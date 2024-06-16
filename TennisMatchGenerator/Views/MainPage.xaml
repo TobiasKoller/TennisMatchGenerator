@@ -1,0 +1,18 @@
+﻿<TabbedPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TennisMatchGenerator.MainPage"
+             xmlns:local="clr-namespace:TennisMatchGenerator"
+             Title="TabbedPageDemo"
+             BarBackgroundColor="#273c75"
+             BarTextColor="White"
+             SelectedTabColor="White"
+             UnselectedTabColor="Gray">
+  <local:MatchDayPage Title="Match Day" IconImageSource="match.svg">
+  </local:MatchDayPage>
+  <local:PlayerPage Title="Players" IconImageSource="players.svg">
+  </local:PlayerPage>
+  <local:RankingPage Title="Ranking" IconImageSource="ranking.svg">
+  </local:RankingPage>
+  <local:SettingsPage Title="Settings" IconImageSource="settings.svg">
+  </local:SettingsPage>
+</TabbedPage>
