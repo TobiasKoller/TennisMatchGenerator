@@ -4,27 +4,32 @@
              x:Class="TennisMatchGenerator.SettingsPage"
              Title="SettingsPage"
              xmlns:viewmodels="clr-namespace:TennisMatchGenerator.ViewModel"
-             x:DataType="viewmodels:SettingViewModel">
+             x:DataType="viewmodels:SettingViewModel"
+             xmlns:controls="clr-namespace:TennisMatchGenerator.Controls">
     <ContentPage.BindingContext>
         <viewmodels:SettingViewModel />
     </ContentPage.BindingContext>
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
-            <RowDefinition Height="1" />
-            <RowDefinition Height="50" />
-            <RowDefinition Height="1" />
-            <RowDefinition Height="50" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        <Label Grid.Row="0" Grid.Column="0"  Text="Number of Courts" />
-        <Entry Grid.Row="0" Grid.Column="1"  WidthRequest="50" PlaceholderColor="Gray" Placeholder="" Keyboard="Numeric" BackgroundColor="WhiteSmoke" Text="{Binding NumberOfCourts}"></Entry>
-        <BoxView Grid.Row="1" BackgroundColor="blue" Grid.ColumnSpan="2" ></BoxView>
-        <Label Grid.Row="2" Grid.Column="0"  Text="test" />
-        <Entry Grid.Row="2" Grid.Column="1" WidthRequest="50" PlaceholderColor="Gray" Placeholder="" Keyboard="Numeric" BackgroundColor="WhiteSmoke" Text="{Binding NumberOfCourts}"></Entry>
-        <BoxView Grid.Row="3" BackgroundColor="blue" Grid.ColumnSpan="2" ></BoxView>
-    </Grid>
+    <VerticalStackLayout>
+        <HorizontalStackLayout FlowDirection="RightToLeft" BackgroundColor="LightBlue" HeightRequest="50">
+            <Button Text="Save" Command="{Binding SaveCommand}"></Button>
+        </HorizontalStackLayout>
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
+                <RowDefinition Height="1" />
+                <RowDefinition Height="50" />
+                <RowDefinition Height="1" />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0"  Text="Number of Courts" />
+            <Entry Grid.Row="0" Grid.Column="1"  WidthRequest="50" PlaceholderColor="Gray" Placeholder="" Keyboard="Numeric" BackgroundColor="WhiteSmoke" Text="{Binding NumberOfCourts}"></Entry>
+            <BoxView Grid.Row="1" BackgroundColor="blue" Grid.ColumnSpan="2" ></BoxView>
+            
+        </Grid>
+    </VerticalStackLayout>
+    
 </ContentPage>

@@ -1,6 +1,6 @@
 ﻿namespace TennisMatchGenerator.Models
 {
-    public class MatchDay
+    public class MatchDay : ModelBase
     {
         public MatchDay()
         {

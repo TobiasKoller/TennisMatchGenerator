@@ -14,5 +14,7 @@ namespace TennisMatchGenerator.Repositories
         {
             return GetAll<Setting>().FirstOrDefault();
         }
+
+        
     }
 }

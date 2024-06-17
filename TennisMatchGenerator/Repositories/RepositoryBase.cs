@@ -43,7 +43,9 @@ namespace TennisMatchGenerator.Repositories
 
         public bool Update<T>(T entry)
         {
+            
            return GetCollection<T>().Update(entry);
+
         }
 
     }

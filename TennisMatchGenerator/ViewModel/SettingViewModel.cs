@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using TennisMatchGenerator.Models;
 using TennisMatchGenerator.Repositories;
 using TennisMatchGenerator.Services;
@@ -10,26 +11,38 @@ namespace TennisMatchGenerator.ViewModel
    
     public partial class SettingViewModel : ObservableObject
     {
-        public SettingService _settingService;
+        public SettingService _service;
 
-  
+        public ICommand SaveCommand { get; private set; }
 
         [ObservableProperty]
         public int _numberOfCourts;
 
+        private Guid _settingId;
         public SettingViewModel()
         {
-            _settingService = new SettingService(new SettingRepository());
+            _service = new SettingService(new SettingRepository());
+            SaveCommand = new Command(Save);
             Init();
         }
 
         private void Init()
         {
-            var settings = _settingService.Get();
-            _numberOfCourts = settings.NumberOfCourts;
-
-            _numberOfCourts = 55;
+            var settings = _service.Get();
+            _settingId = settings.Id;
+            NumberOfCourts = settings.NumberOfCourts;
             
+        }
+
+        private void Save()
+        {
+            var settings = new Setting
+            {
+                Id = _settingId,
+                NumberOfCourts = NumberOfCourts
+            };
+
+            _service.Update(settings);
         }
 
     }

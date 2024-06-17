@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace TennisMatchGenerator.Models
 {
-    public class Player
+    public class Player : ModelBase
     {
-        public required  string FirstName { get; set; }
-        public required string LastName { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
         public int Age { get; set; }
         public double LK {  get; set; }
         public int TotalPoints { get; set; }

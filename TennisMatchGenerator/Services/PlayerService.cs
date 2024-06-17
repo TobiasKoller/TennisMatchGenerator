@@ -16,9 +16,19 @@ namespace TennisMatchGenerator.Services
         {
         }
 
-        public List<Player> GetAllActivePlayers(bool onlyActive)
+        public List<Player> GetAll()
         {
-            throw new NotImplementedException();
+            return Repository.GetAll<Player>();
+        }
+
+        public Guid AddPlayer(Player player)
+        {
+            return Repository.Create(player);
+        }
+
+        public bool UpdatePlayer(Player player)
+        {
+            return Repository.Update(player);
         }
     }
 

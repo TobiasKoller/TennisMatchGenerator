@@ -22,14 +22,13 @@ namespace TennisMatchGenerator.Repositories
             {
                 if (_instance == null)
                 {
-#if DEBUG
-                    var cwd = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    if (Path.GetFileName(cwd) == "AppX") cwd = Path.Combine(cwd,"..","..","..","..","..","db");
-                    _instance = new LiteDatabase(Path.Combine(cwd, "data.db"));
-#else
-                    var cwd = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    _instance = new LiteDatabase(Path.Combine(cwd, "db", "data.db"));
-#endif
+                    //var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    //var appData = FileSystem.Current.AppDataDirectory;
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    var path = Path.Combine(appData, "TennisMatchGenerator");
+                    if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+                    _instance = new LiteDatabase(Path.Combine(path,"TennisMatchGenerator.db"));
                 }
                 return _instance;
                 
