@@ -1,18 +1,37 @@
-﻿<TabbedPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TennisMatchGenerator.MainPage"
-             xmlns:local="clr-namespace:TennisMatchGenerator"
-             Title="TabbedPageDemo"
-             BarBackgroundColor="#273c75"
-             BarTextColor="White"
-             SelectedTabColor="White"
-             UnselectedTabColor="Gray">
-  <local:MatchDayPage Title="Match Day" IconImageSource="match.svg">
-  </local:MatchDayPage>
-  <local:PlayerPage Title="Players" IconImageSource="players.svg">
-  </local:PlayerPage>
-  <local:RankingPage Title="Ranking" IconImageSource="ranking.svg">
-  </local:RankingPage>
-  <local:SettingsPage Title="Settings" IconImageSource="settings.svg">
-  </local:SettingsPage>
-</TabbedPage>
+             xmlns:tabView="clr-namespace:Syncfusion.Maui.TabView;assembly=Syncfusion.Maui.TabView"
+             x:Class="TennisMatchGenerator.Views.MainPage"
+              xmlns:views="clr-namespace:TennisMatchGenerator.Views"
+             Title="MainPage"         
+            BackgroundColor="{DynamicResource PageBackgroundColor}">
+    <ContentPage.Content>
+        <tabView:SfTabView x:Name="tabView" SelectedIndex="3" TabBarBackground="#e5e5e5">
+            <tabView:SfTabView.Items>
+                <tabView:SfTabItem Header="Match Day" ImageSource="match.png" ImagePosition="Left">
+                    <tabView:SfTabItem.Content>
+                        <Grid BackgroundColor="Red" />
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Ranking">
+                    <tabView:SfTabItem.Content>
+                        <Grid BackgroundColor="Green"/>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Players">
+                    <tabView:SfTabItem.Content>
+                        <views:PlayersView></views:PlayersView>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+                <tabView:SfTabItem Header="Settings"  >
+                    <tabView:SfTabItem.Content>
+                        <views:SettingsView></views:SettingsView>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+            </tabView:SfTabView.Items>
+        </tabView:SfTabView>
+    </ContentPage.Content>
+</ContentPage>

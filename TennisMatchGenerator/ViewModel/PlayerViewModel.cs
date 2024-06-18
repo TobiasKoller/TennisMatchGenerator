@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Syncfusion.Maui.DataGrid;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using TennisMatchGenerator.Models;
@@ -12,15 +13,21 @@ namespace TennisMatchGenerator.ViewModel
         public ICommand AddPlayerCommand { get; private set; }
         public ICommand SaveCommand { get; private set; }
         public ICommand SelectionChangedCommand { get;private set; }
+        public ICommand PlayerPropertyChangedCommand { get; private set; }
 
         [ObservableProperty]
-        public Player? _currentPlayer;
+        public bool _showAddPlayerDialog;
+        //[ObservableProperty]
+        //public Player? _currentPlayer;
 
-        [ObservableProperty]
-        public ObservableCollection<Player> _players;
+        //[ObservableProperty]
+        //public ObservableCollection<Player> _players;
 
-        [ObservableProperty]
-        public Player? _selectedPlayer;
+        //[ObservableProperty]
+        //public Player? _selectedPlayer;
+
+        public ObservableCollection<Player> Players { get; private set; }   
+        public Player SelectedPlayer { get; private set; }
 
         private PlayerService _service;
         public PlayerViewModel()
@@ -30,14 +37,42 @@ namespace TennisMatchGenerator.ViewModel
             SaveCommand = new Command(Save);
             SelectionChangedCommand = new Command(SelectionChanged);
 
-            //_currentPlayer = new Player();
-            _players = new ObservableCollection<Player>();
+            Init();
+            ////_currentPlayer = new Player();
+            //_players = new ObservableCollection<Player>();
 
+            //ReloadPlayers();
+        }
+
+        private void SelectionChanged(object args)
+        {
+            //if (args is DataGridSelectionChangedEventArgs parameters)
+            //{
+            //    var player = parameters?.AddedRows?.FirstOrDefault();
+            //    if (player is Player selectedPlayer)
+            //    {
+            //        SelectedPlayer = selectedPlayer;
+            //    }
+            //}
+            
+            
+
+        }
+
+        private void SetSelectedPlayer(Player? player=null)
+        {
+            SelectedPlayer = player??new Player();
+        }
+
+        private void Init()
+        {
+            Players = new ObservableCollection<Player>();
             ReloadPlayers();
         }
 
         private void ReloadPlayers()
         {
+            Reset();
             var players = _service.GetAll();
             Players.Clear();
             foreach (Player player in players)
@@ -48,31 +83,24 @@ namespace TennisMatchGenerator.ViewModel
 
         private void AddPlayer()
         {
-            Reset();
+            ShowAddPlayerDialog = true;
         }
 
         private void Reset()
         {
-            CurrentPlayer = new Player();
+            SetSelectedPlayer(null);
         }
 
-        private void SelectionChanged()
-        {
-
-        }
        
         private void Save()
         {
             //TODO richtige Formvalidierung. Dies ist nur zum schnellen Testen.
-            if (string.IsNullOrWhiteSpace(CurrentPlayer.FirstName)) return;
-            if (string.IsNullOrWhiteSpace(CurrentPlayer.LastName)) return;
+            //if (string.IsNullOrWhiteSpace(CurrentPlayer.FirstName)) return;
+            //if (string.IsNullOrWhiteSpace(CurrentPlayer.LastName)) return;
 
-            if (CurrentPlayer.Id == Guid.Empty)
-                _service.AddPlayer(CurrentPlayer);
-            else
-                _service.UpdatePlayer(CurrentPlayer);
+            if (SelectedPlayer.Id == Guid.Empty) _service.AddPlayer(SelectedPlayer);
+            else _service.UpdatePlayer(SelectedPlayer);
 
-            Reset();
             ReloadPlayers();
         }
     }

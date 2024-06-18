@@ -11,14 +11,16 @@ namespace TennisMatchGenerator.ViewModel
    
     public partial class SettingViewModel : ObservableObject
     {
+
+        public Setting Setting { get; set; }
         public SettingService _service;
 
         public ICommand SaveCommand { get; private set; }
 
-        [ObservableProperty]
-        public int _numberOfCourts;
+        //[ObservableProperty]
+        //public int _numberOfCourts;
 
-        private Guid _settingId;
+        //private Guid _settingId;
         public SettingViewModel()
         {
             _service = new SettingService(new SettingRepository());
@@ -29,20 +31,16 @@ namespace TennisMatchGenerator.ViewModel
         private void Init()
         {
             var settings = _service.Get();
-            _settingId = settings.Id;
-            NumberOfCourts = settings.NumberOfCourts;
+
+            Setting = settings;
+            //_settingId = settings.Id;
+            //NumberOfCourts = settings.NumberOfCourts;
             
         }
 
         private void Save()
         {
-            var settings = new Setting
-            {
-                Id = _settingId,
-                NumberOfCourts = NumberOfCourts
-            };
-
-            _service.Update(settings);
+            _service.Update(Setting);
         }
 
     }

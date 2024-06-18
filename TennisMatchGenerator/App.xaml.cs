@@ -1,4 +1,6 @@
-﻿namespace TennisMatchGenerator;
+﻿using TennisMatchGenerator.Views;
+
+namespace TennisMatchGenerator;
 
 public partial class App : Application
 {

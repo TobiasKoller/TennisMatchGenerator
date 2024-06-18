@@ -10,8 +10,8 @@ namespace TennisMatchGenerator.Models
     {
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
-        public int Age { get; set; }
-        public double LK {  get; set; }
-        public int TotalPoints { get; set; }
+        public DateTime BirthDate { get; set; }
+        public double LK { get; set; } = 25;
+        public int TotalPoints { get; set; } = 0;
     }
 }
