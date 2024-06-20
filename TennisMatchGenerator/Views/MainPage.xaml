@@ -11,7 +11,7 @@
             <tabView:SfTabView.Items>
                 <tabView:SfTabItem Header="Match Day" ImageSource="match.png" ImagePosition="Left">
                     <tabView:SfTabItem.Content>
-                        <Grid BackgroundColor="Red" />
+                        <views:MatchDayView></views:MatchDayView>
                     </tabView:SfTabItem.Content>
                 </tabView:SfTabItem>
 

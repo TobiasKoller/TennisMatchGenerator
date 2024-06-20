@@ -10,19 +10,19 @@
              xmlns:system="clr-namespace:System;assembly=mscorlib"
              x:Class="TennisMatchGenerator.Views.PlayersView">
     <ContentView.BindingContext>
-        <viewmodels:PlayerViewModel />
+        <viewmodels:PlayerViewModel x:Name="ViewModel" />
     </ContentView.BindingContext>
-    <VerticalStackLayout>
+    <VerticalStackLayout Margin="20">
         <HorizontalStackLayout HeightRequest="50" FlowDirection="RightToLeft">
             <buttons:SfButton x:Name="saveBtn" Text="Hinzufügen" Background="Green"  Command="{Binding AddPlayerCommand}"/>
         </HorizontalStackLayout>
         
-        <syncfusion:SfDataGrid x:Name="dataGrid" AutoGenerateColumnsMode="None" 
+        <syncfusion:SfDataGrid x:Name="PlayersDataGrid" AutoGenerateColumnsMode="None" 
                                ItemsSource="{Binding Players}"
-                               SelectionMode="SingleDeselect" AllowEditing="True"  NavigationMode="Cell">
+                               SelectionMode="Single"  NavigationMode="Row">
             <syncfusion:SfDataGrid.Behaviors>
                 <toolkit:EventToCommandBehavior
-                EventName="CellValueChanged"
+                EventName="SelectionChanged"
                 x:TypeArguments="system:EventArgs"
                 Command="{Binding SelectionChangedCommand}" />
             </syncfusion:SfDataGrid.Behaviors>
@@ -32,47 +32,64 @@
             </syncfusion:SfDataGrid.SortColumnDescriptions>
             <syncfusion:SfDataGrid.Columns>
                 <syncfusion:DataGridNumericColumn HeaderText="Vorname" Format="0"
-                                    MappingName="FirstName" Width="150" AllowEditing="True"/>
+                                    MappingName="FirstName" Width="150" />
                 <syncfusion:DataGridTextColumn  HeaderText="Nachname"
                                     MappingName="LastName"
-                                    Width="150"  AllowEditing="True"/>
+                                    Width="150"  />
                 <syncfusion:DataGridNumericColumn  HeaderText="Geburtsdatum"
                                     MappingName="BirthDate"
-                                    Width="150"  AllowEditing="True"/>
+                                    Width="150" />
                 <syncfusion:DataGridNumericColumn  HeaderText="LK-Punkte"
-                                    MappingName="LK"
-                                    Width="150"  AllowEditing="True"/>
+                                    MappingName="LK" 
+                                    Width="150" />
                 <syncfusion:DataGridNumericColumn  HeaderText="Punkte gesamt"
                                     MappingName="TotalPoints"
-                                    Width="150"  AllowEditing="True"/>
+                                    Width="150" />
+                <syncfusion:DataGridTemplateColumn>
+                    <syncfusion:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout FlowDirection="RightToLeft" Spacing="10">
+                                <ImageButton Source="edit.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.EditCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                                <ImageButton Source="delete.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.DeleteCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </syncfusion:DataGridTemplateColumn.CellTemplate>
+                </syncfusion:DataGridTemplateColumn>
             </syncfusion:SfDataGrid.Columns>
         </syncfusion:SfDataGrid>
 
-        <sfPopup:SfPopup x:Name="AddPlayerDialog" ShowOverlayAlways="True" IsOpen="{Binding ShowAddPlayerDialog}"                         
+        <sfPopup:SfPopup x:Name="PlayerDetailDialog" ShowOverlayAlways="True" IsOpen="{Binding ShowPlayerDetailDialog}"                         
                          VerticalOptions="Center" HorizontalOptions="Center" 
                          AutoSizeMode="Height"
                          ShowFooter="True"
                          AppearanceMode="TwoButton"
                          AcceptCommand="{Binding SaveCommand}"
                          HeaderTitle="Neue(r) Spieler(in)"
-                         AcceptButtonText="Hinzufügen"
+                         AcceptButtonText="Speichern"
                          DeclineButtonText="Abbrechen"
-                         StaysOpen="True" ShowCloseButton="True"> 
+                         StaysOpen="True" ShowCloseButton="True">
+            <sfPopup:SfPopup.Triggers>
+                <DataTrigger TargetType="sfPopup:SfPopup" Binding="{Binding Path=CreateMode}" Value="true">
+                    <Setter Property="AcceptButtonText" Value="Hinzufügen" />
+                </DataTrigger>
+            </sfPopup:SfPopup.Triggers>
             <sfPopup:SfPopup.ContentTemplate>
                 <DataTemplate>
-                   
-                        <dataForm:SfDataForm x:Name="NewPlayerForm" 
-                            MinimumHeightRequest="400" 
-                            DataObject="{Binding SelectedPlayer}" AutoGenerateItems="false" LayoutType="TextInputLayout">
+                    <VerticalStackLayout>
+                        <dataForm:SfDataForm x:Name="PlayerDetailForm" 
+                                
+                                MinimumHeightRequest="400"
+                                DataObject="{Binding SelectedPlayer}" AutoGenerateItems="false" LayoutType="TextInputLayout">
                             <dataForm:SfDataForm.Items>
                                 <dataForm:DataFormTextItem FieldName="FirstName" LabelText="Vorname" />
                                 <dataForm:DataFormTextItem FieldName="LastName" LabelText="Nachname" />
-                                <dataForm:DataFormDateItem FieldName="BirthDate" LabelText="Geburtsdatum" />
+                                <dataForm:DataFormDateItem FieldName="BirthDate" LabelText="Geburtsdatum"  />
                                 <dataForm:DataFormNumericItem FieldName="LK" LabelText="LK-Punkte" />
-                                <dataForm:DataFormNumericItem FieldName="TotalPoints" LabelText="Punkte gesamt" />
 
                             </dataForm:SfDataForm.Items>
                         </dataForm:SfDataForm>
+                    </VerticalStackLayout>
+                        
                     
                     
                 </DataTemplate>

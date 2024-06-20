@@ -30,6 +30,11 @@ namespace TennisMatchGenerator.Services
         {
             return Repository.Update(player);
         }
+
+        public bool DeletePlayer(Guid id)
+        {
+            return Repository.Delete<Player>(id);
+        }
     }
 
 }

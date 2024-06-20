@@ -95,7 +95,7 @@
 	  <MauiXaml Update="Views\MainPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\MatchDayPage.xaml">
+	  <MauiXaml Update="Views\MatchDayView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\PlayersView.xaml">

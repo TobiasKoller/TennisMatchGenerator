@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.DataGrid;assembly=Syncfusion.Maui.DataGrid"
+             xmlns:viewmodels="clr-namespace:TennisMatchGenerator.ViewModel"
+             x:Class="TennisMatchGenerator.Views.MatchDayView">
+    <ContentView.BindingContext>
+        <viewmodels:MatchDayViewModel x:Name="ViewModel" />
+    </ContentView.BindingContext>
+    <HorizontalStackLayout>
+        <syncfusion:SfDataGrid x:Name="PlayersDataGrid" AutoGenerateColumnsMode="None" 
+                       ItemsSource="{Binding Players}"
+                       SelectionMode="Single"  NavigationMode="Row">
+
+            <syncfusion:SfDataGrid.SortColumnDescriptions>
+                <syncfusion:SortColumnDescription ColumnName="FullName" SortDirection="Ascending" />
+            </syncfusion:SfDataGrid.SortColumnDescriptions>
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:DataGridNumericColumn HeaderText="Name" Format="0"
+                            MappingName="FullName" Width="150" />
+                <syncfusion:DataGridNumericColumn  HeaderText="LK-Punkte"
+                            MappingName="LK" 
+                            Width="150" />
+                <syncfusion:DataGridNumericColumn  HeaderText="Punkte gesamt"
+                            MappingName="TotalPoints"
+                            Width="150" />
+                <syncfusion:DataGridTemplateColumn>
+                    <syncfusion:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout FlowDirection="RightToLeft" Spacing="10">
+                                <ImageButton Source="edit.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.EditCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                                <ImageButton Source="delete.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.DeleteCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </syncfusion:DataGridTemplateColumn.CellTemplate>
+                </syncfusion:DataGridTemplateColumn>
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+    </HorizontalStackLayout>
+</ContentView>
