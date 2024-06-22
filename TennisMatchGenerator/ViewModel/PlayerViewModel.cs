@@ -8,6 +8,7 @@ using TennisMatchGenerator.Services;
 
 namespace TennisMatchGenerator.ViewModel
 {
+
     public partial class PlayerViewModel : ObservableObject
     {
         public ICommand AddPlayerCommand { get; private set; }
@@ -121,7 +122,6 @@ namespace TennisMatchGenerator.ViewModel
         private async void Save()
         {
 
-            Thread.Sleep(1000);
 
             //TODO richtige Formvalidierung. Dies ist nur zum schnellen Testen.
             //if (string.IsNullOrWhiteSpace(CurrentPlayer.FirstName)) return;

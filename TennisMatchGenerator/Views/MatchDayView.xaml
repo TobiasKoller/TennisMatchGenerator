@@ -2,25 +2,33 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:syncfusion="clr-namespace:Syncfusion.Maui.DataGrid;assembly=Syncfusion.Maui.DataGrid"
+             xmlns:buttons="clr-namespace:Syncfusion.Maui.Buttons;assembly=Syncfusion.Maui.Buttons"
+             xmlns:sfPopup="clr-namespace:Syncfusion.Maui.Popup;assembly=Syncfusion.Maui.Popup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:viewmodels="clr-namespace:TennisMatchGenerator.ViewModel"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              x:Class="TennisMatchGenerator.Views.MatchDayView">
     <ContentView.BindingContext>
         <viewmodels:MatchDayViewModel x:Name="ViewModel" />
     </ContentView.BindingContext>
     <HorizontalStackLayout>
-        <syncfusion:SfDataGrid x:Name="PlayersDataGrid" AutoGenerateColumnsMode="None" 
+        <VerticalStackLayout>
+            <HorizontalStackLayout HeightRequest="50" FlowDirection="RightToLeft">
+                <buttons:SfButton x:Name="saveBtn" Text="Hinzufügen" Background="Green"  Command="{Binding AddPlayerCommand}"/>
+            </HorizontalStackLayout>
+            <syncfusion:SfDataGrid x:Name="PlayersDataGrid" AutoGenerateColumnsMode="None" 
                        ItemsSource="{Binding Players}"
-                       SelectionMode="Single"  NavigationMode="Row">
+                       SelectionMode="Single"  NavigationMode="Row" WidthRequest="500">
 
             <syncfusion:SfDataGrid.SortColumnDescriptions>
                 <syncfusion:SortColumnDescription ColumnName="FullName" SortDirection="Ascending" />
             </syncfusion:SfDataGrid.SortColumnDescriptions>
             <syncfusion:SfDataGrid.Columns>
-                <syncfusion:DataGridNumericColumn HeaderText="Name" Format="0"
-                            MappingName="FullName" Width="150" />
-                <syncfusion:DataGridNumericColumn  HeaderText="LK-Punkte"
+                <syncfusion:DataGridTextColumn HeaderText="Name"
+                            MappingName="FullName" Width="250" />
+                <syncfusion:DataGridTextColumn  HeaderText="LK-Punkte"
                             MappingName="LK" 
-                            Width="150" />
+                            Width="100" />
                 <syncfusion:DataGridNumericColumn  HeaderText="Punkte gesamt"
                             MappingName="TotalPoints"
                             Width="150" />
@@ -28,13 +36,65 @@
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <HorizontalStackLayout FlowDirection="RightToLeft" Spacing="10">
-                                <ImageButton Source="edit.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.EditCommand}"  CommandParameter="{Binding .}"></ImageButton>
-                                <ImageButton Source="delete.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.DeleteCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                                <ImageButton Source="delete.png" Command="{Binding Source={x:Reference PlayersDataGrid},Path=BindingContext.RemovePlayerCommand}"  CommandParameter="{Binding .}"></ImageButton>
                             </HorizontalStackLayout>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
             </syncfusion:SfDataGrid.Columns>
         </syncfusion:SfDataGrid>
+      
+        </VerticalStackLayout>
+        <sfPopup:SfPopup x:Name="PlayerDetailDialog" ShowOverlayAlways="True" IsOpen="{Binding ShowAddPlayerDialog}"                         
+                 VerticalOptions="Center" HorizontalOptions="Center" 
+                 AutoSizeMode="Height"
+                 ShowFooter="True"
+                 AppearanceMode="TwoButton"
+                 AcceptCommand="{Binding AddSelectedPlayersCommand}"
+                 HeaderTitle="SpielerInnen auswählen"
+                 AcceptButtonText="Hinzufügen"
+                 DeclineButtonText="Abbrechen"
+                 WidthRequest="550"
+                 StaysOpen="True" ShowCloseButton="True">
+       
+            <sfPopup:SfPopup.ContentTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout>
+                        <syncfusion:SfDataGrid x:Name="AddPlayersDataGrid" AutoGenerateColumnsMode="None" 
+                               ItemsSource="{Binding AvailablePlayers}"
+                               SelectionMode="Multiple"  NavigationMode="Row" WidthRequest="500">
+                            <syncfusion:SfDataGrid.Behaviors>
+                                <toolkit:EventToCommandBehavior
+                                    EventName="SelectionChanged"
+                                    x:TypeArguments="system:EventArgs"
+                                    Command="{Binding SelectionChangedCommand}" />
+                            </syncfusion:SfDataGrid.Behaviors>
+                            <syncfusion:SfDataGrid.SortColumnDescriptions>
+                                <syncfusion:SortColumnDescription ColumnName="FullName" SortDirection="Ascending" />
+                            </syncfusion:SfDataGrid.SortColumnDescriptions>
+                            <syncfusion:SfDataGrid.Columns>
+                                <syncfusion:DataGridTextColumn HeaderText="Name"
+                                                                MappingName="FullName" Width="250" />
+                                <syncfusion:DataGridTextColumn  HeaderText="LK-Punkte"
+                                                                MappingName="LK" 
+                                                                Width="100" />  
+                                <syncfusion:DataGridNumericColumn  HeaderText="Punkte gesamt"
+                                                                    MappingName="TotalPoints"
+                                                                    Width="150" />
+                                <syncfusion:DataGridTemplateColumn>
+                                    <syncfusion:DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <HorizontalStackLayout FlowDirection="RightToLeft" Spacing="10">
+                                                <ImageButton Source="delete.png" Command="{Binding Source={x:Reference AddPlayersDataGrid},Path=BindingContext.RemovePlayerCommand}"  CommandParameter="{Binding .}"></ImageButton>
+                                            </HorizontalStackLayout>
+                                        </DataTemplate>
+                                    </syncfusion:DataGridTemplateColumn.CellTemplate>
+                                </syncfusion:DataGridTemplateColumn>
+                            </syncfusion:SfDataGrid.Columns>
+                        </syncfusion:SfDataGrid>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </sfPopup:SfPopup.ContentTemplate>
+        </sfPopup:SfPopup>
     </HorizontalStackLayout>
 </ContentView>

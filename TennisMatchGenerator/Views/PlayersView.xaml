@@ -5,7 +5,8 @@
              xmlns:buttons="clr-namespace:Syncfusion.Maui.Buttons;assembly=Syncfusion.Maui.Buttons"
              xmlns:sfPopup="clr-namespace:Syncfusion.Maui.Popup;assembly=Syncfusion.Maui.Popup"
              xmlns:dataForm="clr-namespace:Syncfusion.Maui.DataForm;assembly=Syncfusion.Maui.DataForm"
-            xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:behaviors="clr-namespace:TennisMatchGenerator.Behaviors"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:viewmodels="clr-namespace:TennisMatchGenerator.ViewModel"
              xmlns:system="clr-namespace:System;assembly=mscorlib"
              x:Class="TennisMatchGenerator.Views.PlayersView">
@@ -31,12 +32,12 @@
                 <syncfusion:SortColumnDescription ColumnName="FirstName" SortDirection="Ascending" />
             </syncfusion:SfDataGrid.SortColumnDescriptions>
             <syncfusion:SfDataGrid.Columns>
-                <syncfusion:DataGridNumericColumn HeaderText="Vorname" Format="0"
+                <syncfusion:DataGridTextColumn HeaderText="Vorname" Format="0"
                                     MappingName="FirstName" Width="150" />
                 <syncfusion:DataGridTextColumn  HeaderText="Nachname"
                                     MappingName="LastName"
                                     Width="150"  />
-                <syncfusion:DataGridNumericColumn  HeaderText="Geburtsdatum"
+                <syncfusion:DataGridDateColumn  HeaderText="Geburtsdatum"
                                     MappingName="BirthDate"
                                     Width="150" />
                 <syncfusion:DataGridNumericColumn  HeaderText="LK-Punkte"
@@ -76,9 +77,8 @@
             <sfPopup:SfPopup.ContentTemplate>
                 <DataTemplate>
                     <VerticalStackLayout>
-                        <dataForm:SfDataForm x:Name="PlayerDetailForm" 
-                                
-                                MinimumHeightRequest="400"
+                        <dataForm:SfDataForm x:Name="PlayerDetailForm"                                 
+                                MinimumHeightRequest="400" 
                                 DataObject="{Binding SelectedPlayer}" AutoGenerateItems="false" LayoutType="TextInputLayout">
                             <dataForm:SfDataForm.Items>
                                 <dataForm:DataFormTextItem FieldName="FirstName" LabelText="Vorname" />
@@ -87,11 +87,11 @@
                                 <dataForm:DataFormNumericItem FieldName="LK" LabelText="LK-Punkte" />
 
                             </dataForm:SfDataForm.Items>
+                            <dataForm:SfDataForm.Behaviors>
+                                <behaviors:DataFormRefreshBehavior></behaviors:DataFormRefreshBehavior>
+                            </dataForm:SfDataForm.Behaviors>
                         </dataForm:SfDataForm>
                     </VerticalStackLayout>
-                        
-                    
-                    
                 </DataTemplate>
             </sfPopup:SfPopup.ContentTemplate>
         </sfPopup:SfPopup>
