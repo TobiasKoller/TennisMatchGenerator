@@ -55,6 +55,7 @@
                  AcceptButtonText="Hinzufügen"
                  DeclineButtonText="Abbrechen"
                  WidthRequest="550"
+                         
                  StaysOpen="True" ShowCloseButton="True">
        
             <sfPopup:SfPopup.ContentTemplate>

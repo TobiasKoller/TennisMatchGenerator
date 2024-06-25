@@ -17,7 +17,7 @@
 
                 <tabView:SfTabItem Header="Ranking">
                     <tabView:SfTabItem.Content>
-                        <Grid BackgroundColor="Green"/>
+                        <views:RankingView></views:RankingView>
                     </tabView:SfTabItem.Content>
                 </tabView:SfTabItem>
 

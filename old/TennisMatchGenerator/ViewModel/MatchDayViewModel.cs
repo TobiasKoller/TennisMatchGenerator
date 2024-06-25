@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Syncfusion.Maui.Data;
 using Syncfusion.Maui.DataGrid;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -39,11 +40,11 @@ namespace TennisMatchGenerator.ViewModel
             _service = new MatchDayService(new MatchDayRepository());
             _playerService = new PlayerService(new PlayerRepository());
 
-            ReloadAvailablePlayers();
         }
 
         private void OpenAddPlayerDialog()
         {
+            ReloadAvailablePlayers();
             ShowAddPlayerDialog = true;
         }
 
@@ -51,12 +52,8 @@ namespace TennisMatchGenerator.ViewModel
         {
             if (args is DataGridSelectionChangedEventArgs parameters)
             {
-                SelectedPlayers.Clear();
-                var player = parameters?.AddedRows;
-                if (player is Player selectedPlayer)
-                {
-                    SelectedPlayers.Add(selectedPlayer);
-                }
+                parameters?.AddedRows?.ForEach(r => SelectedPlayers.Add((Player)r));
+                parameters?.RemovedRows?.ForEach(r => SelectedPlayers.Remove((Player)r));
             }
         }
 
@@ -77,7 +74,11 @@ namespace TennisMatchGenerator.ViewModel
 
         private void AddSelectedPlayers()
         {
-
+            var filtered = SelectedPlayers.Where(sp => Players.All(p => p.Id != sp.Id)).ToList();
+            foreach(var player in filtered)
+            {
+                Players.Add(player);
+            }
         }
 
         private void ReloadPlayers()
@@ -91,13 +92,22 @@ namespace TennisMatchGenerator.ViewModel
             //}
         }
 
-        private void ReloadAvailablePlayers()
+        async private void ReloadAvailablePlayers()
         {
+            AvailablePlayers.Clear();
+
             var availablePlayers = _playerService.GetAll().Where(ap => Players.All(p=>p.Id != ap.Id));
             foreach (Player player in availablePlayers)
             {
-                AvailablePlayers.Add(player);
+                await Task.Delay(500);
+                AvailablePlayers.Add(player);               
             }
+
+            await Task.Delay(500);
+            AvailablePlayers.RemoveAt(0);
+            await Task.Delay(500);
+            AvailablePlayers.RemoveAt(0);   
         }
+
     }
 }

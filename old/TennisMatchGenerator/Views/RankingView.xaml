@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:syncfusion="clr-namespace:Syncfusion.Maui.DataGrid;assembly=Syncfusion.Maui.DataGrid"
+             xmlns:buttons="clr-namespace:Syncfusion.Maui.Buttons;assembly=Syncfusion.Maui.Buttons"
+             xmlns:sfPopup="clr-namespace:Syncfusion.Maui.Popup;assembly=Syncfusion.Maui.Popup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodels="clr-namespace:TennisMatchGenerator.ViewModel"
+             x:Class="TennisMatchGenerator.Views.RankingView">
+    <ContentView.BindingContext>
+        <viewmodels:RankingViewModel x:Name="ViewModel" />
+    </ContentView.BindingContext>
+    <VerticalStackLayout>
+        <HorizontalStackLayout HeightRequest="50" FlowDirection="RightToLeft">
+            <buttons:SfButton x:Name="saveBtn" Text="Hinzufügen" Background="Green"  Command="{Binding AddPlayerCommand}"/>
+        </HorizontalStackLayout>
+        
+        <sfPopup:SfPopup x:Name="PlayerDetailDialog" ShowOverlayAlways="True" IsOpen="{Binding ShowAddPlayerDialog}"                         
+         VerticalOptions="Center" HorizontalOptions="Center" 
+         AutoSizeMode="Height"
+         ShowFooter="True"
+         AppearanceMode="TwoButton"
+         AcceptCommand="{Binding AddSelectedPlayersCommand}"
+         HeaderTitle="SpielerInnen auswählen"
+         AcceptButtonText="Hinzufügen"
+         DeclineButtonText="Abbrechen"
+         WidthRequest="550"                 
+         StaysOpen="True" ShowCloseButton="True">
+
+            <sfPopup:SfPopup.ContentTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout>
+                        <syncfusion:SfDataGrid x:Name="AddPlayersDataGrid" AutoGenerateColumnsMode="None" 
+                                               ItemsSource="{Binding AvailablePlayers}"
+                                               SelectionMode="Multiple"  NavigationMode="Row" WidthRequest="500">
+                            <syncfusion:SfDataGrid.Columns>
+                                <syncfusion:DataGridTextColumn HeaderText="Name" MappingName="FullName" Width="250" />
+                            </syncfusion:SfDataGrid.Columns>
+                        </syncfusion:SfDataGrid>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </sfPopup:SfPopup.ContentTemplate>
+        </sfPopup:SfPopup>
+    </VerticalStackLayout>
+</ContentView>
