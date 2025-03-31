@@ -1,26 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Paper, styled, SelectChangeEvent, Typography, Box } from "@mui/material";
+import { TextField, Button, Paper, styled, SelectChangeEvent, Typography, Box,Snackbar, Alert } from "@mui/material";
 import { Setting } from "../model/Setting";
 import { SettingService } from "../services/SettingService";
+import { useNotification } from "../provider/NotificationProvider"; 
+import { CustomPaper } from "../components/CustomPaper";
 
 // Definiere einen Typ für das Formular
 
 
 export const Settings: React.FC = () => {
+    const { notify } = useNotification();
     
-    const CustomPaper = styled(Paper)(({ theme }) => ({
-        // width: 120,
-        // height: 120,
-        padding: theme.spacing(2),
-        ...theme.typography.body2,
-        textAlign: 'left',
-    }));
     
     const [formData, setFormData] = useState<Setting>({
         numberOfCourts: 1,
         pointsForWin: 1,
         pointsForParticipation: 1
     });
+
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+        open: false,
+        message: "",
+        severity: "success",
+      });
 
     
     useEffect(() => {
@@ -43,13 +45,19 @@ export const Settings: React.FC = () => {
     };
 
     // Formular absenden
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         console.log("Formulardaten:", formData);
         const settingService = new SettingService();
-        settingService.saveSettings(formData).then(() => {
-           // alert("Einstellungen erfolgreich aktualisiert!");
-        });
+
+        try{
+            await settingService.saveSettings(formData);
+            notify("Daten erfolgreich gespeichert!", "success");
+        }
+        catch(error: any){
+            notify("Fehler beim Speichern. "+error?.message, "error");
+        }
+     
     };
 
     return (

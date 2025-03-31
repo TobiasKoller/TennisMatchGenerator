@@ -4,3 +4,4 @@ export interface Setting {
     pointsForWin: number;
     pointsForParticipation: number;
 }
+

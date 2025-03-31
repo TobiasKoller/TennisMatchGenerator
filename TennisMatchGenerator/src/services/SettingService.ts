@@ -19,7 +19,6 @@ export class SettingService {
     
     async saveSettings(settings: Settings) {
         const database = await db;
-        var sql = `UPDATE ${tableName} SET ${columns.join("=?,")}`;
         await database.execute(`UPDATE ${tableName} SET ${columns.join("=?,")}=?`, [
             settings.numberOfCourts,
             settings.pointsForWin,
