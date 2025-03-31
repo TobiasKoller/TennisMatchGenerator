@@ -6,3 +6,4 @@ export enum RoutePath{
     USER_DETAIL = "/users/:id",
     NOT_FOUND = "*"
 }
+

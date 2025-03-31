@@ -32,7 +32,7 @@ export const SideMenu: React.FC = () => {
     setOpen(false); //close the drawer after navigating
     navigateHook(route);
   }
-  const buttonSx = {}; //{ paddingLeft: "10px",paddingRight: "50px", position: "relative"};
+  const buttonSx = {}; //r{ paddingLeft: "10px",paddingRight: "50px", position: "relative"};
     return (
       <AppBar position="static">
           <Toolbar>
