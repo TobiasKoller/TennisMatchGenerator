@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Paper, styled, SelectChangeEvent, Typography, Box,Snackbar, Alert } from "@mui/material";
+import { TextField, Button, Paper, styled, SelectChangeEvent, Typography, Box, Snackbar, Alert } from "@mui/material";
 import { Setting } from "../model/Setting";
 import { SettingService } from "../services/SettingService";
-import { useNotification } from "../provider/NotificationProvider"; 
+import { useNotification } from "../provider/NotificationProvider";
 import { CustomPaper } from "../components/CustomPaper";
 
 // Definiere einen Typ für das Formular
@@ -10,8 +10,8 @@ import { CustomPaper } from "../components/CustomPaper";
 
 export const Settings: React.FC = () => {
     const { notify } = useNotification();
-    
-    
+
+
     const [formData, setFormData] = useState<Setting>({
         numberOfCourts: 1,
         pointsForWin: 1,
@@ -22,9 +22,9 @@ export const Settings: React.FC = () => {
         open: false,
         message: "",
         severity: "success",
-      });
+    });
 
-    
+
     useEffect(() => {
         const fetchSettings = async () => {
             const settingService = new SettingService();
@@ -36,11 +36,11 @@ export const Settings: React.FC = () => {
     }, []);
 
     // Ändern von Eingaben
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement  | { name?: string; value: unknown }> | SelectChangeEvent) => {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent) => {
         const { name, value, type } = event.target as HTMLInputElement;
         setFormData((prev) => ({
-        ...prev,
-        [name!]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
+            ...prev,
+            [name!]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
         }));
     };
 
@@ -50,38 +50,38 @@ export const Settings: React.FC = () => {
         console.log("Formulardaten:", formData);
         const settingService = new SettingService();
 
-        try{
+        try {
             await settingService.saveSettings(formData);
             notify("Daten erfolgreich gespeichert!", "success");
         }
-        catch(error: any){
-            notify("Fehler beim Speichern. "+error?.message, "error");
+        catch (error: any) {
+            notify("Fehler beim Speichern. " + error?.message, "error");
         }
-     
+
     };
 
     return (
         <CustomPaper elevation={16} style={{ padding: "16px", margin: "16px" }}>
-        <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                maxWidth: 400,
-                alignItems: "flex-start", // Links ausrichten
-            }}>
-            <Typography variant="h5">Grundeinstellungen</Typography>
+            <Box
+                component="form"
+                onSubmit={handleSubmit}
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    maxWidth: 400,
+                    alignItems: "flex-start", // Links ausrichten
+                }}>
+                <Typography variant="h5">Grundeinstellungen</Typography>
 
-        <TextField label="Anzahl verfügbare Tennisplätze" type="number" name="numberOfCourts" value={formData.numberOfCourts} onChange={handleChange} fullWidth />
-        <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
-        <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
+                <TextField label="Anzahl verfügbare Tennisplätze" type="number" name="numberOfCourts" value={formData.numberOfCourts} onChange={handleChange} fullWidth />
+                <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
+                <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
 
-        <Button type="submit" variant="contained" color="primary">
-            Absenden
-        </Button>
-        </Box>
+                <Button type="submit" variant="contained" color="primary">
+                    Absenden
+                </Button>
+            </Box>
         </CustomPaper>
     );
 }
