@@ -1,33 +1,59 @@
-import { useEffect, useState } from "react";
 
 import "./App.css";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Router } from "react-router-dom";
+import { RoutePath } from "./model/RoutePath";
 import { Home } from "./pages/Home";
-import { Settings } from "./pages/Settings";
-import { NotFound } from "./pages/NotFound";
 import { PlayerList } from "./pages/PlayerList";
+import { Settings } from "./pages/Settings";
 import { PlayerDetail } from "./pages/PlayerDetail";
-import { HomeLayout } from "./layout/HomeLayout";
-import { RoutePath } from "./model/Routes";
-
+import { NotFound } from "./pages/NotFound";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import CssBaseline from "@mui/material/CssBaseline";
+import { SideMenu } from "./components/SideMenu";
+import AppBar from "@mui/material/AppBar";
+import Typography from "@mui/material/Typography";
+import { CurrentSeason } from "./pages/CurrentSeason";
+import { CustomBreadcrumbs } from "./components/Breadcrumbs";
 
 export default function App() {
 
 
   return (
-    <>
-      <HomeLayout />
-      <Routes>
-        <Route path={RoutePath.HOME} element={<Home />} />
-        <Route path={RoutePath.SETTINGS} element={<Settings />} />
-        <Route path={RoutePath.USERS}>
-          <Route index element={<PlayerList />} />
-          <Route path=":id" element={<PlayerDetail />} />
-        </Route>
-        <Route path="*" element={<NotFound />} /> {/* Fallback-Route für nicht gefundene Seiten */}
 
-      </Routes>
-    </>
+    <Box sx={{ display: "flex", height: "100vh", width: "100vw" }}>
+      <CssBaseline />
+      <SideMenu />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          width: "calc(100vw - 240px)", // Sidebar Platz abziehen
+          height: "100vh",
+        }}
+      >
+        <AppBar position="sticky" sx={{ zIndex: 1201, height: "64px" }}>
+          <Toolbar>
+            <Typography variant="h6">Tennis Action</Typography>
+          </Toolbar>
+        </AppBar>
+        <CustomBreadcrumbs />
+        <Routes>
+          <Route path={RoutePath.HOME.path} element={<Home />} />
+          <Route path={RoutePath.SETTINGS.path} element={<Settings />} />
+          <Route path={RoutePath.CURRENT_SEASON.path} element={<CurrentSeason />} />
+          <Route path={RoutePath.PLAYERS.path}>
+            <Route index element={<PlayerList />} />
+            <Route path=":id" element={<PlayerDetail />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+
+        </Routes>
+      </Box>
+    </Box>
 
   );
 

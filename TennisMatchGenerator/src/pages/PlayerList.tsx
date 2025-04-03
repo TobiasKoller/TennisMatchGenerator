@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { useNavigate } from 'react-router-dom';
-import { RoutePath } from '../model/Routes';
+import { RoutePath } from '../model/RoutePath';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -53,7 +53,7 @@ export const PlayerList: React.FC = () => {
   }
 
   const addPlayer = () => {
-    navigate(RoutePath.USERS + "/new");
+    navigate("/" + RoutePath.PLAYERS.path + "/new");
   };
 
   return (

@@ -1,3 +1,3 @@
 export interface DbRecord {
-    id: string;
+    id: number;
 }
