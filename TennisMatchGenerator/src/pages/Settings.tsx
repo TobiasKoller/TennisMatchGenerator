@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Paper, styled, SelectChangeEvent, Typography, Box, Snackbar, Alert } from "@mui/material";
+import { TextField, Button, SelectChangeEvent, Typography, Box } from "@mui/material";
 import { Setting } from "../model/Setting";
-import { SettingService } from "../services/SettingService";
 import { useNotification } from "../provider/NotificationProvider";
 import { CustomPaper } from "../components/CustomPaper";
+import { useServices } from "../context/ServiceContext";
 
 // Definiere einen Typ für das Formular
 
 
 export const Settings: React.FC = () => {
     const { notify } = useNotification();
-
+    const { settingService } = useServices();
 
     const [formData, setFormData] = useState<Setting>({
         numberOfCourts: 1,
@@ -18,16 +18,16 @@ export const Settings: React.FC = () => {
         pointsForParticipation: 1
     });
 
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
-        open: false,
-        message: "",
-        severity: "success",
-    });
+    // const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    //     open: false,
+    //     message: "",
+    //     severity: "success",
+    // });
 
 
     useEffect(() => {
+
         const fetchSettings = async () => {
-            const settingService = new SettingService();
             const settings = await settingService.getSettings();
             setFormData(settings);
         };
@@ -48,7 +48,6 @@ export const Settings: React.FC = () => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         console.log("Formulardaten:", formData);
-        const settingService = new SettingService();
 
         try {
             await settingService.saveSettings(formData);

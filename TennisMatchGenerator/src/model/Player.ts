@@ -1,7 +1,7 @@
 import { DbRecord } from "./DbRecord";
 
 export interface Player extends DbRecord {
-    id: number;
+    id: string;
     firstname: string;
     lastname: string;
     skillRating: number;

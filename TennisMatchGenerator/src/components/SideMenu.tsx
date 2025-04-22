@@ -6,6 +6,8 @@ import { RoutePath } from "../model/RoutePath";
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 
 export const SideMenu = () => {
+
+
   return (
     <Drawer variant="permanent" sx={{
       width: 240,
@@ -21,10 +23,10 @@ export const SideMenu = () => {
           <ListItemIcon><Dashboard /></ListItemIcon>
           <ListItemText primary={RoutePath.HOME.displayName} />
         </ListItem>
-        <ListItem component={Link} to={RoutePath.CURRENT_SEASON.path}>
+        {/* <ListItem component={Link} to={RoutePath.CURRENT_SEASON.path}>
           <ListItemIcon><SportsTennisIcon /></ListItemIcon>
           <ListItemText primary={RoutePath.CURRENT_SEASON.displayName} />
-        </ListItem>
+        </ListItem> */}
         <ListItem component={Link} to={RoutePath.PLAYERS.path}>
           <ListItemIcon><BarChart /></ListItemIcon>
           <ListItemText primary={RoutePath.PLAYERS.displayName} />

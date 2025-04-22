@@ -15,9 +15,15 @@ import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
 import { CurrentSeason } from "./pages/CurrentSeason";
 import { CustomBreadcrumbs } from "./components/Breadcrumbs";
+import { useSeason } from "./context/SeasonContext";
+import { WaitScreen } from "./pages/WaitScreen";
 
 export default function App() {
 
+  const { season } = useSeason();
+  if (!season) {
+    return <WaitScreen />; // oder ein Lade-Spinner
+  }
 
   return (
 
@@ -37,7 +43,7 @@ export default function App() {
       >
         <AppBar position="sticky" sx={{ zIndex: 1201, height: "64px" }}>
           <Toolbar>
-            <Typography variant="h6">Tennis Action</Typography>
+            <Typography variant="h6">Tennis Action - {season.description}</Typography>
           </Toolbar>
         </AppBar>
         <CustomBreadcrumbs />
