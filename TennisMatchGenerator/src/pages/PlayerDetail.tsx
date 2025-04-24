@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Player } from "../model/Player";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { useParams } from "react-router-dom";
 import { CustomPaper } from "../components/CustomPaper";
 import Stack from "@mui/material/Stack";
 import { Box, Button, TextField, Typography } from "@mui/material";
-import { PlayerService } from "../services/PlayerService";
 import { useNotification } from "../provider/NotificationProvider";
+import { PlayerService } from "../services/PlayerService";
+import { useSeason } from "../context/SeasonContext";
 
 interface PlayerDetailProps {
 }
@@ -15,32 +16,43 @@ interface PlayerDetailProps {
 export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
 
     const { notify } = useNotification();
+    const { season } = useSeason();
+    if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
-    const [player, setPlayer] = useState<Player>({
-        firstname: "",
-        lastname: "",
-        skillRating: 1,
-        age: 18,
-        isActive: true,
-        id: ""
-    });
+    const [player, setPlayer] = useState<Player>(new Player());
 
     const { id } = useParams<{ id: string }>();
     const [playerId, setPlayerId] = useState<string>(id || "");
     const [isNewPlayer, setIsNewPlayer] = useState<boolean>(playerId === "new");
+    const playerService = new PlayerService(season.id);
 
-    const newPlayerFormChanged = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent) => {
+    useEffect(() => {
+
+        const fetchPlayer = async () => {
+            if (isNewPlayer) return;
+            if (!playerId) return;
+
+            var player = await playerService.getPlayerById(playerId);
+            if (player) setPlayer(player);
+        };
+
+        fetchPlayer();
+    }, []);
+
+    const newPlayerFormChanged = (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent
+    ) => {
         const { name, value, type } = event.target as HTMLInputElement;
-        setPlayer((prev) => ({
-            ...prev,
+
+        // Kopiere den aktuellen player-Objekt und aktualisiere nur das angegebene Feld
+        setPlayer((prevPlayer) => ({
+            ...prevPlayer,
             [name!]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
         }));
     };
 
     const onFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-        const playerService = new PlayerService();
 
         try {
             if (isNewPlayer) {

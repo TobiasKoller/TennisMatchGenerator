@@ -11,6 +11,7 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { useNavigate } from 'react-router-dom';
 import { RoutePath } from '../model/RoutePath';
+import { useSeason } from '../context/SeasonContext';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -33,15 +34,18 @@ export const PlayerList: React.FC = () => {
 
   const [players, setPlayers] = useState<Player[]>([]);
   const navigateHook = useNavigate();
+  const { season } = useSeason();
+  if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     id: false, // Alter-Spalte am Anfang versteckt
   });
 
+  const playerService = new PlayerService(season.id);
   useEffect(() => {
 
     const fetchPlayers = async () => {
-      var allPlayers = await new PlayerService().getAllPlayers();
+      var allPlayers = await playerService.getAllPlayers();
       setPlayers(allPlayers);
     };
 
@@ -54,6 +58,11 @@ export const PlayerList: React.FC = () => {
 
   const addPlayer = () => {
     navigate("/" + RoutePath.PLAYERS.path + "/new");
+  };
+
+  const editPlayer = (params: any) => {
+    if (!params.id) return;
+    navigate("/" + RoutePath.PLAYERS.path + "/" + params.id);
   };
 
   return (
@@ -70,6 +79,7 @@ export const PlayerList: React.FC = () => {
           initialState={{ pagination: { paginationModel } }}
           pageSizeOptions={[5, 10]}
           checkboxSelection
+          onCellDoubleClick={editPlayer}
           // slots={{ toolbar: GridToolbar }}
           sx={{ border: 0 }}
         />

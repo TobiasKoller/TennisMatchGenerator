@@ -6,7 +6,7 @@ import React, {
     useEffect,
     useRef,
 } from "react";
-import { Season } from "../model/Season"; // Pfad ggf. anpassen
+import { Season } from "../model/Season";
 import { SeasonService } from "../services/SeasonService";
 
 type SeasonContextType = {
@@ -41,8 +41,7 @@ export const SeasonProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const saveSeasonToDb = async (season: Season) => {
-        const seasonService = new SeasonService();
-        await seasonService.saveCurrentSeason(season);
+        await seasonServiceRef.current!.saveCurrentSeason(season);
     };
 
     const updateSeason = async (fn: (prev: Season) => Season) => {

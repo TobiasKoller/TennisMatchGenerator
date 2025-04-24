@@ -20,7 +20,7 @@ import { WaitScreen } from "./pages/WaitScreen";
 
 export default function App() {
 
-  const { season } = useSeason();
+  let { season } = useSeason();
   if (!season) {
     return <WaitScreen />; // oder ein Lade-Spinner
   }

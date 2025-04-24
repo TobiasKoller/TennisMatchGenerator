@@ -3,14 +3,16 @@ import { TextField, Button, SelectChangeEvent, Typography, Box } from "@mui/mate
 import { Setting } from "../model/Setting";
 import { useNotification } from "../provider/NotificationProvider";
 import { CustomPaper } from "../components/CustomPaper";
-import { useServices } from "../context/ServiceContext";
+import { useSeason } from "../context/SeasonContext";
+import { SeasonService } from "../services/SeasonService";
 
 // Definiere einen Typ für das Formular
 
 
 export const Settings: React.FC = () => {
     const { notify } = useNotification();
-    const { settingService } = useServices();
+    const { season } = useSeason();
+    if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
     const [formData, setFormData] = useState<Setting>({
         numberOfCourts: 1,
@@ -24,12 +26,12 @@ export const Settings: React.FC = () => {
     //     severity: "success",
     // });
 
+    const seasonService = new SeasonService();
 
     useEffect(() => {
 
         const fetchSettings = async () => {
-            const settings = await settingService.getSettings();
-            setFormData(settings);
+            setFormData(season.settings);
         };
         fetchSettings();
 
@@ -50,7 +52,7 @@ export const Settings: React.FC = () => {
         console.log("Formulardaten:", formData);
 
         try {
-            await settingService.saveSettings(formData);
+            await seasonService.saveSettings(formData);
             notify("Daten erfolgreich gespeichert!", "success");
         }
         catch (error: any) {

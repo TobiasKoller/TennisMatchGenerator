@@ -6,7 +6,7 @@ import CheckIcon from '@mui/icons-material/Check';
 
 export const CurrentSeason: React.FC = () => {
 
-    const seasonService = new SeasonService();
+
     const [season, setSeason] = useState<Season | null>(null);
 
     useEffect(() => {

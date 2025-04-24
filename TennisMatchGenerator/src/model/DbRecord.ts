@@ -1,3 +1,3 @@
-export interface DbRecord {
-    id?: string;
+export class DbRecord {
+    id: string = "";
 }
