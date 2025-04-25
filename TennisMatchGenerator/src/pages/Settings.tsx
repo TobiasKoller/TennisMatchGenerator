@@ -52,7 +52,7 @@ export const Settings: React.FC = () => {
         console.log("Formulardaten:", formData);
 
         try {
-            await seasonService.saveSettings(formData);
+            await seasonService.saveSettings(season.id, formData);
             notify("Daten erfolgreich gespeichert!", "success");
         }
         catch (error: any) {

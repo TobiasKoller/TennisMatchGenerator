@@ -13,10 +13,11 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { SideMenu } from "./components/SideMenu";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
-import { CurrentSeason } from "./pages/CurrentSeason";
+import { MatchDays } from "./pages/MatchDays";
 import { CustomBreadcrumbs } from "./components/Breadcrumbs";
 import { useSeason } from "./context/SeasonContext";
 import { WaitScreen } from "./pages/WaitScreen";
+import { MatchDayDetail } from "./pages/MatchDayDetail";
 
 export default function App() {
 
@@ -50,7 +51,10 @@ export default function App() {
         <Routes>
           <Route path={RoutePath.HOME.path} element={<Home />} />
           <Route path={RoutePath.SETTINGS.path} element={<Settings />} />
-          <Route path={RoutePath.CURRENT_SEASON.path} element={<CurrentSeason />} />
+          <Route path={RoutePath.MATCHDAYS.path}>
+            <Route index element={<MatchDays />} />
+            <Route path=":id" element={<MatchDayDetail />} />
+          </Route>
           <Route path={RoutePath.PLAYERS.path}>
             <Route index element={<PlayerList />} />
             <Route path=":id" element={<PlayerDetail />} />

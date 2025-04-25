@@ -4,7 +4,7 @@ import { SelectChangeEvent } from "@mui/material/Select";
 import { useParams } from "react-router-dom";
 import { CustomPaper } from "../components/CustomPaper";
 import Stack from "@mui/material/Stack";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, TextField, Typography } from "@mui/material";
 import { useNotification } from "../provider/NotificationProvider";
 import { PlayerService } from "../services/PlayerService";
 import { useSeason } from "../context/SeasonContext";
@@ -47,7 +47,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
         // Kopiere den aktuellen player-Objekt und aktualisiere nur das angegebene Feld
         setPlayer((prevPlayer) => ({
             ...prevPlayer,
-            [name!]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
+            [name]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
         }));
     };
 
@@ -72,7 +72,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
         }
 
     };
-
+    console.log("isActive", player.isActive);
 
     return (
         <CustomPaper elevation={16} style={{ padding: "16px", margin: "16px" }}>
@@ -94,8 +94,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
                     <TextField label="Nachname" name="lastname" type="text" value={player.lastname} onChange={newPlayerFormChanged} fullWidth />
                     <TextField label="Alter" name="age" type="age" value={player.age} onChange={newPlayerFormChanged} fullWidth />
                     <TextField label="Leistungsbewertung" name="skillRating" type="number" value={player.skillRating} onChange={newPlayerFormChanged} fullWidth />
-                    <TextField label="Ist Aktiv" name="isActive" type="checkbox" value={player.isActive} onChange={newPlayerFormChanged} fullWidth />
 
+                    <FormControlLabel control={<Checkbox name="isActive" checked={player.isActive} onChange={newPlayerFormChanged} />} label="Ist Aktiv" />
                     <Button type="submit" variant="contained" color="primary">
                         {isNewPlayer ? "Spieler anlegen" : "Änderungen speichern"}
                     </Button>

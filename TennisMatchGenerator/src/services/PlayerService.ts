@@ -58,8 +58,8 @@ export class PlayerService extends ServiceBase {
         await database.execute(`UPDATE player SET firstname=?,lastname=?,age=?,skill_rating=?,is_active=? WHERE id=?`, [player.firstname, player.lastname, player.age, player.skillRating, player.isActive, player.id]);
     }
 
-    async deletePlayer(player: Player) {
+    async deletePlayer(playerId: string) {
         const database = await db;
-        await database.execute(`DELETE FROM player WHERE id=?`, [player.id]);
+        await database.execute(`DELETE FROM player WHERE id=?`, [playerId]);
     }
 }

@@ -65,12 +65,10 @@ export class SeasonService {
         }
     }
 
-    public async saveSettings(settings: Setting): Promise<void> {
+    public async saveSettings(seasonId: string, settings: Setting): Promise<void> {
         const database = await db;
-        var season = await this.getCurrentSeason(false);
-        if (!season) throw new Error("Keine aktive Saison gefunden.");
 
-        await database.execute(`UPDATE ${tableName} SET settings=? WHERE id=?`, [JSON.stringify(settings), season.id]);
+        await database.execute(`UPDATE ${tableName} SET settings=? WHERE id=?`, [JSON.stringify(settings), seasonId]);
     }
 
 }

@@ -4,6 +4,7 @@ import { Dashboard, BarChart, Settings } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { RoutePath } from "../model/RoutePath";
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
+import GroupIcon from '@mui/icons-material/Group';
 
 export const SideMenu = () => {
 
@@ -23,12 +24,12 @@ export const SideMenu = () => {
           <ListItemIcon><Dashboard /></ListItemIcon>
           <ListItemText primary={RoutePath.HOME.displayName} />
         </ListItem>
-        {/* <ListItem component={Link} to={RoutePath.CURRENT_SEASON.path}>
+        <ListItem component={Link} to={RoutePath.MATCHDAYS.path}>
           <ListItemIcon><SportsTennisIcon /></ListItemIcon>
-          <ListItemText primary={RoutePath.CURRENT_SEASON.displayName} />
-        </ListItem> */}
+          <ListItemText primary={RoutePath.MATCHDAYS.displayName} />
+        </ListItem>
         <ListItem component={Link} to={RoutePath.PLAYERS.path}>
-          <ListItemIcon><BarChart /></ListItemIcon>
+          <ListItemIcon><GroupIcon /></ListItemIcon>
           <ListItemText primary={RoutePath.PLAYERS.displayName} />
         </ListItem>
         <ListItem component={Link} to={RoutePath.SETTINGS.path}>
