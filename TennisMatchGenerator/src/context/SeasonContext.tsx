@@ -1,4 +1,4 @@
-import React, {
+import {
     createContext,
     useContext,
     useState,
@@ -12,7 +12,7 @@ import { SeasonService } from "../services/SeasonService";
 type SeasonContextType = {
     season: Season | null;
     setSeason: (s: Season) => void;
-    updateSeason: (fn: (prev: Season) => Season) => Promise<void>;
+    // updateSeason: (fn: (prev: Season) => Season) => Promise<void>;
 };
 
 const SeasonContext = createContext<SeasonContextType | undefined>(undefined);
@@ -40,19 +40,19 @@ export const SeasonProvider = ({ children }: { children: ReactNode }) => {
 
     }, []);
 
-    const saveSeasonToDb = async (season: Season) => {
-        await seasonServiceRef.current!.saveCurrentSeason(season);
-    };
+    // const saveSeasonToDb = async (season: Season) => {
+    //     await seasonServiceRef.current!.saveCurrentSeason(season);
+    // };
 
-    const updateSeason = async (fn: (prev: Season) => Season) => {
-        if (!season) return;
-        const newSeason = fn(season);
-        setSeason(newSeason); // lokal aktualisieren
-        await saveSeasonToDb(newSeason); // direkt in DB schreiben
-    };
+    // const updateSeason = async (fn: (prev: Season) => Season) => {
+    //     if (!season) return;
+    //     const newSeason = fn(season);
+    //     setSeason(newSeason); // lokal aktualisieren
+    //     await saveSeasonToDb(newSeason); // direkt in DB schreiben
+    // };
 
     return (
-        <SeasonContext.Provider value={{ season, setSeason, updateSeason }}>
+        <SeasonContext.Provider value={{ season, setSeason }}>
             {children}
         </SeasonContext.Provider>
     );

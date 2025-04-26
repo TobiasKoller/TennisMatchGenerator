@@ -2,28 +2,30 @@ import { db } from "../db/Db";
 import { Season } from "../model/Season";
 import { v4 as uuidv4 } from "uuid";
 import { Setting } from "../model/Setting";
+import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
 
 const tableName = "season" as const;
+
+const SeasonColumns: DbColumnDefinition[] = [
+    { column: "id", type: "string" },
+    { column: "year", type: "string" },
+    { column: "description", type: "string" },
+    { column: "settings", type: "json" },
+    { column: "is_active", alias: "isActive", type: "boolean" },
+    { column: "number", type: "number" }
+];
 
 export class SeasonService {
 
     public async getCurrentSeason(createIfNotFound = true): Promise<Season | null> {
         const database = await db;
-        var records = await database.select<any[]>(`SELECT * FROM ${tableName} where is_active=1 LIMIT 1`, []);
-        if (records.length === 0) {
+        var seasons = await safeSelect<Season>(database, SeasonColumns, tableName, "LIMIT 1");
+
+        if (seasons.length === 0) {
             if (createIfNotFound) return await this.createSeason();
             else throw new Error("Keine aktive Saison gefunden.");
         };
-
-        return {
-            id: records[0].id,
-            name: records[0].name,
-            year: records[0].year,
-            description: records[0].description,
-            settings: JSON.parse(records[0].settings),
-            isActive: records[0].is_active == "true",
-            number: records[0].number
-        }
+        return seasons[0];
     }
 
     public async setActiveSeason(seasonId: string): Promise<void> {
@@ -51,18 +53,8 @@ export class SeasonService {
 
     private async getPreviousSeason(): Promise<Season | null> {
         const database = await db;
-        var prevSeason = await database.select<any[]>(`SELECT * FROM ${tableName} order by number desc LIMIT 1`, []);
-        if (prevSeason.length === 0) return null;
-
-        return {
-            id: prevSeason[0].id,
-            name: prevSeason[0].name,
-            year: prevSeason[0].year,
-            description: prevSeason[0].description,
-            settings: JSON.parse(prevSeason[0].settings),
-            isActive: prevSeason[0].is_active == "true",
-            number: prevSeason[0].number
-        }
+        var prevSeason = await safeSelect<Season>(database, SeasonColumns, tableName, "LIMIT 1");
+        return (prevSeason.length === 0) ? null : prevSeason[0];
     }
 
     public async saveSettings(seasonId: string, settings: Setting): Promise<void> {

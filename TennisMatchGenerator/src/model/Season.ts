@@ -3,7 +3,6 @@ import { Setting } from "./Setting";
 
 
 export class Season extends DbRecord {
-    name: string = "";
     number: number = 0;
     isActive: boolean = false;
     year: number = 0;

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DataGrid, GridColDef, GridColumnVisibilityModel, GridRowSelectionModel, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridColumnVisibilityModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useEffect } from 'react';
 import { Player } from '../model/Player';
 import { PlayerService } from '../services/PlayerService';
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { RoutePath } from '../model/RoutePath';
 import { useSeason } from '../context/SeasonContext';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { useNotification } from '../provider/NotificationProvider';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -20,7 +21,7 @@ const columns: GridColDef[] = [
     headerName: 'Name',
     description: 'Der vollständige Name des Spielers',
     width: 500,
-    valueGetter: (value, row: Player) => `${row.firstname || ''} ${row.lastname || ''}`,
+    valueGetter: (_value, row: Player) => `${row.firstname || ''} ${row.lastname || ''}`,
   },
   { field: 'age', headerName: 'Alter', type: 'number', width: 150 },
   { field: 'skillRating', headerName: 'Leitungsbewertung', type: 'number', width: 150 },
@@ -30,11 +31,13 @@ const columns: GridColDef[] = [
 
 const paginationModel = { page: 0, pageSize: 100 };
 
-export const PlayerList: React.FC = () => {
+export const Players: React.FC = () => {
 
   const [players, setPlayers] = useState<Player[]>([]);
   const navigateHook = useNavigate();
   const { season } = useSeason();
+  const notification = useNotification();
+
   if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
@@ -52,7 +55,7 @@ export const PlayerList: React.FC = () => {
     setPlayers(allPlayers);
   };
 
-  const playerService = new PlayerService(season.id);
+  const playerService = new PlayerService(season.id, notification);
   useEffect(() => {
     fetchPlayers();
   }, []);
@@ -97,7 +100,7 @@ export const PlayerList: React.FC = () => {
 
 
   return (
-    <CustomPaper elevation={16} style={{ padding: "16px", margin: "16px" }}>
+    <CustomPaper>
       <Stack direction="column" spacing={2} style={{ marginBottom: "16px" }}>
         <Stack direction="row" spacing={2} justifyContent={'flex-end'}>
 

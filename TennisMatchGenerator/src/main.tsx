@@ -13,7 +13,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <App />
         </NotificationProvider>
       </SeasonProvider>
-
     </BrowserRouter>
   </React.StrictMode>,
 );

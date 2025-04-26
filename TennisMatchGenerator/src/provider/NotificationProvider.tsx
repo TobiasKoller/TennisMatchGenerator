@@ -2,8 +2,11 @@ import React, { createContext, useState, useContext, ReactNode } from "react";
 import { Snackbar, Alert } from "@mui/material";
 
 // Der Typ für den Kontext
-interface NotificationContextType {
+export interface INotificationService {
   notify: (message: string, severity?: "success" | "error" | "warning" | "info") => void;
+  notifyError: (message: string) => Error;
+  notifySuccess: (message: string) => void;
+  notifyWarning: (message: string) => void;
 }
 
 // Der Typ für den Benachrichtigungszustand
@@ -14,7 +17,7 @@ interface NotificationState {
 }
 
 // Der Kontext, der den `notify`-Handler bereitstellt
-const NotificationContext = createContext<NotificationContextType | null>(null);
+const NotificationContext = createContext<INotificationService | null>(null);
 
 
 // Der Provider für Benachrichtigungen
@@ -30,8 +33,22 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotification({ open: true, message, severity });
   };
 
+  const notifyError = (message: string): Error => {
+    setNotification({ open: true, message, severity: "error" });
+
+    return new Error(message);
+  }
+
+  const notifySuccess = (message: string) => {
+    setNotification({ open: true, message, severity: "success" });
+  }
+
+  const notifyWarning = (message: string) => {
+    setNotification({ open: true, message, severity: "warning" });
+  }
+
   return (
-    <NotificationContext.Provider value={{ notify }}>
+    <NotificationContext.Provider value={{ notify, notifyError, notifySuccess, notifyWarning }}>
       {children}
       <Snackbar
         open={notification.open}
@@ -51,7 +68,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 };
 
 // Custom Hook, um Benachrichtigungen zu verwenden
-export const useNotification = (): NotificationContextType => {
+export const useNotification = (): INotificationService => {
   const context = useContext(NotificationContext);
   if (!context) {
     throw new Error("useNotification must be used within a NotificationProvider");

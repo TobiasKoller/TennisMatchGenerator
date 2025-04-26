@@ -1,12 +1,15 @@
 
 import { Drawer, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
-import { Dashboard, BarChart, Settings } from "@mui/icons-material";
+import { Dashboard, Settings } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { RoutePath } from "../model/RoutePath";
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import GroupIcon from '@mui/icons-material/Group';
 
-export const SideMenu = () => {
+interface SideMenuProps {
+};
+
+export const SideMenu: React.FC<SideMenuProps> = ({ }) => {
 
 
   return (

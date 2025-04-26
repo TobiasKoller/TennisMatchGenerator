@@ -1,65 +1,87 @@
 import { Player } from "../model/Player";
-import { v4 as uuidv4, NIL as EMPTY_UUID } from "uuid";
-import { Season } from "../model/Season";
-import { SeasonService } from "./SeasonService";
+import { v4 as uuidv4 } from "uuid";
 import { ServiceBase } from "./ServiceBase";
 import { db } from "../db/Db";
+import { INotificationService } from "../provider/NotificationProvider";
+import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
+import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
+
+const tableNamePlayer = "player" as const;
+const tableNameRoundPlayer = "round_player" as const;
+const PlayerColumns: DbColumnDefinition[] = [
+    { column: "id", type: "string" },
+    { column: "firstname", type: "string" },
+    { column: "lastname", type: "string" },
+    { column: "skill_rating", alias: "skillRating", type: "number" },
+    { column: "age", type: "number" },
+    { column: "is_active", alias: "isActive", type: "boolean" }
+];
+
+const RoundPlayerColumns: DbColumnDefinition[] = [
+    { column: "id", type: "string" },
+    { column: "player_id", alias: "playerId", type: "string" },
+    { column: "round_id", alias: "roundId", type: "string" },
+    { column: "status", alias: "isActive", type: "string" }
+]
+
 
 export class PlayerService extends ServiceBase {
 
-
-    constructor(seasonId: string) {
-        super(seasonId);
+    constructor(seasonId: string, notificationService: INotificationService) {
+        super(seasonId, notificationService);
     }
 
     async getAllPlayers(): Promise<Player[]> {
         const database = await db;
-        const records = await database.select<any[]>(`SELECT * FROM player where season_id=?`, [this.seasonId]);
-        var players: Player[] = [];
-        for (const record of records) {
-            players.push({
-                id: record.id,
-                firstname: record.firstname,
-                lastname: record.lastname,
-                age: record.age,
-                skillRating: record.skill_rating,
-                isActive: record.is_active == "true",
-            });
-        }
+        const players = safeSelect<Player>(database, PlayerColumns, tableNamePlayer); //await database.select<any[]>(`SELECT ${this.selectColumns} FROM player where season_id=?`, [this.seasonId]);
         return players;
     }
 
     async getPlayerById(id: string): Promise<Player | null> {
 
         const database = await db;
-        const records = await database.select<any[]>(`SELECT * FROM player where id=?`, [id]);
-        if (records.length === 0) throw new Error(`Spieler ${id} nicht gefunden`);;
-        return {
-            id: records[0].id,
-            firstname: records[0].firstname,
-            lastname: records[0].lastname,
-            age: records[0].age,
-            skillRating: records[0].skill_rating,
-            isActive: records[0].is_active == "true",
-        };
+        const players = await safeSelect<Player>(database, PlayerColumns, tableNamePlayer, "where id=?", [id]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where id=?`, [id]);
+
+        return (players.length > 0) ? players[0] : null;
+    }
+
+    async getPlayersByRoundId(roundId: string, includePlayerData: boolean): Promise<MatchDayRoundPlayer[]> {
+        const database = await db;
+        const players = await safeSelect<MatchDayRoundPlayer>(database, RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
+
+        if (includePlayerData) {
+            for (const player of players) {
+                const playerData = await this.getPlayerById(player.playerId);
+                if (playerData) player.player = playerData;
+            }
+        }
+        return players;
+    }
+
+    async createRoundPlayer(roundId: string, roundPlayer: MatchDayRoundPlayer): Promise<string> {
+        roundPlayer.id = uuidv4();
+        const database = await db;
+        await database.execute(`INSERT INTO ${tableNameRoundPlayer} (id,player_id,round_id,status) VALUES (?,?,?,?)`, [roundPlayer.id, roundPlayer.playerId, roundId, roundPlayer.status]);
+
+        return roundPlayer.id;
     }
 
     async addPlayer(player: Player): Promise<string> {
 
         player.id = uuidv4();
         const database = await db;
-        await database.execute(`INSERT INTO player (id,firstname,lastname,age,skill_rating,is_active,season_id) VALUES (?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.isActive, this.seasonId]);
+        await database.execute(`INSERT INTO ${tableNamePlayer} (id,firstname,lastname,age,skill_rating,is_active,season_id) VALUES (?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.isActive, this.seasonId]);
 
         return player.id;
     }
 
     async updatePlayer(player: Player) {
         const database = await db;
-        await database.execute(`UPDATE player SET firstname=?,lastname=?,age=?,skill_rating=?,is_active=? WHERE id=?`, [player.firstname, player.lastname, player.age, player.skillRating, player.isActive, player.id]);
+        await database.execute(`UPDATE ${tableNamePlayer} SET firstname=?,lastname=?,age=?,skill_rating=?,is_active=? WHERE id=?`, [player.firstname, player.lastname, player.age, player.skillRating, player.isActive, player.id]);
     }
 
     async deletePlayer(playerId: string) {
         const database = await db;
-        await database.execute(`DELETE FROM player WHERE id=?`, [playerId]);
+        await database.execute(`DELETE FROM ${tableNamePlayer} WHERE id=?`, [playerId]);
     }
 }

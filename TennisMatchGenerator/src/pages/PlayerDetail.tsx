@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Player } from "../model/Player";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CustomPaper } from "../components/CustomPaper";
 import Stack from "@mui/material/Stack";
 import { Box, Button, Checkbox, FormControlLabel, TextField, Typography } from "@mui/material";
 import { useNotification } from "../provider/NotificationProvider";
 import { PlayerService } from "../services/PlayerService";
 import { useSeason } from "../context/SeasonContext";
+import { RoutePath } from "../model/RoutePath";
 
 interface PlayerDetailProps {
 }
@@ -17,14 +18,17 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
 
     const { notify } = useNotification();
     const { season } = useSeason();
+    const navigateHook = useNavigate();
+    const notification = useNotification();
+
     if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
     const [player, setPlayer] = useState<Player>(new Player());
 
     const { id } = useParams<{ id: string }>();
-    const [playerId, setPlayerId] = useState<string>(id || "");
-    const [isNewPlayer, setIsNewPlayer] = useState<boolean>(playerId === "new");
-    const playerService = new PlayerService(season.id);
+    const playerId = id; // Wenn id nicht vorhanden ist, setze auf "new"
+    const isNewPlayer = id === "new";
+    const playerService = new PlayerService(season.id, notification);
 
     useEffect(() => {
 
@@ -38,6 +42,11 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
 
         fetchPlayer();
     }, []);
+
+    const navigteToPlayers = () => {
+
+        navigateHook(`/${RoutePath.PLAYERS.path}`);
+    }
 
     const newPlayerFormChanged = (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent
@@ -56,15 +65,14 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
 
         try {
             if (isNewPlayer) {
-                let id = await playerService.addPlayer(player);
-                setPlayerId(id);
-                setIsNewPlayer(false);
-                setPlayer({ ...player, id: id });
+                await playerService.addPlayer(player);
                 notify("Spieler/In erfolgreich angelegt.", "success");
+                navigteToPlayers();
             }
             else {
                 await playerService.updatePlayer(player);
                 notify("Spieler/In erfolgreich aktualisiert.", "success");
+                navigteToPlayers();
             }
         }
         catch (error: any) {
@@ -72,10 +80,10 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
         }
 
     };
-    console.log("isActive", player.isActive);
+
 
     return (
-        <CustomPaper elevation={16} style={{ padding: "16px", margin: "16px" }}>
+        <CustomPaper>
             <Typography variant="h5">{isNewPlayer ? "neuen Spieler anlegen" : "Spielerdetails"} </Typography>
             <Stack direction="column" spacing={2} style={{ marginBottom: "16px" }}>
                 <Box

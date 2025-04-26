@@ -7,15 +7,6 @@ export class Player extends DbRecord {
     skillRating: number = 0;
     age: number = 0;
     isActive: boolean = true;
-
-    constructor(init?: Partial<Player>) {
-        super();
-        Object.assign(this, init);
-    }
-
-    static fromJSON(data: any): Player {
-        return new Player(data);
-    }
 }
 
 

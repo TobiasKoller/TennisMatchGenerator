@@ -15,7 +15,6 @@ export const Settings: React.FC = () => {
     if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
     const [formData, setFormData] = useState<Setting>({
-        numberOfCourts: 1,
         pointsForWin: 1,
         pointsForParticipation: 1
     });
@@ -62,7 +61,7 @@ export const Settings: React.FC = () => {
     };
 
     return (
-        <CustomPaper elevation={16} style={{ padding: "16px", margin: "16px" }}>
+        <CustomPaper>
             <Box
                 component="form"
                 onSubmit={handleSubmit}
@@ -75,7 +74,6 @@ export const Settings: React.FC = () => {
                 }}>
                 <Typography variant="h5">Grundeinstellungen</Typography>
 
-                <TextField label="Anzahl verfügbare Tennisplätze" type="number" name="numberOfCourts" value={formData.numberOfCourts} onChange={handleChange} fullWidth />
                 <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
                 <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
 
