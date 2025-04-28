@@ -52,7 +52,7 @@ export class MatchDayService extends ServiceBase {
         const playerService = new PlayerService(this.seasonId, this.noticiationService);
         var lastRound = await this.getLastMatchDayRound(matchdayId);
 
-        await database.execute('BEGIN TRANSACTION');
+
 
         try {
 
@@ -66,22 +66,26 @@ export class MatchDayService extends ServiceBase {
                 isActive: true
             };
 
-            await database.execute(`INSERT INTO ${tableNameRound} (id, matchday_id,number,start_date,end_date,courts,is_active) VALUES (?,?,?,?,?,?,?)`,
-                [newRound.id, newRound.matchDayId, newRound.number, newRound.StartDate, newRound.EndDate, JSON.stringify(newRound.courts), newRound.isActive]);
-
             const lastRoundPlayers = lastRound ? await playerService.getPlayersByRoundId(lastRound.id, false) : [];
-            for (var lastPlayer of lastRoundPlayers) {
-                var newPlayer: MatchDayRoundPlayer = {
-                    id: uuidv4(),
-                    playerId: lastPlayer.playerId,
-                    roundId: newRound.id,
-                    status: lastPlayer.status,
+
+            try {
+                await database.execute(`INSERT INTO ${tableNameRound} (id, matchday_id,number,start_date,end_date,courts,is_active) VALUES (?,?,?,?,?,?,?)`,
+                    [newRound.id, newRound.matchDayId, newRound.number, newRound.StartDate, newRound.EndDate, JSON.stringify(newRound.courts), newRound.isActive]);
+
+                for (var lastPlayer of lastRoundPlayers) {
+                    var newPlayer: MatchDayRoundPlayer = {
+                        id: uuidv4(),
+                        playerId: lastPlayer.playerId,
+                        roundId: newRound.id,
+                        status: lastPlayer.status,
+                    };
+                    await playerService.createRoundPlayer(newRound.id, newPlayer);
                 };
-                await playerService.createRoundPlayer(newRound.id, newPlayer);
+            }
+            catch (error: any) {
+                throw this.notifyError("Fehler beim Erstellen der neuen Runde: " + error?.message);
             };
 
-            // Wenn alles erfolgreich war, bestätige die Transaktion
-            await database.execute('COMMIT');
             return newRound.id;
         } catch (error: any) {
             // Falls ein Fehler auftritt, mache die Änderungen rückgängig

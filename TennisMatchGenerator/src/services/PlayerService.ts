@@ -5,6 +5,7 @@ import { db } from "../db/Db";
 import { INotificationService } from "../provider/NotificationProvider";
 import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
+import Database from "@tauri-apps/plugin-sql";
 
 const tableNamePlayer = "player" as const;
 const tableNameRoundPlayer = "round_player" as const;
@@ -14,14 +15,14 @@ const PlayerColumns: DbColumnDefinition[] = [
     { column: "lastname", type: "string" },
     { column: "skill_rating", alias: "skillRating", type: "number" },
     { column: "age", type: "number" },
+    { column: "gender", type: "string" },
     { column: "is_active", alias: "isActive", type: "boolean" }
 ];
 
 const RoundPlayerColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
     { column: "player_id", alias: "playerId", type: "string" },
-    { column: "round_id", alias: "roundId", type: "string" },
-    { column: "status", alias: "isActive", type: "string" }
+    { column: "round_id", alias: "roundId", type: "string" }
 ]
 
 
@@ -61,23 +62,45 @@ export class PlayerService extends ServiceBase {
     async createRoundPlayer(roundId: string, roundPlayer: MatchDayRoundPlayer): Promise<string> {
         roundPlayer.id = uuidv4();
         const database = await db;
-        await database.execute(`INSERT INTO ${tableNameRoundPlayer} (id,player_id,round_id,status) VALUES (?,?,?,?)`, [roundPlayer.id, roundPlayer.playerId, roundId, roundPlayer.status]);
+        await database.execute(`INSERT INTO ${tableNameRoundPlayer} (id,player_id,round_id) VALUES (?,?,?)`, [roundPlayer.id, roundPlayer.playerId, roundId]);
 
         return roundPlayer.id;
+    }
+
+    async getSelectedRoundPlayers(roundId: string): Promise<MatchDayRoundPlayer[]> {
+        const database = await db;
+        const players = await safeSelect<MatchDayRoundPlayer>(database, RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
+
+        return players;
+    }
+
+
+    async updateSelectedRoundPlayers(roundId: string, playerIds: string[]) {
+        const database = await db;
+
+        await database.execute(`DELETE FROM ${tableNameRoundPlayer} WHERE round_id=?`, [roundId]);
+        for (const playerId of playerIds) {
+            const roundPlayer: MatchDayRoundPlayer = {
+                id: uuidv4(),
+                playerId: playerId,
+                roundId: roundId
+            };
+            await this.createRoundPlayer(roundId, roundPlayer);
+        }
     }
 
     async addPlayer(player: Player): Promise<string> {
 
         player.id = uuidv4();
         const database = await db;
-        await database.execute(`INSERT INTO ${tableNamePlayer} (id,firstname,lastname,age,skill_rating,is_active,season_id) VALUES (?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.isActive, this.seasonId]);
+        await database.execute(`INSERT INTO ${tableNamePlayer} (id,firstname,lastname,age,skill_rating, gender,is_active,season_id) VALUES (?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.gender, player.isActive, this.seasonId]);
 
         return player.id;
     }
 
     async updatePlayer(player: Player) {
         const database = await db;
-        await database.execute(`UPDATE ${tableNamePlayer} SET firstname=?,lastname=?,age=?,skill_rating=?,is_active=? WHERE id=?`, [player.firstname, player.lastname, player.age, player.skillRating, player.isActive, player.id]);
+        await database.execute(`UPDATE ${tableNamePlayer} SET firstname=?,lastname=?,age=?,skill_rating=?,gender=?, is_active=?  WHERE id=?`, [player.firstname, player.lastname, player.age, player.skillRating, player.gender, player.isActive, player.id]);
     }
 
     async deletePlayer(playerId: string) {

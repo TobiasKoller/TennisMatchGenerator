@@ -1,5 +1,5 @@
 import { Box, Button, Stack, Tab, Tabs } from "@mui/material";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import AddIcon from '@mui/icons-material/Add';
 import { MatchDayService } from "../services/MatchDayService";
@@ -7,6 +7,7 @@ import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { useParams } from "react-router-dom";
+import { MatchDayRoundPage } from "./MatchDayRoundPage";
 
 interface MatchDayDetailProps {
 }
@@ -14,7 +15,7 @@ interface MatchDayDetailProps {
 export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     const { id } = useParams<{ id: string }>();
-    const [activeRound, setActiveRound] = useState(0);
+    const [activeRoundId, setActiveRound] = useState("");
     const { season } = useSeason();
     const notification = useNotification();
     const [rounds, setRounds] = useState<MatchDayRound[]>([]); // Zustand für die Runden
@@ -26,7 +27,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     var matchDayService = new MatchDayService(season.id, notification);
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setActiveRound(newValue);
     };
 
@@ -38,33 +39,57 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     async function fetchRounds() {
         const dbRounds = await matchDayService.getAllMatchDayRounds(matchDayId!);
         setRounds(dbRounds);
+        setActiveRound(dbRounds[dbRounds.length - 1].id); // Setze die aktive Runde auf die letzte Runde
     }
 
     useEffect(() => {
         fetchRounds();
     }, []);
 
-    return (
-        <CustomPaper>
-            <Stack direction="column" spacing={2} style={{ marginBottom: "16px" }}>
 
-                <Box sx={{ width: '100%', marginTop: 2 }}>
-                    <Stack direction="row" spacing={2} justifyContent={'flex-end'}>
-                        <Button color='primary' variant="contained" startIcon={<AddIcon />} onClick={addNewRound} >Neue Runde</Button>
-                    </Stack >
+    return (
+        <CustomPaper sx={{ height: "100%" }}>
+            <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
+                {/* Obere Buttons und Tabs */}
+                <Box sx={{ flexShrink: 0 }}>
+                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+                        <Button
+                            color="primary"
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={addNewRound}
+                        >
+                            Neue Runde
+                        </Button>
+                    </Stack>
+
                     <Tabs
-                        value={activeRound}
+                        value={activeRoundId}
                         onChange={handleTabChange}
                         variant="scrollable"
                         scrollButtons="auto"
-                        aria-label="Runden Tabs"
                     >
-                        {rounds.map((round, index) => (
-                            <Tab key={round.id} label={`Runde ${round.number}`} />
+                        {rounds.map((round) => (
+                            <Tab key={round.id} label={`Runde ${round.number}`} value={round.id} />
                         ))}
                     </Tabs>
-                </Box >
-            </Stack >
-        </CustomPaper >
+                </Box>
+
+                {/* Inhalt Bereich */}
+                <Box sx={{ flexGrow: 1, overflow: "hidden", minHeight: 0 }}>
+                    {rounds.map((round) => (
+                        round.id === activeRoundId && (
+                            <MatchDayRoundPage
+                                key={round.id}
+                                matchDayId={matchDayId}
+                                round={round}
+                            />
+                        )
+                    ))}
+                </Box>
+            </Stack>
+        </CustomPaper>
+
+
     );
 }

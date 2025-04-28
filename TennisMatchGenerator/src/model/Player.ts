@@ -6,6 +6,7 @@ export class Player extends DbRecord {
     lastname: string = "";
     skillRating: number = 0;
     age: number = 0;
+    gender: "male" | "female" | "diverse" = "male";
     isActive: boolean = true;
 }
 

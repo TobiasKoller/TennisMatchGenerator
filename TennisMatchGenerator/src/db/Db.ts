@@ -6,6 +6,7 @@ class DB {
     private constructor() { }
 
     static getInstance(): Promise<Database> {
+
         if (!DB.instance) {
             DB.instance = Database.load("sqlite:tennismatchgenerator.sqlite");
         }
