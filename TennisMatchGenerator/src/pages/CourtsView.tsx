@@ -1,16 +1,27 @@
-import { Box } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { useState } from "react";
 import tennisCourtUrl from "../assets/tennis_court.svg";
-// import InputMask from "react-input-mask";
+import InputMask from "react-input-mask";
+import { Match } from "../model/Match";
 
-interface CourtsProps {
+interface CourtsViewProps {
     round: MatchDayRound;
+    matches: Match[];
+
 }
 
-export const Courts: React.FC<CourtsProps> = (props) => {
+export const CourtsView: React.FC<CourtsViewProps> = (props) => {
 
-    const [courts, setCourts] = useState<string[]>(["1", "2", "3", "4", "5", "6"]);
+    // const [match, setCourts] = useState<string[]>(["1", "2", "3", "4", "5", "6"]);
+    const [matches, setMatches] = useState<Match[]>(props.matches);
+
+    const resultChanged = (court: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = event.target.value;
+        console.log(`Ergebnis für Platz ${court} geändert: ${newValue}`);
+        // Hier können Sie den neuen Wert speichern oder weiterverarbeiten
+        // Zum Beispiel: setMatches((prev) => ({ ...prev, [court]: newValue }));
+    }
 
     return (
         <Box sx={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", justifyContent: "top", alignItems: "left", padding: 2 }}>
@@ -20,11 +31,8 @@ export const Courts: React.FC<CourtsProps> = (props) => {
                 flexWrap: 'wrap',
                 gap: '16px', // Abstand zwischen den SVGs (optional)
             }}>
-                {courts.map((court, index) => (
-                    // <Box key={index} sx={{ padding: 1, border: "1px solid #ccc", borderRadius: 1 }}>
-                    //     {court}
-                    //     <img src={tennisCourtUrl} alt="Tennisplatz" style={{ width: '300px' }} />
-                    // </Box>
+                {matches.map((match, index) => (
+
                     <Box
                         key={index}
                         sx={{
@@ -48,7 +56,7 @@ export const Courts: React.FC<CourtsProps> = (props) => {
                             }}
                         >
                             <Box>Spieler A</Box>
-                            <Box
+                            {/* <Box
                                 component="input"
                                 type="text"
                                 placeholder="0:0"
@@ -56,7 +64,23 @@ export const Courts: React.FC<CourtsProps> = (props) => {
                                     width: 60,
                                     textAlign: "center",
                                 }}
-                            />
+                            /> */}
+                            <InputMask mask="9:9" value={`${match.set1.homeGames ?? 0}:${match.set1.awayGames}`} maskChar={null} onChange={resultChanged(match.court)}>
+                                {(inputProps) => (
+                                    <TextField
+                                        {...inputProps}
+                                        variant="outlined"
+                                        sx={{
+                                            width: '40px',
+                                            '& input': {
+                                                padding: 0,
+                                                width: '40px',
+                                                textAlign: 'center',
+                                            },
+                                        }}
+                                    />
+                                )}
+                            </InputMask>
                             <Box>Spieler B</Box>
                         </Box>
 

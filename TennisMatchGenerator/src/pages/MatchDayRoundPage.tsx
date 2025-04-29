@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Box, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { PlayerService } from "../services/PlayerService";
 import { useNotification } from "../provider/NotificationProvider";
@@ -10,7 +10,9 @@ import { Player } from "../model/Player";
 import WomanIcon from '@mui/icons-material/Woman';
 import ManIcon from '@mui/icons-material/Man';
 import Man4Icon from '@mui/icons-material/Man4';
-import { Courts } from "./Courts";
+import { CourtsView } from "./CourtsView";
+import { SeasonService } from "../services/SeasonService";
+import { Setting } from "../model/Setting";
 
 interface MatchDayRoundPageProps {
     matchDayId: string;
@@ -36,6 +38,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [allPlayers, setAllPlayers] = useState<Player[]>([]);
     const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<OptionType>>([]);
     const [selectionChanged, setSelectionChanged] = useState(false);
+    const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
+    // Zustand für die ausgewählten Plätze
+
     const playerService = new PlayerService(season.id, notification);
 
     const fetchAllPlayers = async () => {
@@ -69,14 +74,16 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         }
     };
 
-    const initPlayers = async () => {
+
+
+    const init = async () => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
     }
 
 
     useEffect(() => {
-        initPlayers();
+        init();
     }, []);
 
     useEffect(() => {
@@ -140,6 +147,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                 <Box sx={{ marginBottom: 2 }}>
                     <Typography variant="h6">Spieler der Runde</Typography>
                     <Select
+                        isDisabled={!props.isActive}
                         options={allPlayerOptions}
                         value={selectedPlayers}
                         onChange={handleSelectChange}
@@ -169,13 +177,14 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     {selectedPlayers.map((player) => (
                         <Box key={player.value} sx={{ marginBottom: 1 }}>
                             <Chip
+
                                 label={
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         {getGenderIcon(player.value)}
                                         <span>{player.label}</span>
                                     </Stack>
                                 }
-                                onDelete={() => {
+                                onDelete={!props.isActive ? undefined : () => {
                                     const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== player.value);
                                     setSelectedPlayers(newSelectedPlayers);
                                     setSelectionChanged(true);
@@ -203,7 +212,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     overflowY: "auto"
                 }}
             >
-                <Courts round={round} />
+
+                <CourtsView round={round} matches={matches} />
             </Box>
         </Box>
 

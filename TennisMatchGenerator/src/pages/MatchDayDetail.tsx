@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Tab, Tabs } from "@mui/material";
+import { Box, Button, Stack, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { use, useEffect, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import AddIcon from '@mui/icons-material/Add';
@@ -10,6 +10,8 @@ import { useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import LockOutlineIcon from '@mui/icons-material/LockOutline';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import { Setting } from "../model/Setting";
+import { SeasonService } from "../services/SeasonService";
 
 interface MatchDayDetailProps {
 }
@@ -17,12 +19,15 @@ interface MatchDayDetailProps {
 export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     const { id } = useParams<{ id: string }>();
+    const { season } = useSeason();
+    const notification = useNotification();
+
     const [activeRoundId, setActiveRound] = useState("");
     const [selectedRoundId, setSelectedRoundId] = useState("");
     const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
-    const { season } = useSeason();
-    const notification = useNotification();
-    const [rounds, setRounds] = useState<MatchDayRound[]>([]); // Zustand für die Runden
+    const [rounds, setRounds] = useState<MatchDayRound[]>([]);
+    const [settings, setSettings] = useState<Setting>(new Setting());
+    const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
 
     const matchDayId = id;
     if (!matchDayId) return null; // Sicherstellen, dass die ID vorhanden ist    
@@ -57,12 +62,26 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     }
 
+    const fetchSettings = async () => {
+        const seasonService = new SeasonService();
+        const settings = await seasonService.getSettings(season.id);
+        setSettings(settings);
+    }
+
+    const init = async () => {
+        await fetchRounds();
+        await fetchSettings();
+    }
+
+
     useEffect(() => {
         console.log(JSON.stringify(enabledRoundIds));
     }, [enabledRoundIds]);
 
+
+
     useEffect(() => {
-        fetchRounds();
+        init();
     }, []);
 
 
@@ -71,7 +90,32 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
             <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
                 {/* Obere Buttons und Tabs */}
                 <Box sx={{ flexShrink: 0 }}>
-                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+
+                    <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ backgroundColor: "yellow" }}>
+                        <Box display="flex" alignItems="center">
+                            <Typography variant="subtitle1" gutterBottom>
+                                Verfügbare Plätze auswählen:
+                            </Typography>
+                            <ToggleButtonGroup
+                                value={selectedCourts}
+                                onChange={(_e, newSelection) => setSelectedCourts(newSelection)}
+                            >
+                                {settings?.availableCourts?.map((court) => (
+                                    <ToggleButton key={court} value={court} sx={{
+                                        '&.Mui-selected': {
+                                            backgroundColor: 'green',
+                                            color: 'white',
+                                            '&:hover': {
+                                                backgroundColor: 'darkgreen',
+                                            },
+                                        },
+                                    }}>
+                                        {court}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
+                        </Box>
+                        <Box flexGrow={1} />
                         <Button
                             color="primary"
                             variant="contained"

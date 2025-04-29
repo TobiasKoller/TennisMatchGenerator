@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, SelectChangeEvent, Typography, Box } from "@mui/material";
+import { TextField, Button, SelectChangeEvent, Typography, Box, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { Setting } from "../model/Setting";
 import { useNotification } from "../provider/NotificationProvider";
 import { CustomPaper } from "../components/CustomPaper";
@@ -16,25 +16,31 @@ export const Settings: React.FC = () => {
 
     const [formData, setFormData] = useState<Setting>({
         pointsForWin: 1,
-        pointsForParticipation: 1
+        pointsForParticipation: 1,
+        availableCourts: []
     });
-
-    // const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
-    //     open: false,
-    //     message: "",
-    //     severity: "success",
-    // });
+    const [selectedCourts, setSelectedCourts] = useState<number[]>([]); // Zustand für die ausgewählten Plätze
 
     const seasonService = new SeasonService();
 
+    const init = async () => {
+        const settings = await seasonService.getSettings(season.id);
+        setFormData(settings);
+        setSelectedCourts(settings.availableCourts);
+    }
+
     useEffect(() => {
 
-        const fetchSettings = async () => {
-            setFormData(season.settings);
-        };
-        fetchSettings();
+        init();
 
     }, []);
+
+    useEffect(() => {
+        setFormData((prev) => ({
+            ...prev,
+            availableCourts: selectedCourts.sort((a, b) => a - b),
+        }));
+    }, [selectedCourts]);
 
     // Ändern von Eingaben
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent) => {
@@ -76,6 +82,26 @@ export const Settings: React.FC = () => {
 
                 <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
                 <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
+                <ToggleButtonGroup
+                    value={selectedCourts}
+                    onChange={(e, newSelection) => setSelectedCourts(newSelection)}
+                >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((court) => (
+                        <ToggleButton key={court} value={court} sx={{
+                            '&.Mui-selected': {
+                                backgroundColor: 'green',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: 'darkgreen',
+                                },
+                            },
+                        }}>
+                            {court}
+                        </ToggleButton>
+                    ))}
+                </ToggleButtonGroup>
+
+                {/* Hier können Sie weitere Eingabefelder hinzufügen */}
 
                 <Button type="submit" variant="contained" color="primary">
                     Absenden

@@ -75,6 +75,9 @@ importers:
       '@types/react-dom':
         specifier: 19.0.4
         version: 19.0.4(@types/react@19.0.12)
+      '@types/react-input-mask':
+        specifier: ^3.0.6
+        version: 3.0.6
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.3.4(vite@6.2.3)
@@ -760,6 +763,9 @@ packages:
     resolution: {integrity: sha512-4fSQ8vWFkg+TGhePfUzVmat3eC14TXYSsiiDSLI0dVLsrm9gZFABjPy/Qu6TKgl1tq1Bu1yDsuQgY3A3DOjCcg==}
     peerDependencies:
       '@types/react': ^19.0.0
+
+  '@types/react-input-mask@3.0.6':
+    resolution: {integrity: sha512-+5I18WKyG3eWIj7TVPWfK1VitI9mPpS9y6jE/BfmTCe+iL27NfBw/yzKRvCFp1DRBvlvvcsiZf05bub0YC1k8A==}
 
   '@types/react-router-dom@5.3.3':
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
@@ -2049,6 +2055,10 @@ snapshots:
   '@types/prop-types@15.7.14': {}
 
   '@types/react-dom@19.0.4(@types/react@19.0.12)':
+    dependencies:
+      '@types/react': 19.0.12
+
+  '@types/react-input-mask@3.0.6':
     dependencies:
       '@types/react': 19.0.12
 
