@@ -1,4 +1,4 @@
-import { Box, Button, Chip, List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
+import { Box, Chip, Stack, Typography } from "@mui/material";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { PlayerService } from "../services/PlayerService";
 import { useNotification } from "../provider/NotificationProvider";
@@ -10,10 +10,12 @@ import { Player } from "../model/Player";
 import WomanIcon from '@mui/icons-material/Woman';
 import ManIcon from '@mui/icons-material/Man';
 import Man4Icon from '@mui/icons-material/Man4';
+import { Courts } from "./Courts";
 
 interface MatchDayRoundPageProps {
     matchDayId: string;
     round: MatchDayRound;
+    isActive: boolean;
 }
 type OptionType = {
     value: string;
@@ -201,10 +203,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     overflowY: "auto"
                 }}
             >
-                <Typography variant="h4">Details zu Runde {round.number}</Typography>
-                <Typography variant="body1">Startdatum: {round.StartDate?.toString()}</Typography>
-                <Typography variant="body1">Courts: {round.courts.join(", ")}</Typography>
-                <Typography variant="body1">Status: {round.isActive ? "Aktiv" : "Inaktiv"}</Typography>
+                <Courts round={round} />
             </Box>
         </Box>
 

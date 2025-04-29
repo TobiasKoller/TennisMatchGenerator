@@ -1,5 +1,5 @@
 import { Box, Button, Stack, Tab, Tabs } from "@mui/material";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import AddIcon from '@mui/icons-material/Add';
 import { MatchDayService } from "../services/MatchDayService";
@@ -8,6 +8,8 @@ import { useSeason } from "../context/SeasonContext";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
+import LockOutlineIcon from '@mui/icons-material/LockOutline';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 interface MatchDayDetailProps {
 }
@@ -16,19 +18,20 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     const { id } = useParams<{ id: string }>();
     const [activeRoundId, setActiveRound] = useState("");
+    const [selectedRoundId, setSelectedRoundId] = useState("");
+    const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
     const { season } = useSeason();
     const notification = useNotification();
     const [rounds, setRounds] = useState<MatchDayRound[]>([]); // Zustand für die Runden
 
     const matchDayId = id;
     if (!matchDayId) return null; // Sicherstellen, dass die ID vorhanden ist    
-
     if (season === null) return null; // Sicherstellen, dass die Saison vorhanden ist    
 
     var matchDayService = new MatchDayService(season.id, notification);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-        setActiveRound(newValue);
+        setSelectedRoundId(newValue);
     };
 
     const addNewRound = async () => {
@@ -39,8 +42,24 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     async function fetchRounds() {
         const dbRounds = await matchDayService.getAllMatchDayRounds(matchDayId!);
         setRounds(dbRounds);
-        setActiveRound(dbRounds[dbRounds.length - 1].id); // Setze die aktive Runde auf die letzte Runde
+        const activeRoundId = dbRounds[dbRounds.length - 1].id; // Setze die aktive Runde auf die letzte Runde
+        setActiveRound(activeRoundId); // Setze die aktive Runde auf die letzte Runde
+        setSelectedRoundId(activeRoundId); // Setze die ausgewählte Runde auf die letzte Runde
     }
+
+    const isRoundEnabled = (roundId: string) => {
+        return enabledRoundIds.includes(roundId) || roundId === activeRoundId;
+    };
+
+    const changeTabState = (enableTab: boolean) => {
+        if (enableTab) setEnabledRoundIds((prev) => [...prev, selectedRoundId]);
+        else setEnabledRoundIds((prev) => prev.filter((id) => id !== selectedRoundId));
+
+    }
+
+    useEffect(() => {
+        console.log(JSON.stringify(enabledRoundIds));
+    }, [enabledRoundIds]);
 
     useEffect(() => {
         fetchRounds();
@@ -61,10 +80,34 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                         >
                             Neue Runde
                         </Button>
+                        {/*button nur anzeigen wenn aktuell enabled*/}
+                        {isRoundEnabled(selectedRoundId) && (
+                            <Button
+                                color="error"
+                                variant="outlined"
+                                startIcon={<LockOutlineIcon />}
+                                onClick={() => changeTabState(false)}
+                            >
+                                Abschließen
+                            </Button>
+                        )}
+
+                        {/*button nur anzeigen wenn aktuell disabled*/}
+                        {!isRoundEnabled(selectedRoundId) && (
+                            <Button
+                                color="success"
+                                variant="outlined"
+                                startIcon={<LockOpenIcon />}
+                                onClick={() => changeTabState(true)}
+                            >
+                                Entsperren
+                            </Button>
+                        )}
+
                     </Stack>
 
                     <Tabs
-                        value={activeRoundId}
+                        value={selectedRoundId}
                         onChange={handleTabChange}
                         variant="scrollable"
                         scrollButtons="auto"
@@ -78,11 +121,12 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                 {/* Inhalt Bereich */}
                 <Box sx={{ flexGrow: 1, overflow: "hidden", minHeight: 0 }}>
                     {rounds.map((round) => (
-                        round.id === activeRoundId && (
+                        round.id === selectedRoundId && (
                             <MatchDayRoundPage
                                 key={round.id}
                                 matchDayId={matchDayId}
                                 round={round}
+                                isActive={isRoundEnabled(round.id)}
                             />
                         )
                     ))}
