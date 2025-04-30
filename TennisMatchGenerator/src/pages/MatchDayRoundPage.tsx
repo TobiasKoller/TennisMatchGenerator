@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Button, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { PlayerService } from "../services/PlayerService";
 import { useNotification } from "../provider/NotificationProvider";
@@ -13,17 +13,23 @@ import Man4Icon from '@mui/icons-material/Man4';
 import { CourtsView } from "./CourtsView";
 import { SeasonService } from "../services/SeasonService";
 import { Setting } from "../model/Setting";
+import LockOutlineIcon from '@mui/icons-material/LockOutline';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import AddIcon from '@mui/icons-material/Add';
 
-interface MatchDayRoundPageProps {
-    matchDayId: string;
-    round: MatchDayRound;
-    isActive: boolean;
-}
 type OptionType = {
     value: string;
     label: string;
 };
 
+interface MatchDayRoundPageProps {
+    matchDayId: string;
+    round: MatchDayRound;
+    isEnabled: boolean;
+    isActive: boolean;
+    addNewRound: () => void;
+    changeTabState: (enableTab: boolean) => void;
+}
 export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const notification = useNotification();
@@ -39,7 +45,10 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<OptionType>>([]);
     const [selectionChanged, setSelectionChanged] = useState(false);
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
-    // Zustand für die ausgewählten Plätze
+    const [settings, setSettings] = useState<Setting>(new Setting());
+    const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
+    const isEnabled = props.isEnabled;
+    const isActive = props.isActive; // Zustand für die aktiven Runden
 
     const playerService = new PlayerService(season.id, notification);
 
@@ -74,11 +83,16 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         }
     };
 
-
+    const fetchSettings = async () => {
+        const seasonService = new SeasonService();
+        const settings = await seasonService.getSettings(season.id);
+        setSettings(settings);
+    }
 
     const init = async () => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
+        await fetchSettings();
     }
 
 
@@ -92,10 +106,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             setSelectionChanged(false); // Reset
         }
     }, [selectedPlayers, selectionChanged]);
-
-
-
-
 
     const onSelectionClosed = async () => {
         const selectedPlayerIds = selectedPlayers.map((player) => player.value);
@@ -122,6 +132,11 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             default: return null; // Fallback, falls kein Geschlecht gefunden wird
         }
     }
+
+    const courtSelectionChanged = (event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
+        var sorted = newCourts.sort((a, b) => a - b);
+        setSelectedCourts(sorted);
+    };
 
 
     return (
@@ -212,10 +227,60 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     overflowY: "auto"
                 }}
             >
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Box display="flex" alignItems="center">
+                        <Typography variant="subtitle1" gutterBottom>
+                            Verfügbare Plätze auswählen:
+                        </Typography>
+                        <ToggleButtonGroup
+                            value={selectedCourts}
+                            onChange={courtSelectionChanged}
+                            sx={{ marginLeft: 2 }}
+                        >
+                            {settings?.availableCourts?.map((court) => (
+                                <ToggleButton key={court} value={court} sx={{
+                                    py: 0.5, // weniger vertical padding
+                                    px: 1.5, // horizontaler Abstand kann bleiben
+                                    backgroundColor: "lightgray",
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'green',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'darkgreen',
+                                        },
+                                    },
+                                }}>
+                                    {court}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Box>
 
-                <CourtsView round={round} matches={matches} />
+                    {/*button nur anzeigen wenn aktuell enabled*/}
+                    <Box flexGrow={1} />
+                    {!isActive && (
+                        <Button
+                            color="error"
+                            variant="outlined"
+                            startIcon={isEnabled ? <LockOutlineIcon /> : <LockOpenIcon />}
+                            onClick={() => props.changeTabState(!isEnabled)}
+                        >
+                            {isEnabled ? "Abschließen" : "Entsperren"}
+                        </Button>
+
+                    )}
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={props.addNewRound}
+                    >
+                        Neue Runde
+                    </Button>
+                </Stack>
+                <CourtsView round={round} courts={selectedCourts} matches={matches} />
             </Box>
-        </Box>
+        </Box >
 
     );
 }

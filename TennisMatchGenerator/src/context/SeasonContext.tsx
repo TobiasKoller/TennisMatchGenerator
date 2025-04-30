@@ -40,17 +40,6 @@ export const SeasonProvider = ({ children }: { children: ReactNode }) => {
 
     }, []);
 
-    // const saveSeasonToDb = async (season: Season) => {
-    //     await seasonServiceRef.current!.saveCurrentSeason(season);
-    // };
-
-    // const updateSeason = async (fn: (prev: Season) => Season) => {
-    //     if (!season) return;
-    //     const newSeason = fn(season);
-    //     setSeason(newSeason); // lokal aktualisieren
-    //     await saveSeasonToDb(newSeason); // direkt in DB schreiben
-    // };
-
     return (
         <SeasonContext.Provider value={{ season, setSeason }}>
             {children}
