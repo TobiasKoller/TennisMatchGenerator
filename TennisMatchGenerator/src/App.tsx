@@ -102,7 +102,7 @@ export default function App() {
             </Box>
           </Toolbar>
         </AppBar>
-        <CustomBreadcrumbs />
+        {/* <CustomBreadcrumbs /> */}
         <Routes>
           <Route path={RoutePath.HOME.path} element={<Home />} />
           <Route path={RoutePath.SETTINGS.path} element={<Settings />} />

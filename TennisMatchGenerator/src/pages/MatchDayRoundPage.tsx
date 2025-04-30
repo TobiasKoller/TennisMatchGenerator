@@ -199,7 +199,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                         <span>{player.label}</span>
                                     </Stack>
                                 }
-                                onDelete={!props.isActive ? undefined : () => {
+                                onDelete={!isEnabled ? undefined : () => {
                                     const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== player.value);
                                     setSelectedPlayers(newSelectedPlayers);
                                     setSelectionChanged(true);
