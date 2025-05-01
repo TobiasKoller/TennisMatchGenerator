@@ -14,11 +14,12 @@ interface CourtsViewProps {
 export const CourtsView: React.FC<CourtsViewProps> = (props) => {
 
     // const [match, setCourts] = useState<string[]>(["1", "2", "3", "4", "5", "6"]);
-    const [matches, setMatches] = useState<Match[]>(props.matches);
+    // const [matches, setMatches] = useState<Match[]>(props.matches);
     const courts = props.courts;
 
     const getMatchByCourt = (court: number) => {
-        return matches.find((match) => match.court === court) ?? null;
+        let match = props.matches.find((match) => match.court === court) ?? null;
+        return match;
     }
 
     return (
@@ -37,7 +38,7 @@ export const CourtsView: React.FC<CourtsViewProps> = (props) => {
                 flexWrap: 'wrap',
                 gap: '16px', // Abstand zwischen den SVGs (optional)
             }}>
-                {courts.map((courtNumber, index) => (
+                {courts.map((courtNumber, _index) => (
                     <CourtView roundId={props.round.id} court={courtNumber} match={getMatchByCourt(courtNumber)} />
                 ))}
             </Box>

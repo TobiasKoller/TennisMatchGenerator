@@ -16,6 +16,8 @@ import { Setting } from "../model/Setting";
 import LockOutlineIcon from '@mui/icons-material/LockOutline';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AddIcon from '@mui/icons-material/Add';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import { MatchGenerator } from "../services/MatchGenerator";
 
 type OptionType = {
     value: string;
@@ -47,6 +49,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
     const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
+    const [matchGenerator, setMatchGenerator] = useState<MatchGenerator | null>(null);
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
 
@@ -93,6 +96,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
         await fetchSettings();
+        setMatchGenerator(new MatchGenerator());
     }
 
 
@@ -136,6 +140,21 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const courtSelectionChanged = (event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
         var sorted = newCourts.sort((a, b) => a - b);
         setSelectedCourts(sorted);
+    };
+
+    const createMatches = async () => {
+        if (selectedPlayers.length < 2) {
+            notification.notifyError("Bitte mindestens 2 Spieler auswählen.");
+            return;
+        }
+        var generatedMatches = matchGenerator!.generateNextRound(round.id, round.players!, selectedCourts.length) ?? [];
+
+        generatedMatches.forEach(m => {
+            m.court = selectedCourts[m.court - 1];
+        });
+
+        setMatches(generatedMatches);
+
     };
 
 
@@ -256,7 +275,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         </ToggleButtonGroup>
                     </Box>
 
-                    {/*button nur anzeigen wenn aktuell enabled*/}
                     <Box flexGrow={1} />
                     {!isActive && (
                         <Button
@@ -269,13 +287,14 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         </Button>
 
                     )}
+
                     <Button
-                        color="primary"
+                        color="success"
                         variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={props.addNewRound}
+                        startIcon={<ViewInArIcon />}
+                        onClick={createMatches}
                     >
-                        Neue Runde
+                        Paarungen ermitteln
                     </Button>
                 </Stack>
                 <CourtsView round={round} courts={selectedCourts} matches={matches} />

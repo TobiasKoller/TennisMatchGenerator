@@ -57,28 +57,13 @@ const fadeRight = {
 
 export const CourtView: React.FC<CourtViewProps> = (props) => {
 
-    const { roundId, court } = props;
+    const { roundId, court, match } = props;
 
     const notification = useNotification();
     const { season } = useSeason();
 
     if (!season) return <></>;
 
-
-    const match: Match = {
-        id: "", // ID des Matches
-        roundId: roundId, // ID der Runde
-        type: "double",
-        number: 0,
-        court: court,
-        set1: new Set(),
-        set2: new Set(),
-        player1HomeId: "5e67756f-c7fc-4773-b18e-c8c1a548958c", // Spieler 1 Heim  
-        player2HomeId: "65fca80a-a055-47aa-83c8-9eab4f17ac82", // Spieler 2 Heim
-        player1GuestId: "d3653350-30a3-40c6-8c1e-cb9486ce5083", // Spieler 1 Gast
-        player2GuestId: "2b7106a0-764c-4af2-aa19-0ed21e8e8bb0", // Spieler 2 Gast 
-
-    }
     const [result, setResult] = useState<string>("");
     const [players, setPlayers] = useState<Player[]>([]);
 
@@ -117,39 +102,40 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
             />
 
-            {/* Spielerplatzierungen */}
-            {match?.type === "double" ? (
-                <>
-                    {/* Team A (links) */}
-                    <Box sx={playerStyle({ top: "30%", left: "5%" })}>{getPlayerName(match.player1HomeId)}</Box> {/* vorne */}
-                    <Box sx={playerStyle({ top: "60%", left: "5%" })}>{getPlayerName(match.player2HomeId)}</Box> {/* hinten */}
+            {match && match.type === "double" && (<>
+                {/* Team A (links) */}
+                <Box sx={playerStyle({ top: "30%", left: "5%" })}>{getPlayerName(match.player1HomeId)}</Box> {/* vorne */}
+                <Box sx={playerStyle({ top: "60%", left: "5%" })}>{getPlayerName(match.player2HomeId)}</Box> {/* hinten */}
 
-                    {/* Team B (rechts) */}
-                    <Box sx={playerStyle({ top: "30%", right: "5%" })}>{getPlayerName(match.player1GuestId)}</Box> {/* vorne */}
-                    <Box sx={playerStyle({ top: "60%", right: "5%" })}>{getPlayerName(match.player2GuestId)}</Box> {/* hinten */}
-                </>
-            ) : (
-                <>
-                    {/* Einzelspieler */}
-                    <Box sx={playerStyle({ top: "30%", left: "10%" })}>{getPlayerName(match.player1HomeId)}</Box>
-                    <Box sx={playerStyle({ top: "60%", right: "10%" })}>{getPlayerName(match.player1GuestId)}</Box>
-                </>
+                {/* Team B (rechts) */}
+                <Box sx={playerStyle({ top: "30%", right: "5%" })}>{getPlayerName(match.player1GuestId)}</Box> {/* vorne */}
+                <Box sx={playerStyle({ top: "60%", right: "5%" })}>{getPlayerName(match.player2GuestId)}</Box> {/* hinten */}
+            </>
             )}
-
-            {/* Ergebnis mittig */}
-            <Box
-                sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
-                    padding: "4px 12px",
-                    borderRadius: 4,
-                    fontWeight: "bold",
-                }}
-            >
-                3:4  </Box>
+            {match && match.type === "single" && (<>
+                {/* Einzelspieler */}
+                <Box sx={playerStyle({ top: "30%", left: "10%" })}>{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "60%", right: "10%" })}>{getPlayerName(match.player1GuestId)}</Box>
+            </>
+            )}
+            {match && (
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        padding: "4px 12px",
+                        borderRadius: 4,
+                        fontWeight: "bold",
+                    }}
+                >
+                    3:4  </Box>
+            )}
+            {!match && (
+                <Box sx={playerStyle({ top: "50%", left: "30%" })}>Keine Begegnung</Box>
+            )}
             <Box
                 sx={{
                     position: "absolute",
@@ -167,9 +153,9 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     fontWeight: "bold",
                 }}
             >
-                {match.court}
+                {court}
             </Box>
-        </Box>
+        </Box >
 
 
 

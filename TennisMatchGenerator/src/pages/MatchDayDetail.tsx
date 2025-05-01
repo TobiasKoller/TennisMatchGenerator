@@ -1,4 +1,4 @@
-import { Box, Stack, Tab, Tabs, } from "@mui/material";
+import { Box, Button, Stack, Tab, Tabs, } from "@mui/material";
 import { useEffect, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
@@ -7,6 +7,7 @@ import { useSeason } from "../context/SeasonContext";
 import { MatchDayRound } from "../model/MatchDayRound";
 import { useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
+import AddIcon from '@mui/icons-material/Add';
 
 interface MatchDayDetailProps {
 }
@@ -71,7 +72,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         <CustomPaper sx={{ height: "100%" }}>
             <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
                 {/* Obere Buttons und Tabs */}
-                <Box sx={{ flexShrink: 0 }}>
+                <Box display="flex" alignItems="center">
                     <Tabs
                         value={selectedRoundId}
                         onChange={handleTabChange}
@@ -82,6 +83,15 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                             <Tab key={round.id} label={`Runde ${round.number}`} value={round.id} />
                         ))}
                     </Tabs>
+                    <Button
+                        color="primary"
+                        variant="outlined"
+                        startIcon={<AddIcon />}
+                        onClick={addNewRound}
+                        sx={{ marginLeft: 2 }}
+                    >
+                        Neue Runde
+                    </Button>
                 </Box>
 
                 {/* Inhalt Bereich */}
