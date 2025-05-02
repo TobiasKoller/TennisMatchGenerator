@@ -94,6 +94,49 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         return player ? `${player.firstname} ${player.lastname}` : "Unbekannt";
     }
 
+    const isSetFinished = (set: Set): boolean => {
+        return set.homeGames === 6 && set.awayGames < 5 ||
+            set.awayGames === 6 && set.homeGames < 5 ||
+            set.homeGames >= 7 && set.awayGames < 6 ||
+            set.awayGames >= 7 && set.homeGames < 6;
+    }
+
+    const formatResult = (match: Match): string => {
+        var sets = [`${match.set1.homeGames}:${match.set1.awayGames}`];
+        if (isSetFinished(match.set1)) { sets.push(`${match.set2.homeGames}:${match.set2.awayGames}`); }
+        return sets.join(" ");
+    }
+
+    const getMatchSkill = (match: Match | undefined, type: "home" | "away"): string => {
+        if (!match) return "";
+
+        if (match.type === "double") {
+
+
+            const homePlayer1 = players.find(p => p.id === match.player1HomeId);
+            const homePlayer2 = players.find(p => p.id === match.player2HomeId);
+            const guestPlayer1 = players.find(p => p.id === match.player1GuestId);
+            const guestPlayer2 = players.find(p => p.id === match.player2GuestId);
+
+
+
+            var skill1 = (homePlayer1?.skillRating ?? 0) + (homePlayer2?.skillRating ?? 0);
+            var skill2 = (guestPlayer1?.skillRating ?? 0) + (guestPlayer2?.skillRating ?? 0);
+
+            return `Leistung ${skill1} vs ${skill2}`;
+        }
+        else {
+            const homePlayer = players.find(p => p.id === match.player1HomeId);
+            const guestPlayer = players.find(p => p.id === match.player1GuestId);
+            var skill1 = (homePlayer?.skillRating) ?? 0;
+            var skill2 = (guestPlayer?.skillRating) ?? 0;
+
+            return `Leistung ${skill1} vs ${skill2}`;
+        }
+
+    }
+
+
     return (
         <Box sx={{ position: "relative", width: 300, height: 200 }}>
             {/* Court-Bild */}
@@ -104,17 +147,17 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
             {match && match.type === "double" && (<>
                 {/* Team A (links) */}
-                <Box sx={playerStyle({ top: "30%", left: "5%" })}>{getPlayerName(match.player1HomeId)}</Box> {/* vorne */}
+                <Box sx={playerStyle({ top: "28%", left: "5%" })}>{getPlayerName(match.player1HomeId)}</Box> {/* vorne */}
                 <Box sx={playerStyle({ top: "60%", left: "5%" })}>{getPlayerName(match.player2HomeId)}</Box> {/* hinten */}
 
                 {/* Team B (rechts) */}
-                <Box sx={playerStyle({ top: "30%", right: "5%" })}>{getPlayerName(match.player1GuestId)}</Box> {/* vorne */}
+                <Box sx={playerStyle({ top: "28%", right: "5%" })}>{getPlayerName(match.player1GuestId)}</Box> {/* vorne */}
                 <Box sx={playerStyle({ top: "60%", right: "5%" })}>{getPlayerName(match.player2GuestId)}</Box> {/* hinten */}
             </>
             )}
             {match && match.type === "single" && (<>
                 {/* Einzelspieler */}
-                <Box sx={playerStyle({ top: "30%", left: "10%" })}>{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "28%", left: "10%" })}>{getPlayerName(match.player1HomeId)}</Box>
                 <Box sx={playerStyle({ top: "60%", right: "10%" })}>{getPlayerName(match.player1GuestId)}</Box>
             </>
             )}
@@ -131,11 +174,33 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                         fontWeight: "bold",
                     }}
                 >
-                    3:4  </Box>
+                    {formatResult(match)}  </Box>
+
+            )}
+            {match && (
+                <>
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: -2,
+                            left: 10,
+                            color: "white",
+                            borderRadius: "50%",
+                            width: "atuo",
+                            height: 28,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            fontSize: "14px"
+                        }}
+                    >{getMatchSkill(match!, "home")}</Box>
+
+                </>
             )}
             {!match && (
                 <Box sx={playerStyle({ top: "50%", left: "30%" })}>Keine Begegnung</Box>
             )}
+
             <Box
                 sx={{
                     position: "absolute",
@@ -156,105 +221,5 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 {court}
             </Box>
         </Box >
-
-
-
     )
-    // return (
-    //     <Box
-    //         sx={{
-    //             width: 500,
-    //             display: "flex",
-    //             flexDirection: "column",
-    //             alignItems: "center",
-    //             border: "1px solid lightgray",
-    //             borderRadius: 2,
-    //             padding: 2,
-    //         }}
-    //     >
-    //         {match ? (
-    //             <Box
-    //                 sx={{
-    //                     width: "100%",
-    //                     display: "flex",
-    //                     justifyContent: "space-between",
-    //                     alignItems: "center",
-    //                     marginBottom: 1,
-    //                 }}
-    //             >
-    //                 <Box
-    //                     sx={{
-    //                         display: "flex",
-    //                         flexDirection: "column", // sorgt für untereinander
-    //                         gap: 0,                   // optional: Abstand zwischen den Spielern
-    //                     }}
-    //                 >
-    //                     <Box sx={{ width: 100, ...fadeRight }}>{getPlayerName(match.player1HomeId)}</Box>
-    //                     {match.type === "double" && <Box sx={{ width: 100, ...fadeRight }}>{getPlayerName(match.player2HomeId)}</Box>}
-    //                 </Box>
-    //                 {/* {match.type === "double" && <Box>Spieler AA</Box>} */}
-
-
-    //                 <TextField
-    //                     value={result}
-    //                     onChange={resultChanged}
-    //                     placeholder=":"
-    //                     variant="outlined"
-    //                     size="small"
-    //                     sx={{
-    //                         width: "80px",        // genau genug für 5 Zeichen + Puffer
-    //                         input: {
-    //                             padding: "6px 8px", // Höhe kompakt
-    //                             textAlign: "center" // optional: zentrierter Text
-    //                         }
-    //                     }}
-    //                     inputProps={{
-    //                         maxLength: 5,
-    //                     }}
-    //                 />
-    //                 <Box
-    //                     sx={{
-    //                         display: "flex",
-    //                         flexDirection: "column", // sorgt für untereinander
-    //                         gap: 0,                   // optional: Abstand zwischen den Spielern
-    //                     }}
-    //                 >
-    //                     <Box sx={{ width: 100, ...fadeRight }}>{getPlayerName(match.player1GuestId)}</Box>
-    //                     {match.type === "double" && <Box sx={{ width: 100, ...fadeRight }}>{getPlayerName(match.player2GuestId)}</Box>}
-    //                 </Box>
-    //                 {/* {match.type === "double" && <Box>Spieler BB</Box>} */}
-    //             </Box>
-    //         ) : (
-    //             <Box sx={{
-    //                 width: "100%",
-    //                 display: "flex",
-    //                 justifyContent: "center",   // horizontal zentriert
-    //                 alignItems: "center",       // vertikal zentriert (wenn Höhe da ist)
-    //                 marginBottom: 1,
-    //             }}>
-    //                 Keine Begegnung
-    //             </Box>
-    //         )
-    //         }
-
-    //         {/* Tennisplatz SVG */}
-    //         <Box position="relative" width={"300px"} height={"auto"}>
-    //             <img src={tennisCourtUrl} alt={`Tennisplatz ${court}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-    //             <Box
-    //                 position="absolute"
-    //                 bottom={8}
-    //                 right={8}
-    //                 bgcolor="rgba(0, 0, 0, 0.6)"
-    //                 color="white"
-    //                 px={1}
-    //                 py={0.5}
-    //                 borderRadius={1}
-    //                 fontSize="0.875rem"
-    //             >
-    //                 {court}
-    //             </Box>
-    //         </Box>
-
-    //     </Box>
-    // )
 }

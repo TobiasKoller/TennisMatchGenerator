@@ -59,7 +59,7 @@ export class MatchGenerator {
       [team1.player1id, team1.player2id, team2.player1id, team2.player2id].forEach(id => usedPlayerIds.add(id));
     }
 
-    const remainingPlayers = this.players.filter(p => !usedPlayerIds.has(p.id));
+    const remainingPlayers = this.players.filter(p => !usedPlayerIds.has(p.player!.id));
 
     // Einzel-Matches
     for (let i = 0; i < remainingPlayers.length - 1 && courtIndex < courtNumbers.length; i += 2) {
@@ -73,18 +73,18 @@ export class MatchGenerator {
       match.number = matchNumber++;
       match.court = courtNumbers[courtIndex++];
 
-      match.player1HomeId = p1.id;
+      match.player1HomeId = p1.player!.id;
       match.player2HomeId = "";
-      match.player1GuestId = p2.id;
+      match.player1GuestId = p2.player!.id;
       match.player2GuestId = "";
 
       singleMatches.push(match);
 
-      usedPlayerIds.add(p1.id);
-      usedPlayerIds.add(p2.id);
+      usedPlayerIds.add(p1.player!.id);
+      usedPlayerIds.add(p2.player!.id);
     }
 
-    const unusedPlayers = this.players.filter(p => !usedPlayerIds.has(p.id));
+    const unusedPlayers = this.players.filter(p => !usedPlayerIds.has(p.player!.id));
 
     return {
       doubles: doubleMatches,
@@ -113,8 +113,8 @@ export class MatchGenerator {
 
     for (let i = 0; i < minLength; i++) {
       pairs.push({
-        player1id: shuffled1[i].id,
-        player2id: shuffled2[i].id,
+        player1id: shuffled1[i].player!.id,
+        player2id: shuffled2[i].player!.id,
         totalSkill: shuffled1[i].player!.skillRating + shuffled2[i].player!.skillRating
       });
     }
