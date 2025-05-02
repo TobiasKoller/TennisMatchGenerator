@@ -17,7 +17,7 @@ import LockOutlineIcon from '@mui/icons-material/LockOutline';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AddIcon from '@mui/icons-material/Add';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
-import { MatchGenerator } from "../services/MatchGenerator";
+import { MatchGenerator } from "../services/MatchGenerator.ts";
 
 type OptionType = {
     value: string;
@@ -49,7 +49,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
     const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
-    const [matchGenerator, setMatchGenerator] = useState<MatchGenerator | null>(null);
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
 
@@ -96,7 +95,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
         await fetchSettings();
-        setMatchGenerator(new MatchGenerator());
     }
 
 
@@ -147,13 +145,23 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             notification.notifyError("Bitte mindestens 2 Spieler auswählen.");
             return;
         }
-        var generatedMatches = matchGenerator!.generateNextRound(round.id, round.players!, selectedCourts.length) ?? [];
+        var generator = new MatchGenerator(round.players!);
+        var result = generator.generate(round.id, selectedCourts) ?? [];
 
-        generatedMatches.forEach(m => {
-            m.court = selectedCourts[m.court - 1];
-        });
+        var matches = result.doubles.concat(result.singles);
+        if (matches.length === 0) {
+            notification.notifyError("Es konnten keine Paarungen erstellt werden. Bitte überprüfen Sie die Anzahl der Spieler und Plätze.");
+            return;
+        }
 
-        setMatches(generatedMatches);
+        if (result.unusedPlayers.length > 0) {
+            notification.notifyWarning("Es konnten nicht alle Spieler eingeteilt werden. Bitte überprüfen Sie die Anzahl der Spieler und Plätze.");
+        }
+        if (matches.length > 0) {
+            notification.notifySuccess("Paarungen erfolgreich erstellt.");
+        }
+
+        setMatches(matches);
 
     };
 

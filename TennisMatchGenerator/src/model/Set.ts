@@ -5,3 +5,4 @@ export class Set extends DbRecord {
     awayGames: number = 0;
 
 }
+
