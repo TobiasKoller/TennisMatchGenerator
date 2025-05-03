@@ -145,7 +145,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             notification.notifyError("Bitte mindestens 2 Spieler auswählen.");
             return;
         }
-        var generator = new MatchGenerator(round.players!);
+        const players = await playerService.getPlayersByRoundId(round.id, true);
+        var generator = new MatchGenerator(players!);
         var result = generator.generate(round.id, selectedCourts) ?? [];
 
         var matches = result.doubles.concat(result.singles);
@@ -155,7 +156,12 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         }
 
         if (result.unusedPlayers.length > 0) {
-            notification.notifyWarning("Es konnten nicht alle Spieler eingeteilt werden. Bitte überprüfen Sie die Anzahl der Spieler und Plätze.");
+            if (result.unusedPlayers.length === 1) {
+                notification.notifyWarning(`[${result.unusedPlayers[0].player?.firstname} ${result.unusedPlayers[0].player?.lastname}] pausiert in dieser Runde.`);
+            }
+            else {
+                notification.notifyWarning(`Die Spieler [${result.unusedPlayers.map((p) => p.player?.firstname + " " + p.player?.lastname).join(", ")}] pausieren in dieser Runde.`);
+            }
         }
         if (matches.length > 0) {
             notification.notifySuccess("Paarungen erfolgreich erstellt.");
