@@ -63,7 +63,7 @@ export class SeasonService {
         await database.execute(`UPDATE ${tableName} SET settings=? WHERE id=?`, [JSON.stringify(settings), seasonId]);
     }
 
-    public async getSettings(seasonId: string): Promise<Setting> {
+    public async getSettings(): Promise<Setting> {
         var season = await this.getCurrentSeason();
         return season?.settings ?? new Setting();
     }

@@ -1,4 +1,4 @@
-import { Box, TextField } from "@mui/material";
+import { Box } from "@mui/material";
 import { Match } from "../model/Match";
 import { useEffect, useState } from "react";
 import tennisCourtUrl from "../assets/tennis_court.svg";
@@ -38,33 +38,33 @@ const playerStyle = (position: { top: string; left?: string; right?: string }) =
 // });
 
 
-const fadeRight = {
-    position: "relative",
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    '&::after': {
-        content: '""',
-        position: "absolute",
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: "30px",
-        background: "linear-gradient(to right, transparent, white)",
-        pointerEvents: "none",
-    },
-};
+// const fadeRight = {
+//     position: "relative",
+//     overflow: "hidden",
+//     whiteSpace: "nowrap",
+//     textOverflow: "ellipsis",
+//     '&::after': {
+//         content: '""',
+//         position: "absolute",
+//         top: 0,
+//         right: 0,
+//         bottom: 0,
+//         width: "30px",
+//         background: "linear-gradient(to right, transparent, white)",
+//         pointerEvents: "none",
+//     },
+// };
 
 export const CourtView: React.FC<CourtViewProps> = (props) => {
 
-    const { roundId, court, match } = props;
+    const { court, match } = props;
 
     const notification = useNotification();
     const { season } = useSeason();
 
     if (!season) return <></>;
 
-    const [result, setResult] = useState<string>("");
+    // const [result, setResult] = useState<string>("");
     const [players, setPlayers] = useState<Player[]>([]);
 
     const playerService = new PlayerService(season.id, notification);
@@ -80,14 +80,14 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     }
         , []);
 
-    const resultChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // const resultChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
 
-        const val = e.target.value;
-        // if (/^(\d{1,2}:\d{1,2})?$/.test(val)) {
-        //     setResult(val);
-        // }
-        setResult(val);
-    };
+    //     const val = e.target.value;
+    //     // if (/^(\d{1,2}:\d{1,2})?$/.test(val)) {
+    //     //     setResult(val);
+    //     // }
+    //     setResult(val);
+    // };
 
     const getPlayerName = (playerId: string): string => {
         const player = players.find(p => p.id === playerId);
@@ -107,7 +107,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         return sets.join(" ");
     }
 
-    const getMatchSkill = (match: Match | undefined, type: "home" | "away"): string => {
+    const getMatchSkill = (match: Match | undefined): string => {
         if (!match) return "";
 
         if (match.type === "double") {
@@ -193,7 +193,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                             alignItems: "center",
                             fontSize: "14px"
                         }}
-                    >{getMatchSkill(match!, "home")}</Box>
+                    >{getMatchSkill(match!)}</Box>
 
                 </>
             )}

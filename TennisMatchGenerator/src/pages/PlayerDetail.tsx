@@ -12,10 +12,10 @@ import { RoutePath } from "../model/RoutePath";
 interface PlayerDetailProps {
 }
 
-interface GenderOption {
-    value: 'male' | 'female' | 'diverse';
-    label: string;
-}
+// interface GenderOption {
+//     value: 'male' | 'female' | 'diverse';
+//     label: string;
+// }
 
 const genderOptions = [
     { value: 'male', label: 'Männlich' },

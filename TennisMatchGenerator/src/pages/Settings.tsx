@@ -24,7 +24,7 @@ export const Settings: React.FC = () => {
     const seasonService = new SeasonService();
 
     const init = async () => {
-        const settings = await seasonService.getSettings(season.id);
+        const settings = await seasonService.getSettings();
         setFormData(settings);
         setSelectedCourts(settings.availableCourts);
     }
@@ -84,7 +84,7 @@ export const Settings: React.FC = () => {
                 <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
                 <ToggleButtonGroup
                     value={selectedCourts}
-                    onChange={(e, newSelection) => setSelectedCourts(newSelection)}
+                    onChange={(_e, newSelection) => setSelectedCourts(newSelection)}
                 >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((court) => (
                         <ToggleButton key={court} value={court} sx={{

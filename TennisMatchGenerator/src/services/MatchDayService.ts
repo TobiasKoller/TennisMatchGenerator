@@ -141,4 +141,9 @@ export class MatchDayService extends ServiceBase {
         if (rounds.length === 0) return null;
         return rounds[0];
     }
+
+    async updateUsedCourts(roundId: string, courts: number[]) {
+        const database = await db;
+        await database.execute(`UPDATE ${tableNameRound} SET courts=? WHERE id=?`, [JSON.stringify(courts), roundId]);
+    }
 }

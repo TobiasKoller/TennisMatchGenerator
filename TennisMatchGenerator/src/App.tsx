@@ -14,7 +14,6 @@ import { SideMenu } from "./components/SideMenu";
 import AppBar from "@mui/material/AppBar";
 import Typography from "@mui/material/Typography";
 import { MatchDays } from "./pages/MatchDays";
-import { CustomBreadcrumbs } from "./components/Breadcrumbs";
 import { useSeason } from "./context/SeasonContext";
 import { WaitScreen } from "./pages/WaitScreen";
 import { MatchDayDetail } from "./pages/MatchDayDetail";
@@ -26,32 +25,62 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
 import { useNotification } from "./provider/NotificationProvider";
+import { AppService } from "./services/AppService";
 
 export default function App() {
-
-
-  let { season } = useSeason();
-  if (!season) {
-    return <WaitScreen />; // oder ein Lade-Spinner
-  }
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigateHook = useNavigate();
   const notification = useNotification();
+  const [dbInitialized, setDbInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  let { season } = useSeason();
+  if (!season) return <WaitScreen message="Saison wird geladen..." />;
+
+  var appService = new AppService(notification);
+
+  useEffect(() => {
+    async function init() {
+      if (season && !dbInitialized) {
+        if (!await appService.isDbInitialized()) {
+          notification.notifySuccess("Datenbank wird initialisiert...");
+          await appService.initializeDb();
+          notification.notifySuccess("Datenbank erfolgreich eingerichtet.");
+        }
+        setDbInitialized(true);
+      }
+      setIsLoading(false); // Setze auf false, wenn alles initialisiert ist
+    }
+    init();
+  }, [season, dbInitialized]);
+
+  // Zeige Loading-Bildschirm, wenn noch geladen wird
+  if (isLoading || !season) {
+    return <WaitScreen message="Anwendung wird initialisiert..." />;
+  }
+
+
+
+  var matchDayService = new MatchDayService(season.id, notification);
 
 
   useEffect(() => {
     // Immer wenn sich die Route ändert -> Sidebar schließen
     setSidebarOpen(false);
+
   }, [location]);
 
-  var matchDayService = new MatchDayService(season.id, notification);
+  // useEffect(() => {
+  //   init();
+  // }, []);
 
   const openCurrentMatchday = async () => {
     var matchDay = await matchDayService.getActiveMatchDay();
     navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
   };
+
 
 
   return (

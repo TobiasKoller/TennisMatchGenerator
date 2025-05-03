@@ -10,6 +10,6 @@ export class MatchDayRound {
     EndDate: Date | null = null;
     matches?: Match[] = [];
     players?: MatchDayRoundPlayer[] = [];
-    courts: string[] = [];
+    courts: number[] = [];
     isActive: boolean = false;
 }

@@ -15,9 +15,9 @@ import { SeasonService } from "../services/SeasonService";
 import { Setting } from "../model/Setting";
 import LockOutlineIcon from '@mui/icons-material/LockOutline';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import AddIcon from '@mui/icons-material/Add';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { MatchGenerator } from "../services/MatchGenerator.ts";
+import { MatchDayService } from "../services/MatchDayService.ts";
 
 type OptionType = {
     value: string;
@@ -48,11 +48,12 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [selectionChanged, setSelectionChanged] = useState(false);
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
-    const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
+    const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
 
     const playerService = new PlayerService(season.id, notification);
+    const matchDayService = new MatchDayService(season.id, notification);
 
     const fetchAllPlayers = async () => {
         try {
@@ -87,7 +88,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const fetchSettings = async () => {
         const seasonService = new SeasonService();
-        const settings = await seasonService.getSettings(season.id);
+        const settings = await seasonService.getSettings();
         setSettings(settings);
     }
 
@@ -95,6 +96,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
         await fetchSettings();
+
     }
 
 
@@ -108,6 +110,10 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             setSelectionChanged(false); // Reset
         }
     }, [selectedPlayers, selectionChanged]);
+
+    useEffect(() => {
+        matchDayService.updateUsedCourts(round.id, selectedCourts);
+    }, [selectedCourts])
 
     const onSelectionClosed = async () => {
         const selectedPlayerIds = selectedPlayers.map((player) => player.value);
@@ -135,7 +141,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         }
     }
 
-    const courtSelectionChanged = (event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
+    const courtSelectionChanged = (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
         var sorted = newCourts.sort((a, b) => a - b);
         setSelectedCourts(sorted);
     };

@@ -1,10 +1,13 @@
 
+interface WaitScreenProps {
+    message?: string;
+}
 
-export const WaitScreen: React.FC = () => {
+export const WaitScreen: React.FC<WaitScreenProps> = (props) => {
 
     return (
         <div>
-            Please wait ...
+            {props.message || "Bitte warten..."}
         </div>
     );
 }

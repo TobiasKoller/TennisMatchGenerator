@@ -5,7 +5,6 @@ import { db } from "../db/Db";
 import { INotificationService } from "../provider/NotificationProvider";
 import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
-import Database from "@tauri-apps/plugin-sql";
 
 const tableNamePlayer = "player" as const;
 const tableNameRoundPlayer = "round_player" as const;

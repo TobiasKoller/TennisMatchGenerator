@@ -1,5 +1,4 @@
 import { Match } from "../model/Match";
-import { MatchDay } from "../model/Matchday";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
 import { v4 as uuidv4 } from "uuid";
 import { MatchResult } from "../model/MatchResult";
@@ -36,8 +35,7 @@ export class MatchGenerator {
     // usedPlayerIds = [...usedPlayerIds, ...this.getUsedPlayerIds(pairsBC)];
     // const allPairs = this.shuffleArray([...pairsAB, ...pairsBC]);
     const allPairs = this.generatePairs(groupA, groupB, groupC);
-    const usedPlayerIds = this.getUsedPlayerIds(allPairs);
-    // const usedPlayerIds = new Set<string>();
+    const usedPlayerIds: string[] = [];
     const doubleMatches: Match[] = [];
     const singleMatches: Match[] = [];
 
@@ -52,6 +50,7 @@ export class MatchGenerator {
         const team1 = allPairs.pop()!;//allPairs[i];
         const team2 = allPairs.pop()!;//allPairs[i + 1];
 
+        usedPlayerIds.push(team1.player1id, team1.player2id, team2.player1id, team2.player2id);
         const match = new Match();
         match.id = uuidv4(); // Assuming you have a function to generate unique IDs
         match.roundId = roundId;
@@ -68,7 +67,7 @@ export class MatchGenerator {
       }
       else if (allPairs.length == 1) {
         const team1 = allPairs.pop()!;//allPairs[i];
-
+        usedPlayerIds.push(team1.player1id, team1.player2id);
         const match = new Match();
         match.id = uuidv4(); // Assuming you have a function to generate unique IDs
         match.roundId = roundId;
