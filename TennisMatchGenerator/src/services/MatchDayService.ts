@@ -100,10 +100,10 @@ export class MatchDayService extends ServiceBase {
         await database.execute(`UPDATE matchday SET is_active=1 WHERE id=?`, [matchdayId]);
     }
 
-    async getActiveMatchDay(): Promise<MatchDay> {
+    async getActiveMatchDay(): Promise<MatchDay | null> {
         const database = await db;
         const records = await safeSelect<MatchDay>(database, MatchDayColumns, tableNameMatchDay, `where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]) //database.select<MatchDay>(`SELECT id,date,is_active as isActive FROM matchday where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]);
-        if (records.length === 0) throw this.notifyError("Konnte keinen aktiven Spieltag finden.");
+        if (records.length === 0) return null;
         return this.getMatchDayById(records[0].id);
     }
 

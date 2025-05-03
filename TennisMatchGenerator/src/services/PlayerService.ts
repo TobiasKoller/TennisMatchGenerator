@@ -92,7 +92,7 @@ export class PlayerService extends ServiceBase {
 
         player.id = uuidv4();
         const database = await db;
-        await database.execute(`INSERT INTO ${tableNamePlayer} (id,firstname,lastname,age,skill_rating, gender,is_active,season_id) VALUES (?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.gender, player.isActive, this.seasonId]);
+        await database.execute(`INSERT INTO ${tableNamePlayer} (id,firstname,lastname,age,skill_rating, gender,is_active,season_id) VALUES (?,?,?,?,?,?,?,?)`, [player.id, player.firstname, player.lastname, player.age, player.skillRating, player.gender, player.isActive, this.seasonId]);
 
         return player.id;
     }

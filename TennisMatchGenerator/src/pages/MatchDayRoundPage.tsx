@@ -18,6 +18,7 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { MatchGenerator } from "../services/MatchGenerator.ts";
 import { MatchDayService } from "../services/MatchDayService.ts";
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 
 type OptionType = {
     value: string;
@@ -51,6 +52,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
+    const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
 
     const playerService = new PlayerService(season.id, notification);
     const matchDayService = new MatchDayService(season.id, notification);
@@ -177,6 +179,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     };
 
+    const toggleRoundState = async () => {
+        setRoundStarted(!roundStarted);
+    }
 
     return (
         <Box
@@ -294,7 +299,14 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                             ))}
                         </ToggleButtonGroup>
                     </Box>
-
+                    <Button
+                        color="success"
+                        variant="outlined"
+                        startIcon={<ViewInArIcon />}
+                        onClick={createMatches}
+                    >
+                        Paarungen ermitteln
+                    </Button>
                     <Box flexGrow={1} />
                     {!isActive && (
                         <Button
@@ -307,15 +319,17 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         </Button>
 
                     )}
+                    {isActive && matches.length > 0 && (
+                        <Button
+                            color={roundStarted ? "error" : "success"}
+                            variant="contained"
+                            startIcon={<PlayCircleFilledWhiteIcon />}
+                            onClick={() => toggleRoundState()}
+                        >
+                            {roundStarted ? "Runde beenden" : "Runde starten"}
+                        </Button>
+                    )}
 
-                    <Button
-                        color="success"
-                        variant="contained"
-                        startIcon={<ViewInArIcon />}
-                        onClick={createMatches}
-                    >
-                        Paarungen ermitteln
-                    </Button>
                 </Stack>
                 <CourtsView round={round} courts={selectedCourts} matches={matches} />
             </Box>

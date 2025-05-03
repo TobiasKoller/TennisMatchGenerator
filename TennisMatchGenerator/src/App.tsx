@@ -33,38 +33,8 @@ export default function App() {
   const location = useLocation();
   const navigateHook = useNavigate();
   const notification = useNotification();
-  const [dbInitialized, setDbInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   let { season } = useSeason();
-  if (!season) return <WaitScreen message="Saison wird geladen..." />;
-
-  var appService = new AppService(notification);
-
-  useEffect(() => {
-    async function init() {
-      if (season && !dbInitialized) {
-        if (!await appService.isDbInitialized()) {
-          notification.notifySuccess("Datenbank wird initialisiert...");
-          await appService.initializeDb();
-          notification.notifySuccess("Datenbank erfolgreich eingerichtet.");
-        }
-        setDbInitialized(true);
-      }
-      setIsLoading(false); // Setze auf false, wenn alles initialisiert ist
-    }
-    init();
-  }, [season, dbInitialized]);
-
-  // Zeige Loading-Bildschirm, wenn noch geladen wird
-  if (isLoading || !season) {
-    return <WaitScreen message="Anwendung wird initialisiert..." />;
-  }
-
-
-
-  var matchDayService = new MatchDayService(season.id, notification);
-
 
   useEffect(() => {
     // Immer wenn sich die Route ändert -> Sidebar schließen
@@ -72,13 +42,17 @@ export default function App() {
 
   }, [location]);
 
-  // useEffect(() => {
-  //   init();
-  // }, []);
+  // Zeige Loading-Bildschirm, wenn noch geladen wird
+  if (!season) {
+    return <WaitScreen message="Anwendung wird initialisiert..." />;
+  }
+
+  var matchDayService = new MatchDayService(season!.id, notification);
 
   const openCurrentMatchday = async () => {
     var matchDay = await matchDayService.getActiveMatchDay();
-    navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
+    if (!matchDay) navigateHook(`/${RoutePath.MATCHDAYS.path}`);
+    else navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
   };
 
 
@@ -115,7 +89,7 @@ export default function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" noWrap component="div">
-              Tennis Action - {season.description}
+              Tennis Action - {season!.description}
             </Typography>
             <Box sx={{ ml: "auto" }}>
               <Tooltip title="Aktuelle Tabelle" arrow >

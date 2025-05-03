@@ -4,15 +4,18 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import { NotificationProvider } from "./provider/NotificationProvider";
 import { SeasonProvider } from "./context/SeasonContext";
+import DatabaseInitializer from "./db/DatabaseInitializer";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
-      <SeasonProvider>
-        <NotificationProvider>
-          <App />
-        </NotificationProvider>
-      </SeasonProvider>
+      <NotificationProvider>
+        <DatabaseInitializer>
+          <SeasonProvider>
+            <App />
+          </SeasonProvider>
+        </DatabaseInitializer>
+      </NotificationProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

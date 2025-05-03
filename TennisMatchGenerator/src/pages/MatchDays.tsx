@@ -7,6 +7,8 @@ import { useNotification } from '../provider/NotificationProvider';
 import { useSeason } from '../context/SeasonContext';
 import { useEffect, useState } from 'react';
 import { MatchDay } from '../model/Matchday';
+import { useNavigate } from 'react-router-dom';
+import { RoutePath } from '../model/RoutePath';
 
 interface MatchDaysProps {
 }
@@ -17,6 +19,7 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
     const { season } = useSeason();
     const notification = useNotification();
     const [matchDays, setMatchDays] = useState<MatchDay[]>([]); // Zustand für die Spieltage
+    const navigateHook = useNavigate();
     if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
     const matchDayService = new MatchDayService(season.id, notification);
@@ -32,8 +35,8 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
 
 
     const addMatchDay = async () => {
-        await matchDayService.createMatchDay();
-        fetchMatchDays();
+        const id = await matchDayService.createMatchDay();
+        navigateHook(`/${RoutePath.MATCHDAYS.path}/${id}`);
     };
 
     const getMatchDayTitle = (matchDay: MatchDay) => {
@@ -65,6 +68,9 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
                             </Paper>
                         </ListItem>
                     ))}
+                    {matchDays.length === 0 && (
+                        <Typography variant="h6">Keine Spieltage gefunden.</Typography>
+                    )}
                 </List>
             </Stack>
         </CustomPaper>
