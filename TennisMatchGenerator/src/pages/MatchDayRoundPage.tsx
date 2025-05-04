@@ -19,6 +19,8 @@ import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import { MatchGenerator } from "../services/MatchGenerator.ts";
 import { MatchDayService } from "../services/MatchDayService.ts";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
+import { MatchDayRoundContext } from "../context/MatchDayRoundContext.tsx";
+import { ConfirmDialog } from "../components/ConfirmDialog.tsx";
 
 type OptionType = {
     value: string;
@@ -53,6 +55,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
     const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
+    const [markedPlayers, setMarkedPlayers] = useState<string[]>([]);
+    const [showSwitchPlayerDialog, setSwitchPlayerDialog] = useState(false);
 
     const playerService = new PlayerService(season.id, notification);
     const matchDayService = new MatchDayService(season.id, notification);
@@ -116,6 +120,12 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     useEffect(() => {
         matchDayService.updateUsedCourts(round.id, selectedCourts);
     }, [selectedCourts])
+
+    useEffect(() => {
+        if (markedPlayers.length === 2) {
+            switchPlayers();
+        }
+    }, [markedPlayers]);
 
     const onSelectionClosed = async () => {
         const selectedPlayerIds = selectedPlayers.map((player) => player.value);
@@ -183,6 +193,53 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         setRoundStarted(!roundStarted);
     }
 
+    const isSelectedPlayer = (playerId: string) => {
+        return markedPlayers.includes(playerId);
+    }
+
+    const togglePlayerSelection = (playerId: string) => {
+        if (markedPlayers.length >= 2 && !isSelectedPlayer(playerId)) return;
+
+        if (isSelectedPlayer(playerId)) {
+            setMarkedPlayers(markedPlayers.filter(id => id !== playerId));
+        } else {
+            setMarkedPlayers([...markedPlayers, playerId]);
+        }
+    }
+
+    const switchPlayers = () => {
+        if (markedPlayers.length !== 2) return;
+        const [player1Id, player2Id] = markedPlayers;
+
+
+
+        var updatedMatches = matches.map((match) => {
+            const newMatch = { ...match };
+
+            // Für alle 4 Spieler-Positionen prüfen und ggf. tauschen
+            for (const key of ['player1HomeId', 'player2HomeId', 'player1GuestId', 'player2GuestId'] as const) {
+                if (newMatch[key] === player1Id) {
+                    newMatch[key] = player2Id;
+                } else if (newMatch[key] === player2Id) {
+                    newMatch[key] = player1Id;
+                }
+            }
+            return newMatch;
+        });
+
+        setMatches([...updatedMatches]);
+        setMarkedPlayers([]);
+        setSwitchPlayerDialog(false);
+    };
+
+    // const onSwitchPlayerDialogCanceled = () => {
+    //     setMarkedPlayers([]);
+    //     setSwitchPlayerDialog(false);
+    // }
+
+
+
+
     return (
         <Box
             sx={{
@@ -236,7 +293,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     {selectedPlayers.map((player) => (
                         <Box key={player.value} sx={{ marginBottom: 1 }}>
                             <Chip
-
+                                onClick={() => togglePlayerSelection(player.value)}
                                 label={
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         {getGenderIcon(player.value)}
@@ -247,14 +304,17 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                     const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== player.value);
                                     setSelectedPlayers(newSelectedPlayers);
                                     setSelectionChanged(true);
-                                }
-                                }
+                                }}
+
+
                                 sx={{
                                     width: '100%',
+                                    cursor: 'pointer',
                                     justifyContent: 'space-between', // <<< Abstand zwischen Text und "X"
                                     borderRadius: 0, // Kantig
                                     paddingLeft: 1, // Etwas Abstand nach links
                                     paddingRight: 0, // Minimiert Abstand rechts für "X"
+                                    backgroundColor: isSelectedPlayer(player.value) ? "rgba(0, 146, 19, 0.8)" : "rgba(255, 255, 255, 0.8)"
                                 }}
                             />
                         </Box>
@@ -331,8 +391,13 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     )}
 
                 </Stack>
-                <CourtsView round={round} courts={selectedCourts} matches={matches} />
+                <MatchDayRoundContext.Provider value={{ togglePlayerSelection, isSelectedPlayer }}>
+                    <CourtsView round={round} courts={selectedCourts} matches={matches} />
+                </MatchDayRoundContext.Provider>
             </Box>
+
+            {/* <ConfirmDialog open={showSwitchPlayerDialog} onClose={onSwitchPlayerDialogCanceled} onConfirm={switchPlayers} question="Willst du die Spieler jetzt wechseln?" /> */}
+
         </Box >
 
     );

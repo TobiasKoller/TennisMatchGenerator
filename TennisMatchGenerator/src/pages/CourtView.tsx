@@ -1,12 +1,15 @@
-import { Box } from "@mui/material";
+import { Box, IconButton, TextField } from "@mui/material";
 import { Match } from "../model/Match";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import tennisCourtUrl from "../assets/tennis_court.svg";
-import { Set } from "../model/Set";
 import { PlayerService } from "../services/PlayerService";
 import { useSeason } from "../context/SeasonContext";
 import { useNotification } from "../provider/NotificationProvider";
 import { Player } from "../model/Player";
+import CheckIcon from "@mui/icons-material/Check";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useMatch } from "react-router-dom";
+import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
 
 interface CourtViewProps {
     roundId: string;
@@ -14,16 +17,7 @@ interface CourtViewProps {
     match: Match | null;
 
 }
-const playerStyle = (position: { top: string; left?: string; right?: string }) => ({
-    position: "absolute",
-    ...position,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    color: "black",
-    padding: "2px 6px",
-    borderRadius: "8px",
-    fontSize: "12px",
-    fontWeight: 500,
-});
+
 
 // const playerStyle = (position: { top: string; left?: string; right?: string }) => ({
 //     position: "absolute",
@@ -61,11 +55,28 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
     const notification = useNotification();
     const { season } = useSeason();
+    const matchDayRoundContext = useContext(MatchDayRoundContext);
 
-    if (!season) return <></>;
+    if (!season || !matchDayRoundContext) return <></>;
+    const { togglePlayerSelection, isSelectedPlayer } = matchDayRoundContext!;
 
     // const [result, setResult] = useState<string>("");
     const [players, setPlayers] = useState<Player[]>([]);
+    const [editResult, setEditResult] = useState(false);
+    const [scoreHome, setScoreHome] = useState(match?.set1.homeGames ?? 0);
+    const [scoreGuest, setScoreGuest] = useState(match?.set1.guestGames ?? 0);
+
+    const playerStyle = (position: { top: string; left?: string; right?: string, isMarked: boolean }): {} => ({
+        position: "absolute",
+        ...position,
+        cursor: "pointer",
+        backgroundColor: position.isMarked ? "rgba(0, 146, 19, 0.8)" : "rgba(255, 255, 255, 0.8)",
+        color: "black",
+        padding: "2px 6px",
+        borderRadius: "2px",
+        fontSize: "12px",
+        fontWeight: 500,
+    });
 
     const playerService = new PlayerService(season.id, notification);
 
@@ -77,35 +88,28 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
     useEffect(() => {
         init();
-    }
-        , []);
+    }, []);
 
-    // const resultChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
 
-    //     const val = e.target.value;
-    //     // if (/^(\d{1,2}:\d{1,2})?$/.test(val)) {
-    //     //     setResult(val);
-    //     // }
-    //     setResult(val);
-    // };
+    const handleInput = (value: string, setter: (v: number) => void) => {
+        if (/^\d{0,2}$/.test(value)) {
+            const parsed = parseInt(value, 10);
+            setter(isNaN(parsed) ? 0 : parsed);
+        }
+    };
+
+    const saveResult = () => {
+        match!.set1.homeGames = scoreHome;
+        match!.set1.guestGames = scoreGuest;
+
+        setEditResult(false);
+    };
 
     const getPlayerName = (playerId: string): string => {
         const player = players.find(p => p.id === playerId);
-        return player ? `${player.firstname} ${player.lastname}` : "Unbekannt";
+        return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "Unbekannt";
     }
 
-    const isSetFinished = (set: Set): boolean => {
-        return set.homeGames === 6 && set.awayGames < 5 ||
-            set.awayGames === 6 && set.homeGames < 5 ||
-            set.homeGames >= 7 && set.awayGames < 6 ||
-            set.awayGames >= 7 && set.homeGames < 6;
-    }
-
-    const formatResult = (match: Match): string => {
-        var sets = [`${match.set1.homeGames}:${match.set1.awayGames}`];
-        if (isSetFinished(match.set1)) { sets.push(`${match.set2.homeGames}:${match.set2.awayGames}`); }
-        return sets.join(" ");
-    }
 
     const getMatchSkill = (match: Match | undefined): string => {
         if (!match) return "";
@@ -137,6 +141,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     }
 
 
+
     return (
         <Box sx={{ position: "relative", width: 300, height: 200 }}>
             {/* Court-Bild */}
@@ -147,40 +152,89 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
             {match && match.type === "double" && (<>
                 {/* Team A (links) */}
-                <Box sx={playerStyle({ top: "28%", left: "5%" })}>{getPlayerName(match.player1HomeId)}</Box> {/* vorne */}
-                <Box sx={playerStyle({ top: "60%", left: "5%" })}>{getPlayerName(match.player2HomeId)}</Box> {/* hinten */}
+                <Box sx={playerStyle({ top: "28%", left: "5%", isMarked: isSelectedPlayer(match.player1HomeId) })} onClick={() => togglePlayerSelection(match.player1HomeId)}>{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "60%", left: "5%", isMarked: isSelectedPlayer(match.player2HomeId) })} onClick={() => togglePlayerSelection(match.player2HomeId)}>{getPlayerName(match.player2HomeId)}</Box>
 
                 {/* Team B (rechts) */}
-                <Box sx={playerStyle({ top: "28%", right: "5%" })}>{getPlayerName(match.player1GuestId)}</Box> {/* vorne */}
-                <Box sx={playerStyle({ top: "60%", right: "5%" })}>{getPlayerName(match.player2GuestId)}</Box> {/* hinten */}
+                <Box sx={playerStyle({ top: "28%", right: "5%", isMarked: isSelectedPlayer(match.player1GuestId) })} onClick={() => togglePlayerSelection(match.player1GuestId)}>{getPlayerName(match.player1GuestId)}</Box>
+                <Box sx={playerStyle({ top: "60%", right: "5%", isMarked: isSelectedPlayer(match.player2GuestId) })} onClick={() => togglePlayerSelection(match.player2GuestId)}>{getPlayerName(match.player2GuestId)}</Box>
             </>
             )}
             {match && match.type === "single" && (<>
                 {/* Einzelspieler */}
-                <Box sx={playerStyle({ top: "28%", left: "10%" })}>{getPlayerName(match.player1HomeId)}</Box>
-                <Box sx={playerStyle({ top: "60%", right: "10%" })}>{getPlayerName(match.player1GuestId)}</Box>
+                <Box sx={playerStyle({ top: "28%", left: "10%", isMarked: isSelectedPlayer(match.player1HomeId) })} onClick={() => togglePlayerSelection(match.player1HomeId)}>{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "60%", right: "10%", isMarked: isSelectedPlayer(match.player1GuestId) })} onClick={() => togglePlayerSelection(match.player1GuestId)}>{getPlayerName(match.player1GuestId)}</Box>
             </>
             )}
-            {match && (
-                <Box
+            {match && !editResult && (
+                <Box onClick={() => { setEditResult(true) }}
                     sx={{
+                        cursor: "pointer",
                         position: "absolute",
                         top: "50%",
                         left: "50%",
                         transform: "translate(-50%, -50%)",
                         backgroundColor: "rgba(255, 255, 255, 0.8)",
                         padding: "4px 12px",
-                        borderRadius: 4,
+                        borderRadius: 2,
+                        border: "2px solid rgba(0, 0, 0, 0.6)",
                         fontWeight: "bold",
                     }}
                 >
-                    {formatResult(match)}  </Box>
+                    {scoreHome}:{scoreGuest}  </Box>
 
             )}
+            {match && editResult && (
+                <Box
+                    sx={{
+                        position: "absolute",
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: 8,
+                        display: "flex", // Zentrierung aktivieren
+                        alignItems: "center", // vertikal zentrieren
+                        justifyContent: "center", // horizontal zentrieren
+                    }}
+                >
+                    <Box display="flex" alignItems="center" gap={1} sx={{ backgroundColor: "white", padding: 1, borderRadius: 1 }}>
+                        <TextField
+                            variant="outlined"
+                            size="small"
+                            value={scoreHome}
+                            onChange={(e) => handleInput(e.target.value, setScoreHome)}
+                            inputProps={{
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                                maxLength: 2,
+                                style: { textAlign: "center", width: "2ch" },
+                            }}
+                        />
+                        <Box>:</Box>
+                        <TextField
+                            variant="outlined"
+                            size="small"
+                            value={scoreGuest}
+                            onChange={(e) => handleInput(e.target.value, setScoreGuest)}
+                            inputProps={{
+                                inputMode: "numeric",
+                                pattern: "[0-9]*",
+                                maxLength: 2,
+                                style: { textAlign: "center", width: "2ch" },
+                            }}
+                        />
+                        <IconButton onClick={saveResult} size="small" color="primary">
+                            <CheckIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+                </Box>
+            )}
+
             {match && (
                 <>
                     <Box
                         sx={{
+                            cursor: "pointer",
                             position: "absolute",
                             top: -2,
                             left: 10,
@@ -198,7 +252,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 </>
             )}
             {!match && (
-                <Box sx={playerStyle({ top: "50%", left: "30%" })}>Keine Begegnung</Box>
+                <Box sx={playerStyle({ top: "45%", left: "30%", isMarked: false })}>Keine Begegnung</Box>
             )}
 
             <Box
