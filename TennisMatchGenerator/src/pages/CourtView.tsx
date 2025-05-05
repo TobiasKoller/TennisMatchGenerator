@@ -7,9 +7,9 @@ import { useSeason } from "../context/SeasonContext";
 import { useNotification } from "../provider/NotificationProvider";
 import { Player } from "../model/Player";
 import CheckIcon from "@mui/icons-material/Check";
-import { ConfirmDialog } from "../components/ConfirmDialog";
-import { useMatch } from "react-router-dom";
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
+import { MatchDayService } from "../services/MatchDayService";
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 interface CourtViewProps {
     roundId: string;
@@ -17,37 +17,6 @@ interface CourtViewProps {
     match: Match | null;
 
 }
-
-
-// const playerStyle = (position: { top: string; left?: string; right?: string }) => ({
-//     position: "absolute",
-//     ...position,
-//     backgroundColor: "rgba(0,0,0,0.6)",
-//     color: "white",
-//     padding: "2px 6px",
-//     borderRadius: "6px",
-//     fontSize: "12px",
-//     whiteSpace: "nowrap",
-//     textAlign: "center",
-// });
-
-
-// const fadeRight = {
-//     position: "relative",
-//     overflow: "hidden",
-//     whiteSpace: "nowrap",
-//     textOverflow: "ellipsis",
-//     '&::after': {
-//         content: '""',
-//         position: "absolute",
-//         top: 0,
-//         right: 0,
-//         bottom: 0,
-//         width: "30px",
-//         background: "linear-gradient(to right, transparent, white)",
-//         pointerEvents: "none",
-//     },
-// };
 
 export const CourtView: React.FC<CourtViewProps> = (props) => {
 
@@ -63,8 +32,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     // const [result, setResult] = useState<string>("");
     const [players, setPlayers] = useState<Player[]>([]);
     const [editResult, setEditResult] = useState(false);
-    const [scoreHome, setScoreHome] = useState(match?.set1.homeGames ?? 0);
-    const [scoreGuest, setScoreGuest] = useState(match?.set1.guestGames ?? 0);
+    const [scoreHome, setScoreHome] = useState(0);
+    const [scoreGuest, setScoreGuest] = useState(0);
 
     const playerStyle = (position: { top: string; left?: string; right?: string, isMarked: boolean }): {} => ({
         position: "absolute",
@@ -79,12 +48,20 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     });
 
     const playerService = new PlayerService(season.id, notification);
+    const matchDayService = new MatchDayService(season.id, notification);
 
     const init = async () => {
         // Hier können Sie die Spieler laden und den Zustand aktualisieren
         const players = await playerService.getAllPlayers();
         setPlayers(players);
     }
+
+    useEffect(() => {
+        if (match?.set1) {
+            setScoreHome(match.set1.homeGames ?? 0);
+            setScoreGuest(match.set1.guestGames ?? 0);
+        }
+    }, [match]);
 
     useEffect(() => {
         init();
@@ -98,9 +75,10 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         }
     };
 
-    const saveResult = () => {
+    const saveResult = async () => {
         match!.set1.homeGames = scoreHome;
         match!.set1.guestGames = scoreGuest;
+        await matchDayService.updateMatch(match!);
 
         setEditResult(false);
     };
@@ -116,13 +94,10 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
         if (match.type === "double") {
 
-
             const homePlayer1 = players.find(p => p.id === match.player1HomeId);
             const homePlayer2 = players.find(p => p.id === match.player2HomeId);
             const guestPlayer1 = players.find(p => p.id === match.player1GuestId);
             const guestPlayer2 = players.find(p => p.id === match.player2GuestId);
-
-
 
             var skill1 = (homePlayer1?.skillRating ?? 0) + (homePlayer2?.skillRating ?? 0);
             var skill2 = (guestPlayer1?.skillRating ?? 0) + (guestPlayer2?.skillRating ?? 0);
@@ -137,13 +112,14 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
             return `Leistung ${skill1} vs ${skill2}`;
         }
-
     }
 
-
-
     return (
-        <Box sx={{ position: "relative", width: 300, height: 200 }}>
+        <Box sx={{
+            position: "relative", width: 300, height: 200, '&:hover .delete-icon': {
+                opacity: 1,
+            },
+        }}>
             {/* Court-Bild */}
             <img
                 src={tennisCourtUrl}
@@ -191,7 +167,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                         backgroundColor: "rgba(0,0,0,0.7)",
                         width: "100%",
                         height: "100%",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         display: "flex", // Zentrierung aktivieren
                         alignItems: "center", // vertikal zentrieren
                         justifyContent: "center", // horizontal zentrieren
@@ -273,6 +249,29 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 }}
             >
                 {court}
+            </Box>
+            <Box
+                className="delete-icon"
+                sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: "rgba(219, 0, 0, 0.8)",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: 28,
+                    height: 28,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    opacity: 0,
+                    transition: "opacity 0.2s",
+                }}
+            >
+                <DeleteForeverIcon fontSize="small" />
             </Box>
         </Box >
     )

@@ -57,12 +57,6 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         await fetchRounds();
     }
 
-
-    useEffect(() => {
-    }, [enabledRoundIds]);
-
-
-
     useEffect(() => {
         init();
     }, []);

@@ -20,7 +20,7 @@ import { MatchGenerator } from "../services/MatchGenerator.ts";
 import { MatchDayService } from "../services/MatchDayService.ts";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext.tsx";
-import { ConfirmDialog } from "../components/ConfirmDialog.tsx";
+import { Match } from "../model/Match.ts";
 
 type OptionType = {
     value: string;
@@ -56,7 +56,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const isActive = props.isActive; // Zustand für die aktiven Runden
     const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
     const [markedPlayers, setMarkedPlayers] = useState<string[]>([]);
-    const [showSwitchPlayerDialog, setSwitchPlayerDialog] = useState(false);
 
     const playerService = new PlayerService(season.id, notification);
     const matchDayService = new MatchDayService(season.id, notification);
@@ -98,12 +97,18 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         setSettings(settings);
     }
 
+    const fetchMatches = async () => {
+        const currentMatches = await matchDayService.getMatchesByRoundId(round.id);
+        setMatches(currentMatches);
+    }
+
     const init = async () => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
         await fetchSettings();
-
+        await fetchMatches();
     }
+
 
 
     useEffect(() => {
@@ -185,11 +190,12 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
             notification.notifySuccess("Paarungen erfolgreich erstellt.");
         }
 
-        setMatches(matches);
-
+        await matchDayService.saveMatches(round.id, matches);
+        await fetchMatches();
     };
 
     const toggleRoundState = async () => {
+
         setRoundStarted(!roundStarted);
     }
 
@@ -212,32 +218,55 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         const [player1Id, player2Id] = markedPlayers;
 
 
-
-        var updatedMatches = matches.map((match) => {
+        var updatedMatches: Match[] = [];
+        var currentMatches = matches.map((match) => {
             const newMatch = { ...match };
 
             // Für alle 4 Spieler-Positionen prüfen und ggf. tauschen
             for (const key of ['player1HomeId', 'player2HomeId', 'player1GuestId', 'player2GuestId'] as const) {
+                let updated = false;
                 if (newMatch[key] === player1Id) {
                     newMatch[key] = player2Id;
-                } else if (newMatch[key] === player2Id) {
+                    updated = true;
+                }
+                else if (newMatch[key] === player2Id) {
                     newMatch[key] = player1Id;
+                    updated = true;
+                }
+
+                if (updated && updatedMatches.find((m) => m.id === newMatch.id) === undefined) {
+                    updatedMatches.push(newMatch);
                 }
             }
             return newMatch;
         });
 
-        setMatches([...updatedMatches]);
+        setMatches(currentMatches);
+        updateMatches(updatedMatches);
         setMarkedPlayers([]);
-        setSwitchPlayerDialog(false);
     };
 
-    // const onSwitchPlayerDialogCanceled = () => {
-    //     setMarkedPlayers([]);
-    //     setSwitchPlayerDialog(false);
-    // }
+    const isPlayerUsedInMatch = (playerId: string) => {
+        return matches.some((match) => {
+            return match.player1HomeId === playerId || match.player2HomeId === playerId || match.player1GuestId === playerId || match.player2GuestId === playerId;
+        });
+    }
 
+    const deletePlayer = async (playerId: string) => {
+        if (isPlayerUsedInMatch(playerId)) {
+            notification.notifyError("Spieler kann nicht entfernt werden, da er bereits in einem Match verwendet wird.");
+            return;
+        }
+        const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== playerId);
+        setSelectedPlayers(newSelectedPlayers);
+        setSelectionChanged(true);
+    }
 
+    const updateMatches = async (matches: Match[]) => {
+        const matchDayService = new MatchDayService(season.id, notification);
+        await matchDayService.updateMatches(matches);
+        fetchMatches(); // Aktualisiere die Matches nach dem Update
+    }
 
 
     return (
@@ -301,9 +330,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                     </Stack>
                                 }
                                 onDelete={!isEnabled ? undefined : () => {
-                                    const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== player.value);
-                                    setSelectedPlayers(newSelectedPlayers);
-                                    setSelectionChanged(true);
+                                    deletePlayer(player.value);
                                 }}
 
 
@@ -395,9 +422,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     <CourtsView round={round} courts={selectedCourts} matches={matches} />
                 </MatchDayRoundContext.Provider>
             </Box>
-
-            {/* <ConfirmDialog open={showSwitchPlayerDialog} onClose={onSwitchPlayerDialogCanceled} onConfirm={switchPlayers} question="Willst du die Spieler jetzt wechseln?" /> */}
-
         </Box >
 
     );
