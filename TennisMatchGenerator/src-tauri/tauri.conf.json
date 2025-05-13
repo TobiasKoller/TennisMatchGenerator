@@ -12,9 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "tennismatchgenerator",
+        "title": "Tennis Match Generator",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "dragDropEnabled": false
       }
     ],
     "security": {
@@ -31,7 +32,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources" :[
+    "resources": [
       "resources/sql/init.sql"
     ]
   }

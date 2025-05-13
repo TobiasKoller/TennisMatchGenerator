@@ -10,6 +10,8 @@ import CheckIcon from "@mui/icons-material/Check";
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
 import { MatchDayService } from "../services/MatchDayService";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { v4 as uuidv4, validate, NIL as emptyGuid } from "uuid";
+
 
 interface CourtViewProps {
     roundId: string;
@@ -18,22 +20,31 @@ interface CourtViewProps {
 
 }
 
+enum CourtSide {
+    LEFT = 0,
+    RIGHT = 1,
+}
+
 export const CourtView: React.FC<CourtViewProps> = (props) => {
 
-    const { court, match } = props;
+    const { court } = props;
 
     const notification = useNotification();
     const { season } = useSeason();
     const matchDayRoundContext = useContext(MatchDayRoundContext);
 
     if (!season || !matchDayRoundContext) return <></>;
-    const { togglePlayerSelection, isSelectedPlayer } = matchDayRoundContext!;
+    // const { togglePlayerSelection, isSelectedPlayer } = matchDayRoundContext!;
 
     // const [result, setResult] = useState<string>("");
     const [players, setPlayers] = useState<Player[]>([]);
     const [editResult, setEditResult] = useState(false);
     const [scoreHome, setScoreHome] = useState(0);
     const [scoreGuest, setScoreGuest] = useState(0);
+    const [match, setMatch] = useState<Match | null>(props.match);
+
+    const [isDraggingLeft, setIsDraggingLeft] = useState(false);
+    const [isDraggingRight, setIsDraggingRight] = useState(false);
 
     const playerStyle = (position: { top: string; left?: string; right?: string, isMarked: boolean }): {} => ({
         position: "absolute",
@@ -114,32 +125,124 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         }
     }
 
+    const isValidId = (id: string) => {
+        if (id === emptyGuid) return false;
+        if (id === "") return false;
+        if (!validate(id)) return false;
+        return true;
+    }
+
+    const addPlayerToMatch = async (playerId: string, side: CourtSide) => {
+        if (!match) {
+            var newMatch = new Match();
+            if (side == CourtSide.LEFT) newMatch.player1HomeId = playerId;
+            else newMatch.player1GuestId = playerId;
+            await matchDayService.addMatch(newMatch, props.roundId, court);
+            setMatch(newMatch);
+        }
+        else {
+            if (side == CourtSide.LEFT) {
+                if (!isValidId(match.player1HomeId)) match.player1HomeId = playerId;
+                else if (!isValidId(match.player2HomeId)) match.player2HomeId = playerId;
+            }
+            else {
+                if (!isValidId(match.player1GuestId)) match.player1GuestId = playerId;
+                else if (!isValidId(match.player2GuestId)) match.player2GuestId = playerId;
+            }
+
+            await matchDayService.updateMatch(match);
+        }
+    }
+
+    const deleteMatch = async () => {
+        if (match) {
+            await matchDayService.deleteMatch(match.id);
+            notification.notifySuccess("Begegnung gelöscht");
+        }
+    }
+
+
+    // const [isHovered, setIsHovered] = useState(false);
+
+    const handleDragOver = (event: React.DragEvent, side: CourtSide) => {
+
+
+        side == CourtSide.LEFT ? setIsDraggingLeft(true) : setIsDraggingRight(true);
+        event.preventDefault();
+
+    };
+
+    const handleDragLeave = (side: CourtSide) => {
+        side == CourtSide.LEFT ? setIsDraggingLeft(false) : setIsDraggingRight(false);
+    };
+
+    const handleDrop = (event: React.DragEvent, side: CourtSide) => {
+        event.preventDefault();
+        side == CourtSide.LEFT ? setIsDraggingLeft(false) : setIsDraggingRight(false);
+
+        addPlayerToMatch(event.dataTransfer.getData("playerId"), side);
+
+    };
+
     return (
-        <Box sx={{
-            position: "relative", width: 300, height: 200, '&:hover .delete-icon': {
-                opacity: 1,
-            },
-        }}>
+        <Box
+            sx={{
+                position: "relative",
+                width: 300,
+                height: 200,
+                ...(match && {
+                    '&:hover .action-icon': {
+                        opacity: 1,
+                    }
+                })
+            }}>
             {/* Court-Bild */}
-            <img
+            <img draggable={false}
                 src={tennisCourtUrl}
                 style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
             />
 
+            {/*Home-side linke hälfte */}
+            <Box
+                onDragOver={(event => handleDragOver(event, CourtSide.LEFT))}
+                onDragLeave={() => handleDragLeave(CourtSide.LEFT)}
+                onDrop={(event => handleDrop(event, CourtSide.LEFT))}
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "50%",
+                    height: "100%",
+                    backgroundColor: isDraggingLeft ? "rgba(0, 0, 0, 0.5)" : null,
+                }}
+            />
+            {/*away-side */}
+            <Box
+                onDragOver={(event => handleDragOver(event, CourtSide.RIGHT))}
+                onDragLeave={() => handleDragLeave(CourtSide.RIGHT)}
+                onDrop={(event => handleDrop(event, CourtSide.RIGHT))}
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: "50%",
+                    height: "100%",
+                    backgroundColor: isDraggingRight ? "rgba(0, 0, 0, 0.5)" : null,
+                }} />
             {match && match.type === "double" && (<>
                 {/* Team A (links) */}
-                <Box sx={playerStyle({ top: "28%", left: "5%", isMarked: isSelectedPlayer(match.player1HomeId) })} onClick={() => togglePlayerSelection(match.player1HomeId)}>{getPlayerName(match.player1HomeId)}</Box>
-                <Box sx={playerStyle({ top: "60%", left: "5%", isMarked: isSelectedPlayer(match.player2HomeId) })} onClick={() => togglePlayerSelection(match.player2HomeId)}>{getPlayerName(match.player2HomeId)}</Box>
+                <Box sx={playerStyle({ top: "28%", left: "5%", isMarked: false })} >{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "60%", left: "5%", isMarked: false })} >{getPlayerName(match.player2HomeId)}</Box>
 
                 {/* Team B (rechts) */}
-                <Box sx={playerStyle({ top: "28%", right: "5%", isMarked: isSelectedPlayer(match.player1GuestId) })} onClick={() => togglePlayerSelection(match.player1GuestId)}>{getPlayerName(match.player1GuestId)}</Box>
-                <Box sx={playerStyle({ top: "60%", right: "5%", isMarked: isSelectedPlayer(match.player2GuestId) })} onClick={() => togglePlayerSelection(match.player2GuestId)}>{getPlayerName(match.player2GuestId)}</Box>
+                <Box sx={playerStyle({ top: "28%", right: "5%", isMarked: false })} >{getPlayerName(match.player1GuestId)}</Box>
+                <Box sx={playerStyle({ top: "60%", right: "5%", isMarked: false })} >{getPlayerName(match.player2GuestId)}</Box>
             </>
             )}
             {match && match.type === "single" && (<>
                 {/* Einzelspieler */}
-                <Box sx={playerStyle({ top: "28%", left: "10%", isMarked: isSelectedPlayer(match.player1HomeId) })} onClick={() => togglePlayerSelection(match.player1HomeId)}>{getPlayerName(match.player1HomeId)}</Box>
-                <Box sx={playerStyle({ top: "60%", right: "10%", isMarked: isSelectedPlayer(match.player1GuestId) })} onClick={() => togglePlayerSelection(match.player1GuestId)}>{getPlayerName(match.player1GuestId)}</Box>
+                <Box sx={playerStyle({ top: "28%", left: "10%", isMarked: false })} >{getPlayerName(match.player1HomeId)}</Box>
+                <Box sx={playerStyle({ top: "60%", right: "10%", isMarked: false })}>{getPlayerName(match.player1GuestId)}</Box>
             </>
             )}
             {match && !editResult && (
@@ -251,7 +354,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 {court}
             </Box>
             <Box
-                className="delete-icon"
+                className="action-icon"
+
                 sx={{
                     position: "absolute",
                     top: 8,
@@ -271,7 +375,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     transition: "opacity 0.2s",
                 }}
             >
-                <DeleteForeverIcon fontSize="small" />
+                <DeleteForeverIcon fontSize="small" onClick={() => deleteMatch} />
             </Box>
         </Box >
     )

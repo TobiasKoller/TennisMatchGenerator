@@ -7,7 +7,7 @@ import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
 import { INotificationService } from "../provider/NotificationProvider";
 import { PlayerService } from "./PlayerService";
 import { ServiceBase } from "./ServiceBase";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4, validate, NIL as emptyGuid } from "uuid";
 import { Set } from "../model/Set";
 
 const tableNameMatchDay = "matchday" as const;
@@ -190,6 +190,11 @@ export class MatchDayService extends ServiceBase {
         }
     }
 
+    async deleteMatch(matchId: string) {
+        const database = await db;
+        await database.execute(`DELETE FROM match WHERE id=?`, [matchId]);
+    }
+
     async getMatchesByRoundId(roundId: string): Promise<Match[]> {
 
         const formatSet = (setStr: string) => {
@@ -222,5 +227,19 @@ export class MatchDayService extends ServiceBase {
     async updateUsedCourts(roundId: string, courts: number[]) {
         const database = await db;
         await database.execute(`UPDATE ${tableNameRound} SET courts=? WHERE id=?`, [JSON.stringify(courts), roundId]);
+    }
+
+    async addMatch(match: Match, roundId: string, court: number) {
+        const database = await db;
+        await database.execute(`INSERT INTO match (id, round_id,type,number,court,set1,set2,player1_home_id,player2_home_id,player1_guest_id,player2_guest_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            [match.id, roundId, match.type, match.number, court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
+    }
+
+    validateGuid(id: string): string | null {
+        if (id === emptyGuid) return null;
+        if (id === "") return null;
+        if (!validate(id)) return null;
+        return id;
+
     }
 }
