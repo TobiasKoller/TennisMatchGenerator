@@ -241,7 +241,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     }
 
     return (
-        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, registerDraggablePlayer }}>
+        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, registerDraggablePlayer, reloadMatches: fetchMatches }}>
             <Box
                 sx={{
                     display: "flex",

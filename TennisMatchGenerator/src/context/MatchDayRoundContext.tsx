@@ -5,6 +5,7 @@ type MatchDayRoundContextType = {
     // isSelectedPlayer: (playerId: string) => boolean;
     registerDraggablePlayer: (control: HTMLDivElement) => void;
     isPlayerUsedInMatch: (playerId: string) => boolean;
+    reloadMatches: () => void;
 };
 
 export const MatchDayRoundContext = createContext<MatchDayRoundContextType | undefined>(undefined);

@@ -229,10 +229,10 @@ export class MatchDayService extends ServiceBase {
         await database.execute(`UPDATE ${tableNameRound} SET courts=? WHERE id=?`, [JSON.stringify(courts), roundId]);
     }
 
-    async addMatch(match: Match, roundId: string, court: number) {
+    async addMatch(match: Match) {
         const database = await db;
         await database.execute(`INSERT INTO match (id, round_id,type,number,court,set1,set2,player1_home_id,player2_home_id,player1_guest_id,player2_guest_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-            [match.id, roundId, match.type, match.number, court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
+            [match.id, match.roundId, match.type, match.number, match.court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
     }
 
     validateGuid(id: string): string | null {

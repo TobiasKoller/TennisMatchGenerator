@@ -13,6 +13,7 @@ import ManIcon from '@mui/icons-material/Man';
 import Man4Icon from '@mui/icons-material/Man4';
 import { MatchDayRound } from "../model/MatchDayRound";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
+import { DragDropService } from "../services/DragDropService";
 
 interface PlayerListProps {
     // Define any props you need here
@@ -34,13 +35,13 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const [allPlayers, setAllPlayers] = useState<Player[]>([]);
     const [selectionChanged, setSelectionChanged] = useState(false);
     const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<OptionType>>([]);
-    const boxRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const round = props.round;
     const isEnabled = props.isEnabled;
 
     const { isPlayerUsedInMatch } = matchDayRoundContext!;
     const playerService = new PlayerService(season.id, notification);
+    const dragDropService = new DragDropService(season.id, notification);
 
     const NoMultiValue = () => null;
 
@@ -85,30 +86,12 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         }
     };
 
-    const setupDragEvents = () => {
-        const handleDragStart = (e: DragEvent, playerId: string) => {
-            e.dataTransfer?.setData('playerid', playerId);
-            console.log('Drag started:', playerId);
-        };
-
-        selectedPlayers.forEach((player, index) => {
-            const boxId = `selected-player-${player.value}`;
-            const element = document.getElementById(boxId)! as HTMLDivElement;
-            element.draggable = true;
-            element.addEventListener('dragstart', (ev) => handleDragStart(ev, player.value));
-
-        });
-    }
 
 
     const init = async () => {
         await fetchAllPlayers();
         await fetchSelectedPlayers();
     }
-
-    useEffect(() => {
-        setupDragEvents(); // Hier wird der erste Spieler als Beispiel verwendet
-    }, [selectedPlayers]);
 
     useEffect(() => {
         init();
@@ -186,8 +169,11 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
                 {
                     selectedPlayers.map((player, index) => {
-                        const boxId = `selected-player-${player.value}`;
-                        return <Box key={index} sx={{ marginBottom: 1 }} id={boxId} >
+                        return <Box
+                            key={index} sx={{ marginBottom: 1 }}
+                            draggable
+                            onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value)}
+                        >
                             <Chip
                                 label={
                                     <Stack direction="row" alignItems="center" spacing={1}>
@@ -214,6 +200,6 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
                     })
                 }
             </Box >
-        </ >
-    )
+        </ >)
+
 }

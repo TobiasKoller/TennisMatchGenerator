@@ -13,3 +13,5 @@ export abstract class ServiceBase {
         this.notifyError = notificationService.notifyError;
     }
 }
+
+
