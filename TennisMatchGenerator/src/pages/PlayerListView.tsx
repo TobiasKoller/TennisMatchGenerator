@@ -13,7 +13,8 @@ import ManIcon from '@mui/icons-material/Man';
 import Man4Icon from '@mui/icons-material/Man4';
 import { MatchDayRound } from "../model/MatchDayRound";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
-import { DragDropService } from "../services/DragDropService";
+import { DragDropService } from "../handler/DragDropHandler";
+import { MatchDayService } from "../services/MatchDayService";
 
 interface PlayerListProps {
     // Define any props you need here
@@ -41,7 +42,8 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
     const { isPlayerUsedInMatch } = matchDayRoundContext!;
     const playerService = new PlayerService(season.id, notification);
-    const dragDropService = new DragDropService(season.id, notification);
+    const matchDayService = new MatchDayService(season.id, notification);
+    const dragDropService = new DragDropService(season.id, notification, round.id, matchDayService, matchDayRoundContext.reloadMatches);
 
     const NoMultiValue = () => null;
 
@@ -172,7 +174,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
                         return <Box
                             key={index} sx={{ marginBottom: 1 }}
                             draggable
-                            onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value)}
+                            onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value, null, null)}
                         >
                             <Chip
                                 label={

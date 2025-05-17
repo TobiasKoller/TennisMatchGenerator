@@ -93,7 +93,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const fetchMatches = async () => {
         const currentMatches = await matchDayService.getMatchesByRoundId(round.id);
-        setMatches(currentMatches);
+        setMatches([...currentMatches]);
     }
 
     const init = async () => {

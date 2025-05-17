@@ -149,6 +149,13 @@ export class MatchDayService extends ServiceBase {
         return rounds;
     }
 
+    async getMatch(matchId: string): Promise<Match> {
+        const database = await db;
+        const matches = await safeSelect<Match>(database, MatchColumns, "match", `where id=?`, [matchId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where id=?`, [matchId]);
+        if (matches.length === 0) throw this.notifyError(`Spiel ${matchId} nicht gefunden`);
+        return matches[0];
+    }
+
     async updateMatch(match: Match) {
         this.updateMatches([match]);
     }
@@ -156,7 +163,7 @@ export class MatchDayService extends ServiceBase {
     async updateMatches(matches: Match[]) {
         try {
             const database = await db;
-            const formatSet = (set: Set) => { return `${set.homeGames ?? 0}:${set.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
+            const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
             const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
 
             for (const match of matches) {
@@ -176,7 +183,7 @@ export class MatchDayService extends ServiceBase {
 
             await database.execute(`DELETE FROM match WHERE round_id=?`, [roundId]); // Löschen der alten Matches für die Runde
 
-            const formatSet = (set: Set) => { return `${set.homeGames ?? 0}:${set.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
+            const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
             const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
 
             for (const match of matches) {

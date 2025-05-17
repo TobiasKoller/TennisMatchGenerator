@@ -10,9 +10,9 @@ import CheckIcon from "@mui/icons-material/Check";
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
 import { MatchDayService } from "../services/MatchDayService";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { v4 as uuidv4, validate, NIL as emptyGuid } from "uuid";
 import { CourtSide } from "../model/Enums";
-import { DragDropService } from "../services/DragDropService";
+import { DragDropService } from "../handler/DragDropHandler";
+import { DragPlayerContext } from "../model/DragPlayerContext";
 
 
 interface CourtViewProps {
@@ -167,6 +167,24 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         return !!playerId && isDraggingPlayerId === playerId;
     }
 
+    const createCourtDragContext = (e: React.DragEvent<HTMLDivElement>, side: CourtSide) => {
+
+        var dragContext: DragPlayerContext = JSON.parse(e.dataTransfer!.getData("dragContext"));
+        dragContext.toMatchId = match?.id ?? null;
+        dragContext.toCourtNumber = court;
+        dragContext.toSide = side;
+        return dragContext;
+    }
+
+    const createPlayerDragContext = (e: React.DragEvent<HTMLDivElement>, toPlayerId: string) => {
+
+        var dragContext: DragPlayerContext = JSON.parse(e.dataTransfer!.getData("dragContext"));
+        dragContext.toMatchId = match?.id ?? null;
+        dragContext.toCourtNumber = court;
+        dragContext.toPlayerId = toPlayerId;
+        return dragContext;
+    }
+
     return (
         <Box
             sx={{
@@ -191,7 +209,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 onDragLeave={() => handleDragLeave(CourtSide.LEFT)}
                 onDrop={(event) => {
                     resetDragging();
-                    dragDropService.handleOnDropOnCourt(event, CourtSide.LEFT, props.court, match);
+                    dragDropService.handleOnDropOnCourt(event, createCourtDragContext(event, CourtSide.LEFT));
                 }}
                 sx={{
                     position: "absolute",
@@ -208,7 +226,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 onDragLeave={() => handleDragLeave(CourtSide.RIGHT)}
                 onDrop={(event) => {
                     resetDragging();
-                    dragDropService.handleOnDropOnCourt(event, CourtSide.LEFT, props.court, match);
+                    dragDropService.handleOnDropOnCourt(event, createCourtDragContext(event, CourtSide.RIGHT));
                 }}
                 sx={{
                     position: "absolute",
@@ -221,41 +239,41 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && match.type === "double" && (<>
                 {/* Team A (links) */}
                 <Box draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player1HomeId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player1HomeId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1HomeId));
                     }}
                     sx={playerStyle({ top: "28%", left: "5%", isMarked: isDraggingOverPlayer(match.player1HomeId) })}  >{getPlayerName(match.player1HomeId)}</Box>
                 <Box draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2HomeId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2HomeId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player2HomeId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player2HomeId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player2HomeId));
                     }}
                     sx={playerStyle({ top: "60%", left: "5%", isMarked: isDraggingOverPlayer(match.player2HomeId) })} >{getPlayerName(match.player2HomeId)}</Box>
 
                 {/* Team B (rechts) */}
                 <Box draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player1GuestId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player1GuestId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1GuestId));
                     }}
                     sx={playerStyle({ top: "28%", right: "5%", isMarked: isDraggingOverPlayer(match.player1GuestId) })} >{getPlayerName(match.player1GuestId)}</Box>
                 <Box draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2GuestId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2GuestId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player2GuestId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player2GuestId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player2GuestId));
                     }}
                     sx={playerStyle({ top: "60%", right: "5%", isMarked: isDraggingOverPlayer(match.player2GuestId) })} >{getPlayerName(match.player2GuestId)}</Box>
             </>
@@ -264,23 +282,23 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 {/* Einzelspieler */}
                 <Box
                     draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player1HomeId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player1HomeId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1HomeId));
                     }}
                     sx={playerStyle({ top: "28%", left: "10%", isMarked: isDraggingOverPlayer(match.player1HomeId) })}
                 >{getPlayerName(match.player1HomeId)}</Box>
                 <Box
                     draggable
-                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId)}
+                    onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId, match.id, court)}
                     onDragOver={(e => handleDragOverPlayer(e, match.player1GuestId))}
                     onDragLeave={handleDragLeavePlayer}
                     onDrop={(event) => {
                         resetDragging();
-                        dragDropService.handleDropOnPlayer(event, match.player1GuestId);
+                        dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1GuestId));
                     }}
                     sx={playerStyle({ top: "60%", right: "10%", isMarked: isDraggingOverPlayer(match.player1GuestId) })}>{getPlayerName(match.player1GuestId)}</Box>
             </>
