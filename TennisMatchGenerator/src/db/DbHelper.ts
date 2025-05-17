@@ -46,22 +46,9 @@ export async function safeSelect<T>(
     whereClause: string = "",
     bindValues: any[] = []
 ): Promise<T[]> {
+
+    // await db.select("SELECT 1"); //dummy
     const sql = `SELECT ${buildSelect(columns)} FROM ${table} ${whereClause}`;
     const rawRows = await db.select<any[]>(sql, bindValues);
     return rawRows.map(row => parseRow<T>(row, columns));
 }
-
-// export async function runInTransaction<T>(database: Database, work: () => Promise<T>, onError: (error: any) => Error): Promise<T | null> {
-
-
-//     await database.execute('BEGIN TRANSACTION');
-//     try {
-//         const result = await work();
-//         await database.execute('COMMIT');
-//         return result;
-//     } catch (error) {
-//         await database.execute('ROLLBACK');
-//         onError(error);
-//         return null;
-//     }
-// }

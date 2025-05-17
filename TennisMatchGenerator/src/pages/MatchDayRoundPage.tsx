@@ -1,24 +1,17 @@
-import { Box, Button, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Button, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { MatchDayRound } from "../model/MatchDayRound";
-import { PlayerService } from "../services/PlayerService";
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
 import { useEffect, useState } from "react";
-import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
-import { Player } from "../model/Player";
 import { CourtsView } from "./CourtsView";
 import { SeasonService } from "../services/SeasonService";
 import { Setting } from "../model/Setting";
 import LockOutlineIcon from '@mui/icons-material/LockOutline';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ViewInArIcon from '@mui/icons-material/ViewInAr';
-import { MatchGenerator } from "../services/MatchGenerator.ts";
 import { MatchDayService } from "../services/MatchDayService.ts";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext.tsx";
-import { Match } from "../model/Match.ts";
 import { PlayerListView } from "./PlayerListView.tsx";
-import { OptionType } from "../model/OptionType.ts";
 
 
 
@@ -47,43 +40,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
     const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
-    // const [markedPlayers, setMarkedPlayers] = useState<string[]>([]);
-    // const [allPlayers, setAllPlayers] = useState<Player[]>([]);
 
-    const playerService = new PlayerService(season.id, notification);
+
     const matchDayService = new MatchDayService(season.id, notification);
-
-
-    // const fetchAllPlayers = async () => {
-    //     try {
-    //         const players = await playerService.getAllPlayers();
-
-    //         var allPlayers: OptionType[] = players.map((player: Player) => ({ //Modell für Select-Optionen
-    //             value: player.id,
-    //             label: `${player.firstname} ${player.lastname} (${player.skillRating})`,
-    //         }));
-    //         setAllPlayers(players); // Speichern der Spieler für die Hintergrundfarbe
-    //         // setAllPlayerOptions(allPlayers);
-    //     } catch (error) {
-    //         console.error("Fehler beim Abrufen der Spieler:", error);
-    //     }
-    // };
-
-    // const fetchSelectedPlayers = async () => {
-    //     try {
-    //         const players = await playerService.getPlayersByRoundId(round.id, true);
-
-    //         var selectedPlayers: OptionType[] = players.map((player: MatchDayRoundPlayer) => ({
-    //             value: player.playerId,
-    //             label: `${player.player?.firstname} ${player.player?.lastname} (${player.player?.skillRating})`,
-    //         }));
-
-
-    //         setSelectedPlayers(selectedPlayers);
-    //     } catch (error) {
-    //         console.error("Fehler beim Abrufen der selektierten Spieler:", error);
-    //     }
-    // };
 
     const fetchSettings = async () => {
         const seasonService = new SeasonService();
@@ -93,26 +52,18 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const fetchMatches = async () => {
         const currentMatches = await matchDayService.getMatchesByRoundId(round.id);
-        setMatches([...currentMatches]);
+        console.log("Fetched matches:", currentMatches);
+        setMatches(currentMatches);
     }
 
+    useEffect(() => {
+        console.log("Matches updated:", matches);
+    }, [matches])
+
     const init = async () => {
-        // await fetchAllPlayers();
-        // await fetchSelectedPlayers();
         await fetchSettings();
         await fetchMatches();
     }
-
-
-    const registerDraggablePlayer = (control: HTMLDivElement) => {
-        control.addEventListener("dragstart", (e: any) => {
-            const playerId = e.currentTarget.getAttribute("data-player-id");
-            if (playerId) {
-                handleOnDrag(e, playerId);
-            }
-        });
-    }
-
 
 
     useEffect(() => {
@@ -120,17 +71,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     }, []);
 
 
-
     useEffect(() => {
         matchDayService.updateUsedCourts(round.id, selectedCourts);
     }, [selectedCourts])
-
-    // useEffect(() => {
-    //     if (markedPlayers.length === 2) {
-    //         switchPlayers();
-    //     }
-    // }, [markedPlayers]);
-
 
 
     const courtSelectionChanged = (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
@@ -138,88 +81,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         setSelectedCourts(sorted);
     };
 
-    // const createMatches = async () => {
-    //     if (selectedPlayers.length < 2) {
-    //         notification.notifyError("Bitte mindestens 2 Spieler auswählen.");
-    //         return;
-    //     }
-    //     const players = await playerService.getPlayersByRoundId(round.id, true);
-    //     var generator = new MatchGenerator(players!);
-    //     var result = generator.generate(round.id, selectedCourts) ?? [];
-
-    //     var matches = result.doubles.concat(result.singles);
-    //     if (matches.length === 0) {
-    //         notification.notifyError("Es konnten keine Paarungen erstellt werden. Bitte überprüfen Sie die Anzahl der Spieler und Plätze.");
-    //         return;
-    //     }
-
-    //     if (result.unusedPlayers.length > 0) {
-    //         if (result.unusedPlayers.length === 1) {
-    //             notification.notifyWarning(`[${result.unusedPlayers[0].player?.firstname} ${result.unusedPlayers[0].player?.lastname}] pausiert in dieser Runde.`);
-    //         }
-    //         else {
-    //             notification.notifyWarning(`Die Spieler [${result.unusedPlayers.map((p) => p.player?.firstname + " " + p.player?.lastname).join(", ")}] pausieren in dieser Runde.`);
-    //         }
-    //     }
-    //     if (matches.length > 0) {
-    //         notification.notifySuccess("Paarungen erfolgreich erstellt.");
-    //     }
-
-    //     await matchDayService.saveMatches(round.id, matches);
-    //     await fetchMatches();
-    // };
-
     const toggleRoundState = async () => {
-
         setRoundStarted(!roundStarted);
     }
-
-    // const isSelectedPlayer = (playerId: string) => {
-    //     return markedPlayers.includes(playerId);
-    // }
-
-    // const togglePlayerSelection = (playerId: string) => {
-    //     if (markedPlayers.length >= 2 && !isSelectedPlayer(playerId)) return;
-
-    //     if (isSelectedPlayer(playerId)) {
-    //         setMarkedPlayers(markedPlayers.filter(id => id !== playerId));
-    //     } else {
-    //         setMarkedPlayers([...markedPlayers, playerId]);
-    //     }
-    // }
-
-    // const switchPlayers = () => {
-    //     if (markedPlayers.length !== 2) return;
-    //     const [player1Id, player2Id] = markedPlayers;
-
-
-    //     var updatedMatches: Match[] = [];
-    //     var currentMatches = matches.map((match) => {
-    //         const newMatch = { ...match };
-
-    //         // Für alle 4 Spieler-Positionen prüfen und ggf. tauschen
-    //         for (const key of ['player1HomeId', 'player2HomeId', 'player1GuestId', 'player2GuestId'] as const) {
-    //             let updated = false;
-    //             if (newMatch[key] === player1Id) {
-    //                 newMatch[key] = player2Id;
-    //                 updated = true;
-    //             }
-    //             else if (newMatch[key] === player2Id) {
-    //                 newMatch[key] = player1Id;
-    //                 updated = true;
-    //             }
-
-    //             if (updated && updatedMatches.find((m) => m.id === newMatch.id) === undefined) {
-    //                 updatedMatches.push(newMatch);
-    //             }
-    //         }
-    //         return newMatch;
-    //     });
-
-    //     setMatches(currentMatches);
-    //     updateMatches(updatedMatches);
-    //     setMarkedPlayers([]);
-    // };
 
     const isPlayerUsedInMatch = (playerId: string) => {
         return matches.some((match) => {
@@ -227,21 +91,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         });
     }
 
-
-
-    // const updateMatches = async (matches: Match[]) => {
-    //     const matchDayService = new MatchDayService(season.id, notification);
-    //     await matchDayService.updateMatches(matches);
-    //     fetchMatches(); // Aktualisiere die Matches nach dem Update
-    // }
-
-    const handleOnDrag = (e: React.DragEvent<HTMLDivElement>, playerId: string) => {
-        console.log("Drag started for player ID:", playerId);
-        e.dataTransfer.setData("playerId", playerId);
-    }
-
     return (
-        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, registerDraggablePlayer, reloadMatches: fetchMatches }}>
+        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, reloadMatches: fetchMatches }}>
             <Box
                 sx={{
                     display: "flex",

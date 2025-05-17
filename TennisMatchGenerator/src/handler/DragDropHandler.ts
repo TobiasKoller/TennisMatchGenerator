@@ -9,7 +9,7 @@ import { v4 as uuidv4, NIL as EMPTY_GUID, validate as validateGuid } from 'uuid'
 
 
 export class DragDropService extends ServiceBase {
-    constructor(seasonId: string, private notificationService: INotificationService, private roundId: string, private matchDayService: MatchDayService, private reloadMatches: () => void) {
+    constructor(seasonId: string, private notificationService: INotificationService, private roundId: string, private matchDayService: MatchDayService, private reloadMatches: () => Promise<void>) {
         super(seasonId, notificationService);
     }
 
@@ -42,7 +42,7 @@ export class DragDropService extends ServiceBase {
 
         await this.switchPlayers(fromPlayer, toPlayer, fromMatchId, toMatchId);
 
-        this.reloadMatches();
+        await this.reloadMatches();
     }
 
 

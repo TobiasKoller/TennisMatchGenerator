@@ -63,18 +63,20 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     const dragDropService = new DragDropService(season.id, notification, props.roundId, matchDayService, matchDayRoundContext.reloadMatches);
 
     const init = async () => {
-        setMatch(props.match);
         // Hier können Sie die Spieler laden und den Zustand aktualisieren
-        const players = await playerService.getAllPlayers();
-        setPlayers(players);
+        const allPlayers = await playerService.getAllPlayers();
+        setPlayers(allPlayers);
     }
 
     useEffect(() => {
+        console.log("Match changed", JSON.stringify(props.match));
         if (match?.set1) {
-            setScoreHome(match.set1.homeGames ?? 0);
-            setScoreGuest(match.set1.guestGames ?? 0);
+            setScoreHome(match.set1?.homeGames ?? 0);
+            setScoreGuest(match.set1?.guestGames ?? 0);
         }
-    }, [match]);
+
+        setMatch(props.match);
+    }, [props.match]);
 
     useEffect(() => {
         init();
@@ -83,7 +85,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
     const handleInput = (value: string, setter: (v: number) => void) => {
         if (/^\d{0,2}$/.test(value)) {
-            const parsed = parseInt(value, 10);
+            const parsed = parseInt(value ?? 0, 10);
             setter(isNaN(parsed) ? 0 : parsed);
         }
     };
@@ -98,11 +100,11 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
 
     const getPlayerName = (playerId: string): string => {
         const player = players.find(p => p.id === playerId);
-        return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "Unbekannt";
+        return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "";
     }
 
 
-    const getMatchSkill = (match: Match | undefined): string => {
+    const getMatchSkill = (): string => {
         if (!match) return "";
 
         if (match.type === "double") {
@@ -135,9 +137,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             notification.notifySuccess("Begegnung gelöscht");
         }
     }
-
-
-    // const [isHovered, setIsHovered] = useState(false);
 
     const handleDragOver = (event: React.DragEvent, side: CourtSide) => {
         side == CourtSide.LEFT ? setIsDraggingLeft(true) : setIsDraggingRight(true);
@@ -197,6 +196,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     }
                 })
             }}>
+
             {/* Court-Bild */}
             <img draggable={false}
                 src={tennisCourtUrl}
@@ -384,7 +384,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                             alignItems: "center",
                             fontSize: "14px"
                         }}
-                    >{getMatchSkill(match!)}</Box>
+                    >{getMatchSkill()}</Box>
 
                 </>
             )}

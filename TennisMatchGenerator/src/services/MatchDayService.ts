@@ -161,8 +161,10 @@ export class MatchDayService extends ServiceBase {
     }
 
     async updateMatches(matches: Match[]) {
+        const database = await db;
         try {
-            const database = await db;
+            await database.execute("BEGIN TRANSACTION");
+
             const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
             const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
 
@@ -170,9 +172,12 @@ export class MatchDayService extends ServiceBase {
                 await database.execute(`UPDATE match SET type=?,number=?,court=?,set1=?,set2=?,player1_home_id=?,player2_home_id=?,player1_guest_id=?,player2_guest_id=? WHERE id=?`,
                     [match.type, match.number, match.court, formatSet(match.set1), formatSet(match.set2), nullIfEmpty(match.player1HomeId), nullIfEmpty(match.player2HomeId), nullIfEmpty(match.player1GuestId), nullIfEmpty(match.player2GuestId), match.id]);
             }
+
+            await database.execute("COMMIT"); // Transaktion abschließen
             this.noticiationService.notifySuccess("Matches erfolgreich aktualisiert");
         }
         catch (error: any) {
+            await database.execute("ROLLBACK"); // Transaktion zurücksetzen
             throw this.notifyError("Fehler beim Aktualisieren der Matches: " + error?.message);
         }
     }
@@ -213,6 +218,7 @@ export class MatchDayService extends ServiceBase {
         }
 
         const database = await db;
+
         const matches = await safeSelect<Match>(database, MatchColumns, "match", `where round_id=?`, [roundId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where round_id=?`, [roundId]);
         for (let match of matches) {
             match.set1 = formatSet((<any>match).set1Str);
