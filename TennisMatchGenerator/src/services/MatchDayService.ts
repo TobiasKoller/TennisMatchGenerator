@@ -9,6 +9,8 @@ import { ServiceBase } from "./ServiceBase";
 import { v4 as uuidv4, validate, NIL as emptyGuid } from "uuid";
 import { Set } from "../model/Set";
 import { DbColumnDefinition } from "../db/DbColumnDefinition";
+import { MatchGenerator } from "./MatchGenerator";
+import { MatchResult } from "../model/MatchResult";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
@@ -156,40 +158,46 @@ export class MatchDayService extends ServiceBase {
         return matches[0];
     }
 
+    async getMatches(roundId: string): Promise<Match[]> {
+        const database = await db;
+        const matches = await database.safeSelect<Match>(MatchColumns, "match", `where round_id=?`, [roundId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where round_id=?`, [roundId]);
+        return matches ?? [];
+    }
+
     async updateMatch(match: Match) {
         return this.updateMatches([match]);
     }
 
     async updateMatches(matches: Match[]) {
         const database = await db;
-        const transaction = await database.beginTransaction();
+        //const transaction = await database.beginTransaction();
         try {
 
             const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
-            const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
+            const nullIfEmpty = (value: string | null) => { return value === null || value === "" ? null : value }; // Null-Werte für leere Strings
 
             for (const match of matches) {
-                transaction.addStatement(`UPDATE match SET type=?,number=?,court=?,set1=?,set2=?,player1_home_id=?,player2_home_id=?,player1_guest_id=?,player2_guest_id=? WHERE id=?`,
+                await database.execute(`UPDATE match SET type=?,number=?,court=?,set1=?,set2=?,player1_home_id=?,player2_home_id=?,player1_guest_id=?,player2_guest_id=? WHERE id=?`,
                     [match.type, match.number, match.court, formatSet(match.set1), formatSet(match.set2), nullIfEmpty(match.player1HomeId), nullIfEmpty(match.player2HomeId), nullIfEmpty(match.player1GuestId), nullIfEmpty(match.player2GuestId), match.id]);
             }
 
-            await transaction.commit(); // Transaktion abschließen
+            // await transaction.commit(); // Transaktion abschließen
             this.noticiationService.notifySuccess("Matches erfolgreich aktualisiert");
         }
         catch (error: any) {
-            await transaction.rollback(); // Transaktion zurücksetzen
+            //await transaction.rollback(); // Transaktion zurücksetzen
             throw this.notifyError("Fehler beim Aktualisieren der Matches: " + error);
         }
     }
 
-    async saveMatches(roundId: string, matches: Match[]) {
+    async createMatches(roundId: string, matches: Match[]) {
         try {
             const database = await db;
 
             await database.execute(`DELETE FROM match WHERE round_id=?`, [roundId]); // Löschen der alten Matches für die Runde
 
             const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
-            const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
+            const nullIfEmpty = (value: string | null) => { return value === "" ? null : value }; // Null-Werte für leere Strings
 
             for (const match of matches) {
                 await database.execute(`INSERT INTO match (id, round_id,type,number,court,set1,set2,player1_home_id,player2_home_id,player1_guest_id,player2_guest_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
@@ -248,8 +256,16 @@ export class MatchDayService extends ServiceBase {
             [match.id, match.roundId, match.type, match.number, match.court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
     }
 
-    validateGuid(id: string): string | null {
-        if (id === emptyGuid) return null;
+    generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {
+
+        var generator = new MatchGenerator(players);
+        const matches = generator.generate(roundId, courts);
+
+        return matches;
+    }
+
+    validateGuid(id: string | null): string | null {
+        if (id === emptyGuid || id === null) return null;
         if (id === "") return null;
         if (!validate(id)) return null;
         return id;

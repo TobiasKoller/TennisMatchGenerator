@@ -33,7 +33,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications((prev) => [...prev, { id, message, severity }]);
 
     // Nur bei success automatisch entfernen
-    if (severity === "success") {
+    if (severity === "success" || severity === "info" || severity === "warning") {
       setTimeout(() => removeNotification(id), 3000);
     }
   };

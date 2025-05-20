@@ -26,17 +26,6 @@ export class MatchGenerator {
   //   return usedPlayerIds;
   // }
 
-  private getClosestPair(pairs: PlayerPair[]): PlayerPair {
-
-    var closestPair: PlayerPair = pairs[0];
-    for (var i = 1; i < pairs.length; i++) {
-      var skillDiff = Math.abs(pairs[i].player1.skillRating - pairs[i].player2.skillRating);
-      if (skillDiff < Math.abs(closestPair.player1.skillRating - closestPair.player2.skillRating)) {
-        closestPair = pairs[i];
-      }
-    }
-    return closestPair;
-  }
 
   public generate(roundId: string, courtNumbers: number[]): MatchResult {
     const allPairs = this.generatePairsSimple();
@@ -116,6 +105,19 @@ export class MatchGenerator {
       unusedPlayers
     };
   }
+
+  private getClosestPair(pairs: PlayerPair[]): PlayerPair {
+
+    var closestPair: PlayerPair = pairs[0];
+    for (var i = 1; i < pairs.length; i++) {
+      var skillDiff = Math.abs(pairs[i].player1.skillRating - pairs[i].player2.skillRating);
+      if (skillDiff < Math.abs(closestPair.player1.skillRating - closestPair.player2.skillRating)) {
+        closestPair = pairs[i];
+      }
+    }
+    return closestPair;
+  }
+
 
   private generatePairsSimple(): PlayerPair[] {
     const pairs: PlayerPair[] = [];

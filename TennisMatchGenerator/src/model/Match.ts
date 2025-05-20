@@ -12,9 +12,9 @@ export class Match extends DbRecord {
     court: number = 0;
     set1: Set = new Set(0, 0);
     set2: Set = new Set(0, 0);
-    player1HomeId: string = ""; // Spieler 1 Heim  
-    player2HomeId: string = ""; // Spieler 2 Heim
-    player1GuestId: string = ""; // Spieler 1 Gast
-    player2GuestId: string = ""; // Spieler 2 Gast 
+    player1HomeId: string | null = ""; // Spieler 1 Heim  
+    player2HomeId: string | null = ""; // Spieler 2 Heim
+    player1GuestId: string | null = ""; // Spieler 1 Gast
+    player2GuestId: string | null = ""; // Spieler 2 Gast 
 
 }

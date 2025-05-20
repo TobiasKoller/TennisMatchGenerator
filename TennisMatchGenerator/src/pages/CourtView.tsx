@@ -74,6 +74,10 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             setScoreHome(match.set1?.homeGames ?? 0);
             setScoreGuest(match.set1?.guestGames ?? 0);
         }
+        else {
+            setScoreHome(0);
+            setScoreGuest(0);
+        }
 
         setMatch(props.match);
     }, [props.match]);
@@ -98,7 +102,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setEditResult(false);
     };
 
-    const getPlayerName = (playerId: string): string => {
+    const getPlayerName = (playerId: string | null): string => {
+        if (playerId === null) return "";
         const player = players.find(p => p.id === playerId);
         return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "";
     }
@@ -135,6 +140,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         if (match) {
             await matchDayService.deleteMatch(match.id);
             notification.notifySuccess("Begegnung gelöscht");
+            setMatch(null);
         }
     }
 
@@ -153,7 +159,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setIsDraggingPlayerId(null);
     }
 
-    const handleDragOverPlayer = (event: React.DragEvent, playerId: string) => {
+    const handleDragOverPlayer = (event: React.DragEvent, playerId: string | null) => {
         event.preventDefault();
         setIsDraggingPlayerId(playerId);
     }
@@ -162,7 +168,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setIsDraggingPlayerId(null);
     }
 
-    const isDraggingOverPlayer = (playerId: string | undefined): boolean => {
+    const isDraggingOverPlayer = (playerId: string | undefined | null): boolean => {
         return !!playerId && isDraggingPlayerId === playerId;
     }
 
@@ -175,7 +181,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         return dragContext;
     }
 
-    const createPlayerDragContext = (e: React.DragEvent<HTMLDivElement>, toPlayerId: string) => {
+    const createPlayerDragContext = (e: React.DragEvent<HTMLDivElement>, toPlayerId: string | null) => {
 
         var dragContext: DragPlayerContext = JSON.parse(e.dataTransfer!.getData("dragContext"));
         dragContext.toMatchId = match?.id ?? null;
@@ -433,7 +439,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     transition: "opacity 0.2s",
                 }}
             >
-                <DeleteForeverIcon fontSize="small" onClick={() => deleteMatch} />
+                <DeleteForeverIcon fontSize="small" onClick={() => deleteMatch()} />
             </Box>
         </Box >
     )

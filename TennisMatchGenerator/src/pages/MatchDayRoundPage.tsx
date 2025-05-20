@@ -2,7 +2,7 @@ import { Box, Button, Stack, ToggleButton, ToggleButtonGroup, Typography } from 
 import { MatchDayRound } from "../model/MatchDayRound";
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CourtsView } from "./CourtsView";
 import { SeasonService } from "../services/SeasonService";
 import { Setting } from "../model/Setting";
@@ -12,7 +12,10 @@ import { MatchDayService } from "../services/MatchDayService.ts";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext.tsx";
 import { PlayerListView } from "./PlayerListView.tsx";
-
+import { PlayerService } from "../services/PlayerService.ts";
+import { Match } from "../model/Match.ts";
+import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
+import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog.tsx";
 
 
 interface MatchDayRoundPageProps {
@@ -33,6 +36,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
+    const dialogRef = useRef<ConfirmDialogHandle>(null);
 
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
@@ -43,6 +47,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
 
     const matchDayService = new MatchDayService(season.id, notification);
+    const playerService = new PlayerService(season.id, notification);
 
     const fetchSettings = async () => {
         const seasonService = new SeasonService();
@@ -83,6 +88,26 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const toggleRoundState = async () => {
         setRoundStarted(!roundStarted);
+    }
+
+    const generateMatches = async () => {
+        if (selectedCourts.length === 0) {
+            notification.notifyWarning("Bitte mindestens einen Platz auswählen");
+            return;
+        }
+
+        dialogRef.current?.open({
+            question: "Es werden alle bisherigen Matches gelöscht! Fortfahren?",
+            onConfirm: async () => {
+                const players = await playerService.getPlayersByRoundId(round.id, true);
+                const generatedMatches = await matchDayService.generateMatches(players, round.id, selectedCourts);
+                var newMatches: Match[] = [generatedMatches.doubles, generatedMatches.singles].flat();
+                await matchDayService.createMatches(round.id, newMatches);
+                fetchMatches();
+            },
+            onClose: () => {
+            },
+        });
     }
 
     const isPlayerUsedInMatch = (playerId: string) => {
@@ -149,6 +174,13 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                 ))}
                             </ToggleButtonGroup>
                         </Box>
+                        <Box>
+                            <Button onClick={generateMatches}
+                                variant="outlined" color="primary"
+                                startIcon={<CasinoOutlinedIcon />}>
+                                Partien auslosen
+                            </Button>
+                        </Box>
                         <Box flexGrow={1} />
                         {!isActive && (
                             <Button
@@ -178,6 +210,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
                 </Box>
             </Box >
+            <ConfirmDialog ref={dialogRef} />
         </MatchDayRoundContext.Provider>
     );
 }
