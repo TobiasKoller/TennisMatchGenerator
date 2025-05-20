@@ -1,5 +1,4 @@
 import { db } from "../db/Db";
-import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
 import { Match } from "../model/Match";
 import { MatchDay } from "../model/Matchday";
 import { MatchDayRound } from "../model/MatchDayRound";
@@ -9,6 +8,7 @@ import { PlayerService } from "./PlayerService";
 import { ServiceBase } from "./ServiceBase";
 import { v4 as uuidv4, validate, NIL as emptyGuid } from "uuid";
 import { Set } from "../model/Set";
+import { DbColumnDefinition } from "../db/DbColumnDefinition";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
@@ -116,28 +116,28 @@ export class MatchDayService extends ServiceBase {
 
     async getActiveMatchDay(): Promise<MatchDay | null> {
         const database = await db;
-        const records = await safeSelect<MatchDay>(database, MatchDayColumns, tableNameMatchDay, `where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]) //database.select<MatchDay>(`SELECT id,date,is_active as isActive FROM matchday where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]);
+        const records = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]) //database.select<MatchDay>(`SELECT id,date,is_active as isActive FROM matchday where season_id=? and is_active=1 LIMIT 1`, [this.seasonId]);
         if (records.length === 0) return null;
         return this.getMatchDayById(records[0].id);
     }
 
     async getMatchDayById(id: string): Promise<MatchDay> {
         const database = await db;
-        const matchDays = await safeSelect<MatchDay>(database, MatchDayColumns, tableNameMatchDay, `where id=?`, [id]) //database.safeSelect<MatchDay>(`SELECT id,date,is_active as isActive FROM matchday where id=?`, [id]);
+        const matchDays = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where id=?`, [id]) //database.safeSelect<MatchDay>(`SELECT id,date,is_active as isActive FROM matchday where id=?`, [id]);
         if (matchDays.length === 0) throw this.notifyError(`Spieltag ${id} nicht gefunden`);
         return matchDays[0];
     }
 
     async getAllMatchDays(): Promise<MatchDay[]> {
         const database = await db;
-        const matchdays = await safeSelect<MatchDay>(database, MatchDayColumns, tableNameMatchDay, `where season_id=?`, [this.seasonId]) //db.safeSelect<MatchDay>(`SELECT id, date, is_active as isActive FROM matchday where season_id=?`, [this.seasonId]);
+        const matchdays = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where season_id=?`, [this.seasonId]) //db.safeSelect<MatchDay>(`SELECT id, date, is_active as isActive FROM matchday where season_id=?`, [this.seasonId]);
 
         return matchdays;
     }
 
     async getAllMatchDayRounds(matchdayId: string): Promise<MatchDayRound[]> {
         const database = await db;
-        const rounds = await safeSelect<MatchDayRound>(database, RoundColumns, tableNameRound, `where matchday_id=? order by number asc`, [matchdayId]) //database.safeSelect<MatchDayRound>(`SELECT id,matchday_id as matchDayId,round,start_date as startDate,end_date as endDate,courts,is_active as isActive FROM matchday_round where matchday_id=?`, [matchdayId]);
+        const rounds = await database.safeSelect<MatchDayRound>(RoundColumns, tableNameRound, `where matchday_id=? order by number asc`, [matchdayId]) //database.safeSelect<MatchDayRound>(`SELECT id,matchday_id as matchDayId,round,start_date as startDate,end_date as endDate,courts,is_active as isActive FROM matchday_round where matchday_id=?`, [matchdayId]);
         if (rounds.length === 0) return [];
 
         var playerService = new PlayerService(this.seasonId, this.noticiationService);
@@ -151,34 +151,34 @@ export class MatchDayService extends ServiceBase {
 
     async getMatch(matchId: string): Promise<Match> {
         const database = await db;
-        const matches = await safeSelect<Match>(database, MatchColumns, "match", `where id=?`, [matchId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where id=?`, [matchId]);
+        const matches = await database.safeSelect<Match>(MatchColumns, "match", `where id=?`, [matchId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where id=?`, [matchId]);
         if (matches.length === 0) throw this.notifyError(`Spiel ${matchId} nicht gefunden`);
         return matches[0];
     }
 
     async updateMatch(match: Match) {
-        this.updateMatches([match]);
+        return this.updateMatches([match]);
     }
 
     async updateMatches(matches: Match[]) {
         const database = await db;
+        const transaction = await database.beginTransaction();
         try {
-            await database.execute("BEGIN TRANSACTION");
 
             const formatSet = (set: Set) => { return `${set?.homeGames ?? 0}:${set?.guestGames ?? 0}` }; // Formatierung der Sets für die Datenbank
             const nullIfEmpty = (value: string) => { return value === "" ? null : value }; // Null-Werte für leere Strings
 
             for (const match of matches) {
-                await database.execute(`UPDATE match SET type=?,number=?,court=?,set1=?,set2=?,player1_home_id=?,player2_home_id=?,player1_guest_id=?,player2_guest_id=? WHERE id=?`,
+                transaction.addStatement(`UPDATE match SET type=?,number=?,court=?,set1=?,set2=?,player1_home_id=?,player2_home_id=?,player1_guest_id=?,player2_guest_id=? WHERE id=?`,
                     [match.type, match.number, match.court, formatSet(match.set1), formatSet(match.set2), nullIfEmpty(match.player1HomeId), nullIfEmpty(match.player2HomeId), nullIfEmpty(match.player1GuestId), nullIfEmpty(match.player2GuestId), match.id]);
             }
 
-            await database.execute("COMMIT"); // Transaktion abschließen
+            await transaction.commit(); // Transaktion abschließen
             this.noticiationService.notifySuccess("Matches erfolgreich aktualisiert");
         }
         catch (error: any) {
-            await database.execute("ROLLBACK"); // Transaktion zurücksetzen
-            throw this.notifyError("Fehler beim Aktualisieren der Matches: " + error?.message);
+            await transaction.rollback(); // Transaktion zurücksetzen
+            throw this.notifyError("Fehler beim Aktualisieren der Matches: " + error);
         }
     }
 
@@ -219,7 +219,7 @@ export class MatchDayService extends ServiceBase {
 
         const database = await db;
 
-        const matches = await safeSelect<Match>(database, MatchColumns, "match", `where round_id=?`, [roundId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where round_id=?`, [roundId]);
+        const matches = await database.safeSelect<Match>(MatchColumns, "match", `where round_id=?`, [roundId]); //database.safeSelect<Match>(`SELECT id,round_id as roundId,type,number,court,set1,set2,player1_home_id as player1HomeId,player2_home_id as player2HomeId,player1_guest_id as player1GuestId,player2_guest_id as player2GuestId FROM match where round_id=?`, [roundId]);
         for (let match of matches) {
             match.set1 = formatSet((<any>match).set1Str);
             match.set2 = formatSet((<any>match).set2Str);
@@ -232,7 +232,7 @@ export class MatchDayService extends ServiceBase {
 
     async getLastMatchDayRound(matchdayId: string): Promise<MatchDayRound | null> {
         const database = await db;
-        const rounds = await safeSelect<MatchDayRound>(database, RoundColumns, tableNameRound, `where matchday_id=? order by number desc limit 1`, [matchdayId]);
+        const rounds = await database.safeSelect<MatchDayRound>(RoundColumns, tableNameRound, `where matchday_id=? order by number desc limit 1`, [matchdayId]);
         if (rounds.length === 0) return null;
         return rounds[0];
     }

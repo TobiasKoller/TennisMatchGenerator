@@ -3,8 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { ServiceBase } from "./ServiceBase";
 import { db } from "../db/Db";
 import { INotificationService } from "../provider/NotificationProvider";
-import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
+import { DbColumnDefinition } from "../db/DbColumnDefinition";
 
 const tableNamePlayer = "player" as const;
 const tableNameRoundPlayer = "round_player" as const;
@@ -33,21 +33,21 @@ export class PlayerService extends ServiceBase {
 
     async getAllPlayers(): Promise<Player[]> {
         const database = await db;
-        const players = safeSelect<Player>(database, PlayerColumns, tableNamePlayer); //await database.select<any[]>(`SELECT ${this.selectColumns} FROM player where season_id=?`, [this.seasonId]);
+        const players = database.safeSelect<Player>(PlayerColumns, tableNamePlayer); //await database.select<any[]>(`SELECT ${this.selectColumns} FROM player where season_id=?`, [this.seasonId]);
         return players;
     }
 
     async getPlayerById(id: string): Promise<Player | null> {
 
         const database = await db;
-        const players = await safeSelect<Player>(database, PlayerColumns, tableNamePlayer, "where id=?", [id]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where id=?`, [id]);
+        const players = await database.safeSelect<Player>(PlayerColumns, tableNamePlayer, "where id=?", [id]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where id=?`, [id]);
 
         return (players.length > 0) ? players[0] : null;
     }
 
     async getPlayersByRoundId(roundId: string, includePlayerData: boolean): Promise<MatchDayRoundPlayer[]> {
         const database = await db;
-        const players = await safeSelect<MatchDayRoundPlayer>(database, RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
+        const players = await database.safeSelect<MatchDayRoundPlayer>(RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
 
         if (includePlayerData) {
             for (const player of players) {
@@ -68,7 +68,7 @@ export class PlayerService extends ServiceBase {
 
     async getSelectedRoundPlayers(roundId: string): Promise<MatchDayRoundPlayer[]> {
         const database = await db;
-        const players = await safeSelect<MatchDayRoundPlayer>(database, RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
+        const players = await database.safeSelect<MatchDayRoundPlayer>(RoundPlayerColumns, tableNameRoundPlayer, "where round_id=?", [roundId]) //database.select<any[]>(`SELECT ${this.selectColumns} FROM player where round_id=?`, [roundId]);
 
         return players;
     }

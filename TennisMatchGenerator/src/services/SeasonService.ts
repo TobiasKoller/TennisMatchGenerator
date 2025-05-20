@@ -2,7 +2,7 @@ import { db } from "../db/Db";
 import { Season } from "../model/Season";
 import { v4 as uuidv4 } from "uuid";
 import { Setting } from "../model/Setting";
-import { DbColumnDefinition, safeSelect } from "../db/DbHelper";
+import { DbColumnDefinition } from "../db/DbColumnDefinition";
 
 const tableName = "season" as const;
 
@@ -19,7 +19,7 @@ export class SeasonService {
 
     public async getCurrentSeason(createIfNotFound = true): Promise<Season | null> {
         const database = await db;
-        var seasons = await safeSelect<Season>(database, SeasonColumns, tableName, "LIMIT 1");
+        var seasons = await database.safeSelect<Season>(SeasonColumns, tableName, "LIMIT 1");
 
         if (seasons.length === 0) {
             if (createIfNotFound) return await this.createSeason();
@@ -53,7 +53,7 @@ export class SeasonService {
 
     private async getPreviousSeason(): Promise<Season | null> {
         const database = await db;
-        var prevSeason = await safeSelect<Season>(database, SeasonColumns, tableName, "LIMIT 1");
+        var prevSeason = await database.safeSelect<Season>(SeasonColumns, tableName, "LIMIT 1");
         return (prevSeason.length === 0) ? null : prevSeason[0];
     }
 

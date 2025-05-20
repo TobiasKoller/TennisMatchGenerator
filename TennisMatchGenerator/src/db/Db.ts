@@ -1,14 +1,14 @@
-import Database from "@tauri-apps/plugin-sql";
+import { DatabaseExt } from "./DatabaseExt";
 
+// ✅ Singleton-Klasse
 class DB {
-    private static instance: Promise<Database>;
+    private static instance: Promise<DatabaseExt>;
 
     private constructor() { }
 
-    static getInstance(): Promise<Database> {
-
+    static getInstance(): Promise<DatabaseExt> {
         if (!DB.instance) {
-            DB.instance = Database.load("sqlite:tennismatchgenerator.sqlite");
+            DB.instance = DatabaseExt.load("sqlite:tennismatchgenerator.sqlite");
         }
         return DB.instance;
     }
