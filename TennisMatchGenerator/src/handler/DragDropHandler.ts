@@ -13,13 +13,14 @@ export class DragDropService extends ServiceBase {
         super(seasonId, notificationService);
     }
 
-    public handleDragPlayerStart(e: React.DragEvent, playerId: string | null, fromMatchId: string | null, fromCourtNumber: number | null) {
+    public handleDragPlayerStart(e: React.DragEvent, playerId: string | null, fromMatchId: string | null, fromCourtNumber: number | null, fromSide: CourtSide | null) {
         const context: DragPlayerContext = {
             fromMatchId: fromMatchId,
             fromPlayerId: playerId,
             fromCourtNumber: fromCourtNumber,
             toMatchId: null,
             toPlayerId: null,
+            fromSide: fromSide,
             toSide: null,
             toCourtNumber: null
         };
@@ -50,54 +51,135 @@ export class DragDropService extends ServiceBase {
     public async handleOnDropOnCourt(e: React.DragEvent, context: DragPlayerContext) {
         e.preventDefault();
 
-        let matchId = context.toMatchId;
-        const side = context.toSide;
-        const playerId = context.fromPlayerId;
+        const fromMatchId = context.fromMatchId;
+        const toMatchId = context.toMatchId;
+        const fromPlayerId = context.fromPlayerId;
+        const toPlayerId = context.toPlayerId;
+        const fromCourtNumber = context.fromCourtNumber;
+        const toCourtNumber = context.toCourtNumber;
+        const fromSide = context.fromSide;
+        const toSide = context.toSide;
+        const fromMatch = context.fromMatchId ? await this.matchDayService.getMatch(context.fromMatchId) : null;
+        let toMatch = context.toMatchId ? await this.matchDayService.getMatch(context.toMatchId) : null;
 
-        if (side === null || playerId === null) return;
-        if (await this.isPlayerInMatch(playerId, matchId!)) {
-            this.notificationService.notifyWarning("Spieler ist bereits im Match");
-            return;
-        }
+        if (toSide === null || fromPlayerId === null) return;
 
-        if (!matchId) {
-            if (!context.toCourtNumber) return;
-            let match = await this.createMatch(context.toCourtNumber);
-            matchId = match.id;
-        }
+        try {
+            if (this.playerMovedFromOtherCourt(fromCourtNumber, toCourtNumber)) {
+                if (!toMatchId && toCourtNumber)
+                    toMatch = await this.createMatch(toCourtNumber);
 
-        if (context.fromMatchId) { // Spieler wird von einem anderen Match verschoben
-            await this.addPlayerToMatch(playerId, side, matchId!);
-            await this.removePlayerFromMatch(playerId, context.fromMatchId);
-        }
-        else { // Spieler wird von der Spielerliste verschoben
-            if (await this.isPlayerInAnyMatch(playerId)) {
-                this.notificationService.notifyWarning("Spieler ist bereits in einem anderen Match");
+                await this.addPlayerToMatch(fromPlayerId, toSide, toMatch!);
+                await this.removePlayerFromMatch(fromPlayerId, fromMatch!);
                 return;
             }
-            await this.addPlayerToMatch(playerId, side, matchId!);
-        }
+            if (this.playerMovedSideOnSameCourt(fromMatchId, toMatchId)) {
+                await this.movePlayerToOtherSide(fromPlayerId, toMatch!, fromSide, toSide);
+                return;
+            }
 
-        await this.reloadMatches();
+
+            if (this.playerMovedFromPlayerList(fromMatchId)) {
+                if (await this.isPlayerInAnyMatch(fromPlayerId)) {
+                    this.notificationService.notifyWarning("Spieler ist bereits in einem anderen Match");
+                    return;
+                }
+
+                if (!toMatchId && toCourtNumber)
+                    toMatch = await this.createMatch(toCourtNumber);
+
+                await this.addPlayerToMatch(fromPlayerId, toSide, toMatch!);
+            }
+        }
+        finally {
+            await this.reloadMatches();
+        }
     };
 
-    async isPlayerInAnyMatch(playerId: string) {
-        if (!playerId) return false;
+
+
+    async movePlayerToOtherSide(fromPlayerId: string, match: Match, fromSide: CourtSide | null, toSide: CourtSide | null) {
+        if (!match) return;
+
+        if (fromSide == CourtSide.LEFT) {
+            if (toSide == CourtSide.LEFT) {
+                this.notificationService.notifyWarning("Der Spieler ist bereits auf der Seite.");
+                return;
+            }
+
+            if (!this.isNullOrEmpty(match.player1GuestId) && !this.isNullOrEmpty(match.player2GuestId)) {
+                this.notificationService.notifyError("Beide Spieler sind bereits gesetzt");
+                return;
+            }
+
+            if (this.isNullOrEmpty(match.player1GuestId)) match.player1GuestId = fromPlayerId;
+            else match.player2GuestId = fromPlayerId;
+
+            this.removePlayerFromCourt(fromPlayerId, match, CourtSide.LEFT);
+
+        }
+        else {
+            if (toSide == CourtSide.RIGHT) {
+                this.notificationService.notifyWarning("Der Spieler ist bereits auf der Seite.");
+                return;
+            }
+            if (!this.isNullOrEmpty(match.player1HomeId) && !this.isNullOrEmpty(match.player2HomeId)) {
+                this.notificationService.notifyWarning("Beide Spieler sind bereits gesetzt");
+                return;
+            }
+            if (this.isNullOrEmpty(match.player1HomeId)) match.player1HomeId = fromPlayerId;
+            else match.player2HomeId = fromPlayerId;
+
+            this.removePlayerFromCourt(fromPlayerId, match, CourtSide.RIGHT);
+        }
+
+        await this.matchDayService.updateMatch(match);
+    }
+
+    removePlayerFromCourt(playerId: string, match: Match, side: CourtSide) {
+        if (!match) return;
+
+        if (side == CourtSide.LEFT) {
+            if (match.player1HomeId == playerId) match.player1HomeId = null;
+            else if (match.player2HomeId == playerId) match.player2HomeId = null;
+        }
+        else {
+            if (match.player1GuestId == playerId) match.player1GuestId = null;
+            else if (match.player2GuestId == playerId) match.player2GuestId = null;
+        }
+
+        this.matchDayService.updateMatch(match);
+    }
+
+    playerMovedFromOtherCourt(fromCourtNumber: number | null, toCourtNumber: number | null) {
+        return fromCourtNumber !== null && fromCourtNumber != toCourtNumber;
+    }
+
+    playerMovedFromPlayerList(fromMatchId: string | null) {
+        return fromMatchId === null;
+    }
+
+    playerMovedSideOnSameCourt(fromMatchId: string | null, toMatchId: string | null) {
+        return !this.isNullOrEmpty(fromMatchId) && !this.isNullOrEmpty(toMatchId) && fromMatchId === toMatchId;
+    }
+
+    async isPlayerInAnyMatch(fromPlayerId: string) {
+        if (!fromPlayerId) return false;
 
         const matches = await this.matchDayService.getMatches(this.roundId);
 
         for (const match of matches) {
-            if (await this.isPlayerInMatch(playerId, match)) return true;
+            if (await this.isPlayerInMatch(fromPlayerId, match)) return true;
         }
         return false;
     }
 
-    async isPlayerInMatch(playerId: string, match: Match | string) {
-        if (!playerId || !match) return false;
+    async isPlayerInMatch(fromPlayerId: string, match: Match | string) {
+        if (!fromPlayerId || !match) return false;
 
         const currentMatch = typeof match === "string" ? await this.matchDayService.getMatch(match) : match;
 
-        if (currentMatch.player1HomeId == playerId || currentMatch.player2HomeId == playerId || currentMatch.player1GuestId == playerId || currentMatch.player2GuestId == playerId) {
+        if (currentMatch.player1HomeId == fromPlayerId || currentMatch.player2HomeId == fromPlayerId || currentMatch.player1GuestId == fromPlayerId || currentMatch.player2GuestId == fromPlayerId) {
             return true;
         }
         return false;
@@ -120,10 +202,15 @@ export class DragDropService extends ServiceBase {
         return validateGuid(id);
     }
 
-    async switchPlayers(fromPlayerId: string, toPlayerId: string, fromMatchId: string | null, toMatchId: string) {
+    async switchPlayers(fromPlayerId: string, toPlayerId: string, fromMatchId: string | null, toMatchId: string, fromSide: CourtSide | null = null, toSide: CourtSide | null = null) {
         if (!fromPlayerId || !toPlayerId) return;
 
         if (fromMatchId == toMatchId) {
+            // if(fromSide != toSide) {
+            // }
+            // else{
+
+            // }
             this.notificationService.notifyError("Beide Spieler sind bereits im selben Match");
             return;
         }
@@ -132,16 +219,51 @@ export class DragDropService extends ServiceBase {
 
     }
 
-    async removePlayerFromMatch(playerId: string, matchId: string) {
-        var match = await this.matchDayService.getMatch(matchId);
+    async removePlayerFromMatch(playerId: string, match: Match) {
+        //var match = await this.matchDayService.getMatch(matchId);
 
         if (match.player1HomeId == playerId) match.player1HomeId = null;
         else if (match.player2HomeId == playerId) match.player2HomeId = null;
         else if (match.player1GuestId == playerId) match.player1GuestId = null;
         else if (match.player2GuestId == playerId) match.player2GuestId = null;
 
-        if (this.isEmptyMatch(match)) await this.matchDayService.deleteMatch(matchId);
-        else await this.matchDayService.updateMatch(match);
+        if (this.isEmptyMatch(match)) await this.matchDayService.deleteMatch(match.id);
+        else {
+            if (this.countHomePlayers(match) < 2 && this.countGuestPlayers(match) < 2) {
+                match.type = "single";
+                if (!this.isNullOrEmpty(match.player2HomeId)) {
+                    match.player1HomeId = match.player2HomeId;
+                    match.player2HomeId = null;
+                }
+                if (!this.isNullOrEmpty(match.player2GuestId)) {
+                    match.player1GuestId = match.player2GuestId;
+                    match.player2GuestId = null;
+                }
+            }
+            else {
+                match.type = "double";
+            }
+
+            await this.matchDayService.updateMatch(match);
+        }
+    }
+
+    isNullOrEmpty(value: string | null) {
+        return value === null || value === "" || value == EMPTY_GUID || value == undefined;
+    }
+
+    countHomePlayers(match: Match) {
+
+        let count = 0;
+        if (match.player1HomeId) count++;
+        if (match.player2HomeId) count++;
+        return count;
+    }
+    countGuestPlayers(match: Match) {
+        let count = 0;
+        if (match.player1GuestId) count++;
+        if (match.player2GuestId) count++;
+        return count;
     }
 
     isEmptyMatch(match: Match) {
@@ -152,9 +274,7 @@ export class DragDropService extends ServiceBase {
     }
 
 
-    async addPlayerToMatch(playerId: string, side: CourtSide, matchId: string) {
-
-        var match = await this.matchDayService.getMatch(matchId);
+    async addPlayerToMatch(playerId: string, side: CourtSide, match: Match) {
 
         if (side == CourtSide.LEFT) {
             if (this.isvalidId(match.player1HomeId) && this.isvalidId(match.player2HomeId)) {

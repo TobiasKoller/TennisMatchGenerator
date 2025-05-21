@@ -6,6 +6,7 @@ export class DragPlayerContext {
     fromCourtNumber: number | null = null;
     toMatchId: string | null = null;
     toPlayerId: string | null = null;
+    fromSide: CourtSide | null = null;
     toSide: CourtSide | null = null;
     toCourtNumber: number | null = null;
 }

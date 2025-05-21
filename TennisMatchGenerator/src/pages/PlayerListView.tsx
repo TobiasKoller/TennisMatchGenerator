@@ -1,5 +1,5 @@
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import { useContext, useEffect, useRef, useState } from "react";
+import { use, useContext, useEffect, useRef, useState } from "react";
 import Select, { MultiValue } from 'react-select';
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
@@ -15,12 +15,14 @@ import { MatchDayRound } from "../model/MatchDayRound";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
 import { DragDropService } from "../handler/DragDropHandler";
 import { MatchDayService } from "../services/MatchDayService";
+import { Match } from "../model/Match";
 
 interface PlayerListProps {
     // Define any props you need here
     isActive?: boolean;
     isEnabled?: boolean;
     round: MatchDayRound;
+    matches: Match[];
 }
 
 
@@ -46,6 +48,10 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const dragDropService = new DragDropService(season.id, notification, round.id, matchDayService, matchDayRoundContext.reloadMatches);
 
     const NoMultiValue = () => null;
+
+    useEffect(() => {
+
+    }, [props.matches]);
 
     const deletePlayer = async (playerId: string) => {
         if (isPlayerUsedInMatch(playerId)) {
@@ -171,12 +177,13 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
                 {
                     selectedPlayers.map((player, index) => {
+
                         return <Box
                             key={index} sx={{ marginBottom: 1 }}
-                            draggable
-                            onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value, null, null)}
+                            draggable={!isPlayerUsedInMatch(player.value)}
+                            onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value, null, null, null)}
                         >
-                            <Chip
+                            <Chip disabled={isPlayerUsedInMatch(player.value)}
                                 label={
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         {getGenderIcon(player.value)}
