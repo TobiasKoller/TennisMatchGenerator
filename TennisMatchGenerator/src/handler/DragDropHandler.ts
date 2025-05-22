@@ -38,10 +38,12 @@ export class DragDropService extends ServiceBase {
         var toPlayer = context.toPlayerId;
         var fromMatchId = context.fromMatchId;
         var toMatchId = context.toMatchId;
+        var fromSide = context.fromSide;
+        var toSide = context.toSide;
 
         if (!fromPlayer || !toPlayer || !toMatchId) return;
 
-        await this.switchPlayers(fromPlayer, toPlayer, fromMatchId, toMatchId);
+        await this.switchPlayers(fromPlayer, toPlayer, fromMatchId, toMatchId, fromSide, toSide);
 
         await this.reloadMatches();
     }
@@ -71,6 +73,7 @@ export class DragDropService extends ServiceBase {
 
                 await this.addPlayerToMatch(fromPlayerId, toSide, toMatch!);
                 await this.removePlayerFromMatch(fromPlayerId, fromMatch!);
+
                 return;
             }
             if (this.playerMovedSideOnSameCourt(fromMatchId, toMatchId)) {
@@ -96,7 +99,28 @@ export class DragDropService extends ServiceBase {
         }
     };
 
+    updateMatchType(match: Match) {
+        var type: "single" | "double" = "single";
 
+        if (this.isvalidId(match.player1HomeId) && this.isvalidId(match.player2HomeId))
+            type = "double";
+        else if (this.isvalidId(match.player1GuestId) && this.isvalidId(match.player2GuestId))
+            type = "double";
+
+        if (type == "single") {
+            if (!this.isvalidId(match.player1HomeId)) {
+                match.player1HomeId = match.player2HomeId;
+                match.player2HomeId = null;
+            }
+            if (!this.isvalidId(match.player1GuestId)) {
+                match.player1GuestId = match.player2GuestId;
+                match.player2GuestId = null;
+            }
+        }
+
+        match.type = type;
+
+    }
 
     async movePlayerToOtherSide(fromPlayerId: string, match: Match, fromSide: CourtSide | null, toSide: CourtSide | null) {
         if (!match) return;
@@ -132,7 +156,7 @@ export class DragDropService extends ServiceBase {
 
             this.removePlayerFromCourt(fromPlayerId, match, CourtSide.RIGHT);
         }
-
+        this.updateMatchType(match);
         await this.matchDayService.updateMatch(match);
     }
 
@@ -147,7 +171,7 @@ export class DragDropService extends ServiceBase {
             if (match.player1GuestId == playerId) match.player1GuestId = null;
             else if (match.player2GuestId == playerId) match.player2GuestId = null;
         }
-
+        this.updateMatchType(match);
         this.matchDayService.updateMatch(match);
     }
 
@@ -203,19 +227,76 @@ export class DragDropService extends ServiceBase {
     }
 
     async switchPlayers(fromPlayerId: string, toPlayerId: string, fromMatchId: string | null, toMatchId: string, fromSide: CourtSide | null = null, toSide: CourtSide | null = null) {
-        if (!fromPlayerId || !toPlayerId) return;
+        if (!fromPlayerId || !toPlayerId || !toMatchId) return;
 
-        if (fromMatchId == toMatchId) {
-            // if(fromSide != toSide) {
-            // }
-            // else{
+        try {
 
-            // }
-            this.notificationService.notifyError("Beide Spieler sind bereits im selben Match");
-            return;
+            const fromMatch = fromMatchId ? await this.matchDayService.getMatch(fromMatchId!) : null;
+            const toMatch = await this.matchDayService.getMatch(toMatchId);
+
+            if (this.isNullOrEmpty(fromMatchId)) {
+                //Player kommt von der Spieler-Liste
+                if (toSide == CourtSide.LEFT) {
+                    if (toMatch.player1HomeId == toPlayerId)
+                        toMatch.player1HomeId = fromPlayerId;
+                    else if (toMatch.player2HomeId == toPlayerId)
+                        toMatch.player2HomeId = fromPlayerId;
+                }
+                else {
+                    if (toMatch.player1GuestId == toPlayerId)
+                        toMatch.player1GuestId = fromPlayerId;
+                    else if (toMatch.player2GuestId == toPlayerId)
+                        toMatch.player2GuestId = fromPlayerId;
+                }
+                await this.matchDayService.updateMatch(toMatch);
+                return;
+            }
+            else if (fromMatchId == toMatchId) {
+                if (fromSide == toSide) {
+                    this.notificationService.notifyWarning("Beide Spieler sind bereits im selben Match");
+                    return;
+                }
+
+                if (fromSide == CourtSide.LEFT) {
+                    var fromAttribute = fromMatch!.player1HomeId === fromPlayerId ? "player1HomeId" : "player2HomeId";
+                    var toAttribute = toMatch.player1GuestId === toPlayerId ? "player1GuestId" : "player2GuestId";
+
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
+                    (<any>toMatch)[fromAttribute] = toPlayerId;
+                }
+                else {
+                    var fromAttribute = fromMatch!.player1GuestId === fromPlayerId ? "player1GuestId" : "player2GuestId";
+                    var toAttribute = toMatch.player1HomeId === toPlayerId ? "player1HomeId" : "player2HomeId";
+
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
+                    (<any>toMatch)[fromAttribute] = toPlayerId;
+                }
+                await this.matchDayService.updateMatch(toMatch);
+
+            }
+            else {
+                // Spieler von einem Match in ein anderes Match verschieben
+                if (fromSide == CourtSide.LEFT) {
+                    var fromAttribute = fromMatch!.player1HomeId === fromPlayerId ? "player1HomeId" : "player2HomeId";
+                    var toAttribute = toMatch.player1GuestId === toPlayerId ? "player1GuestId" : "player2GuestId";
+
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
+                    (<any>fromMatch)[fromAttribute] = toPlayerId;
+                }
+                else {
+                    var fromAttribute = fromMatch!.player1GuestId === fromPlayerId ? "player1GuestId" : "player2GuestId";
+                    var toAttribute = toMatch.player1HomeId === toPlayerId ? "player1HomeId" : "player2HomeId";
+
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
+                    (<any>fromMatch)[fromAttribute] = toPlayerId;
+                }
+                await this.matchDayService.updateMatch(toMatch);
+                await this.matchDayService.updateMatch(fromMatch!);
+            }
         }
-
-        await this.switchPlayers(fromPlayerId, toPlayerId, fromMatchId, toMatchId);
+        finally {
+            await this.reloadMatches();
+        }
 
     }
 
@@ -243,7 +324,7 @@ export class DragDropService extends ServiceBase {
             else {
                 match.type = "double";
             }
-
+            this.updateMatchType(match);
             await this.matchDayService.updateMatch(match);
         }
     }
@@ -302,7 +383,7 @@ export class DragDropService extends ServiceBase {
                 match.type = "double";
             }
         }
-
+        this.updateMatchType(match);
         await this.matchDayService.updateMatch(match);
     }
 }

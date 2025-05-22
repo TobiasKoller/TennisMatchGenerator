@@ -85,7 +85,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     }, [selectedCourts])
 
 
-    const courtSelectionChanged = (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
+    const courtSelectionChanged = async (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
 
         //removed court
         if (newCourts.length < selectedCourts.length) {
@@ -102,6 +102,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         }
 
         var sorted = newCourts.sort((a, b) => a - b);
+        await matchDayService.updateUsedCourts(round.id, sorted);
         setSelectedCourts(sorted);
     };
 
