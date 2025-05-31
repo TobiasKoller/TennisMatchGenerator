@@ -14,11 +14,15 @@ import { MatchResult } from "../model/MatchResult";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
+const tableNameRoundPlayer = "round_player" as const;
+const tableNameMatch = "match" as const;
 
 const MatchDayColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
     { column: "date", type: "date" },
-    { column: "is_active", alias: "isActive", type: "boolean" }
+    { column: "is_active", alias: "isActive", type: "boolean" },
+    { column: "scoring_done", alias: "scoringDone", type: "boolean" },
+    { column: "season_id", alias: "seasonId", type: "string" }
 ];
 
 const MatchColumns: DbColumnDefinition[] = [
@@ -55,11 +59,12 @@ export class MatchDayService extends ServiceBase {
         const matchday: MatchDay = {
             date: new Date(),
             isActive: true,
+            scoringDone: false, // Standardmäßig auf false setzen
             id: uuidv4()
         }
 
         const database = await db;
-        await database.execute(`INSERT INTO matchday (id,season_id,date, is_active) VALUES (?,?,?,?)`, [matchday.id, this.seasonId, matchday.date.toISOString(), true]);
+        await database.execute(`INSERT INTO matchday (id,season_id,date, is_active, scoring_done) VALUES (?,?,?,?,?)`, [matchday.id, this.seasonId, matchday.date.toISOString(), true, false]);
 
         await this.setActiveMatchDay(matchday.id); // Set the new matchday as active
         return matchday.id;
@@ -107,6 +112,23 @@ export class MatchDayService extends ServiceBase {
             // Falls ein Fehler auftritt, mache die Änderungen rückgängig
             await database.execute('ROLLBACK');
             throw this.notifyError('Fehler beim Anlegen der neuen Runde:' + error?.message);
+        }
+    }
+
+    async deleteMatchDayRound(matchdayId: string, roundId: string) {
+        const database = await db;
+
+        const transaction = await database.beginTransaction();
+        try {
+            transaction.addStatement(`DELETE FROM ${tableNameRoundPlayer} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Spieler
+            transaction.addStatement(`DELETE FROM ${tableNameRound} WHERE id=?`, [roundId]);
+            transaction.addStatement(`DELETE FROM ${tableNameMatch} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Matches
+
+            await transaction.commit(); // Transaktion abschließen
+        }
+        catch (error: any) {
+            await transaction.rollback(); // Transaktion zurücksetzen
+            throw this.notifyError("Fehler beim Löschen der Runde: " + error?.message);
         }
     }
 
@@ -238,6 +260,14 @@ export class MatchDayService extends ServiceBase {
         return matches;
     }
 
+    async getMatchDayRoundById(roundId: string): Promise<MatchDayRound> {
+        const database = await db;
+        const rounds = await database.safeSelect<MatchDayRound>(RoundColumns, tableNameRound, `where id=?`, [roundId]); //database.safeSelect<MatchDayRound>(`SELECT id,matchday_id as matchDayId,number,start_date as startDate,end_date as endDate,courts,is_active as isActive FROM matchday_round where id=?`, [roundId]);
+        if (rounds.length === 0) throw this.notifyError(`Runde ${roundId} nicht gefunden`);
+        return rounds[0];
+    }
+
+
     async getLastMatchDayRound(matchdayId: string): Promise<MatchDayRound | null> {
         const database = await db;
         const rounds = await database.safeSelect<MatchDayRound>(RoundColumns, tableNameRound, `where matchday_id=? order by number desc limit 1`, [matchdayId]);
@@ -254,6 +284,11 @@ export class MatchDayService extends ServiceBase {
         const database = await db;
         await database.execute(`INSERT INTO match (id, round_id,type,number,court,set1,set2,player1_home_id,player2_home_id,player1_guest_id,player2_guest_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
             [match.id, match.roundId, match.type, match.number, match.court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
+    }
+
+    async closeMatchDay(matchdayId: string) {
+        const database = await db;
+
     }
 
     generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {

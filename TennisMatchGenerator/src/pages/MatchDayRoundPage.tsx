@@ -25,10 +25,10 @@ interface MatchDayRoundPageProps {
     isEnabled: boolean;
     isActive: boolean;
     addNewRound: () => void;
-    changeTabState: (enableTab: boolean) => void;
+    // changeTabState: (enableTab: boolean) => void;
 }
 export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
-
+    console.log("MatchDayRoundPage rendered with props:", props);
     const notification = useNotification();
     const { season } = useSeason();
 
@@ -42,10 +42,9 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
     const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
-    const isEnabled = props.isEnabled;
     const isActive = props.isActive; // Zustand für die aktiven Runden
     const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
-
+    // const [isEnabled, setIsEnabled] = useState(props.isEnabled); // Zustand für die Aktivierung der Runde
 
     const matchDayService = new MatchDayService(season.id, notification);
     const playerService = new PlayerService(season.id, notification);
@@ -62,15 +61,30 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         setMatches(currentMatches);
     }
 
+    const fetchRound = async () => {
+        const currentRound = await matchDayService.getMatchDayRoundById(round.id);
+        console.log("Fetched round:", currentRound);
+        setSelectedCourts(currentRound.courts ?? []);
+    }
+
+    // useEffect(() => {
+    //     if (roundStarted) setIsEnabled(false); // Runde gestartet, also deaktivieren
+    // }, [roundStarted]);
+
     useEffect(() => {
         console.log("Matches updated:", matches);
     }, [matches])
 
     const init = async () => {
+        // setIsEnabled(props.isEnabled);
         await fetchSettings();
         await fetchMatches();
+        await fetchRound();
     }
 
+    // useEffect(() => {
+    //     console.log("isEnabled changed:", isEnabled);
+    // }, [isEnabled]);
 
     useEffect(() => {
         init();
@@ -80,10 +94,14 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     useEffect(() => {
 
         //gibt es ein match wozu es aber keinen court gibt?
-
-        matchDayService.updateUsedCourts(round.id, selectedCourts);
+        if (round.courts != selectedCourts)
+            matchDayService.updateUsedCourts(round.id, selectedCourts);
     }, [selectedCourts])
 
+    const isEditable = () => {
+        // Runde ist aktiv und nicht gestartet
+        return !roundStarted; //isActive && !roundStarted;
+    }
 
     const courtSelectionChanged = async (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
 
@@ -168,7 +186,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     }
 
     return (
-        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, reloadMatches: fetchMatches }}>
+        <MatchDayRoundContext.Provider value={{ isPlayerUsedInMatch, reloadMatches: fetchMatches, isEditable: isEditable }}>
             <Box
                 sx={{
                     display: "flex",
@@ -186,7 +204,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         height: '100%'
                     }}
                 >
-                    <PlayerListView round={round} isActive={isActive} isEnabled={isEnabled} matches={matches} />
+                    <PlayerListView round={round} isActive={isActive} matches={matches} />
                 </Box>
 
                 {/* Rechte Seite */}
@@ -203,6 +221,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                 Verfügbare Plätze auswählen:
                             </Typography>
                             <ToggleButtonGroup
+                                disabled={!isEditable()}
                                 value={selectedCourts}
                                 onChange={courtSelectionChanged}
                                 sx={{ marginLeft: 2 }}
@@ -226,14 +245,15 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                             </ToggleButtonGroup>
                         </Box>
                         <Box>
-                            <Button onClick={generateMatches}
+                            {isEditable() && <Button onClick={generateMatches}
+
                                 variant="outlined" color="primary"
                                 startIcon={<CasinoOutlinedIcon />}>
                                 Partien auslosen
-                            </Button>
+                            </Button>}
                         </Box>
                         <Box flexGrow={1} />
-                        {!isActive && (
+                        {/* {(!isActive || roundStarted) && (
                             <Button
                                 color="error"
                                 variant="outlined"
@@ -243,8 +263,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                 {isEnabled ? "Abschließen" : "Entsperren"}
                             </Button>
 
-                        )}
-                        {isActive && matches.length > 0 && (
+                        )} */}
+                        {/* {isActive && matches.length > 0 && (
                             <Button
                                 color={roundStarted ? "error" : "success"}
                                 variant="contained"
@@ -253,7 +273,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                             >
                                 {roundStarted ? "Runde beenden" : "Runde starten"}
                             </Button>
-                        )}
+                        )} */}
 
                     </Stack>
 

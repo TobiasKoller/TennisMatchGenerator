@@ -43,7 +43,6 @@ export class MatchGenerator {
       singlePair = this.getClosestPair(allPairs);
       allPairs.splice(allPairs.findIndex(p => p.id == singlePair!.id), 1);
 
-      usedPlayerIds.push(singlePair.player1.id, singlePair.player2.id);
     }
 
     // Doppel-Matches
@@ -67,7 +66,11 @@ export class MatchGenerator {
       doubleMatches.push(match);
     }
 
-    if (singlePair) {
+
+
+    if (courtIndex < courtNumbers.length && singlePair) {
+
+      usedPlayerIds.push(singlePair.player1.id, singlePair.player2.id);
       const match = new Match();
       match.id = uuidv4(); // Assuming you have a function to generate unique IDs
       match.roundId = roundId;

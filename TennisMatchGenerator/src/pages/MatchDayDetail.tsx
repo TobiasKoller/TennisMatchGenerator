@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Tab, Tabs, } from "@mui/material";
+import { Box, Button, IconButton, Stack, Tab, Tabs, } from "@mui/material";
 import { useEffect, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
@@ -8,6 +8,8 @@ import { MatchDayRound } from "../model/MatchDayRound";
 import { useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 interface MatchDayDetailProps {
 }
@@ -20,7 +22,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     const [activeRoundId, setActiveRound] = useState("");
     const [selectedRoundId, setSelectedRoundId] = useState("");
-    const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
+    // const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
     const [rounds, setRounds] = useState<MatchDayRound[]>([]);
 
 
@@ -48,9 +50,47 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     }
 
 
-    const changeTabState = (enableTab: boolean) => {
-        if (enableTab) setEnabledRoundIds((prev) => [...prev, selectedRoundId]);
-        else setEnabledRoundIds((prev) => prev.filter((id) => id !== selectedRoundId));
+    // const changeTabState = (enableTab: boolean) => {
+    //     if (enableTab) {
+    //         if (!enabledRoundIds.includes(selectedRoundId)) {
+    //             setEnabledRoundIds((prev) => [...prev, selectedRoundId]);
+    //         }
+    //     }
+    //     else
+    //         setEnabledRoundIds((prev) => prev.filter((id) => id !== selectedRoundId));
+    // }
+
+    const handleDelete = async (roundId: string) => {
+        // if (rounds.length <= 1) {
+        //     notification.notifyError("Es muss mindestens eine Runde vorhanden sein.");
+        //     return;
+        // }
+
+        // const confirmed = window.confirm("Möchten Sie diese Runde wirklich löschen?");
+        // if (!confirmed) return;
+
+        // try {
+        //     await matchDayService.deleteMatchDayRound(matchDayId, roundId);
+        //     setRounds((prev) => prev.filter((round) => round.id !== roundId));
+        //     notification.notifySuccess("Runde erfolgreich gelöscht.");
+        //     // Wenn die gelöschte Runde die aktive Runde war, setze die nächste Runde als aktiv
+        //     if (activeRoundId === roundId && rounds.length > 1) {
+        //         const nextActiveRound = rounds[0].id; // Nimm die erste Runde als neue aktive Runde
+        //         setActiveRound(nextActiveRound);
+        //         setSelectedRoundId(nextActiveRound);
+        //     }
+        // } catch (error) {
+        //     notification.notifyError("Fehler beim Löschen der Runde.");
+        // }
+    }
+
+    const closeMatchDay = async () => {
+        try {
+            await matchDayService.closeMatchDay(matchDayId);
+            notification.notifySuccess("Spieltag erfolgreich abgeschlossen.");
+        } catch (error) {
+            notification.notifyError("Fehler beim Abschließen des Spieltags.");
+        }
     }
 
     const init = async () => {
@@ -73,8 +113,23 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                         variant="scrollable"
                         scrollButtons="auto"
                     >
-                        {rounds.map((round) => (
-                            <Tab key={round.id} label={`Runde ${round.number}`} value={round.id} />
+                        {rounds.map((round, index) => (
+                            <Tab key={round.id} label={
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {`Runde ${round.number}`}
+                                    {index === rounds.length - 1 && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(round.id);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
+                                </span>
+                            } value={round.id} />
                         ))}
                     </Tabs>
                     <Button
@@ -86,6 +141,16 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                     >
                         Neue Runde
                     </Button>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Button
+                        color="primary"
+                        variant="outlined"
+                        startIcon={<TaskAltIcon />}
+                        onClick={closeMatchDay}
+                        sx={{ marginLeft: 2 }}
+                    >
+                        Spieltag abschließen
+                    </Button>
                 </Box>
 
                 {/* Inhalt Bereich */}
@@ -96,10 +161,10 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                                 key={round.id}
                                 matchDayId={matchDayId}
                                 round={round}
-                                changeTabState={changeTabState}
+                                // changeTabState={changeTabState}
                                 addNewRound={addNewRound}
                                 isActive={activeRoundId === round.id}
-                                isEnabled={enabledRoundIds.includes(round.id) || round.id === activeRoundId}
+                                isEnabled={true}
                             />
                         )
                     ))}

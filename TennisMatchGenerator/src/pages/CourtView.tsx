@@ -46,6 +46,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     const [isDraggingRight, setIsDraggingRight] = useState(false);
     const [isDraggingPlayerId, setIsDraggingPlayerId] = useState<string | null>(null);
 
+    const isEditable = matchDayRoundContext.isEditable();
+
     const playerStyle = (position: { top: string; left?: string; right?: string, isMarked: boolean, }): {} => ({
         position: "absolute",
         ...position,
@@ -203,6 +205,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 position: "relative",
                 width: 300,
                 height: 200,
+                pointerEvents: isEditable ? 'auto' : 'none',
                 ...(match && {
                     '&:hover .action-icon': {
                         opacity: 1,
@@ -322,6 +325,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && !editResult && (
                 <Box onClick={() => { setEditResult(true) }}
                     sx={{
+                        pointerEvents: 'all',
                         cursor: "pointer",
                         position: "absolute",
                         top: "50%",
@@ -340,6 +344,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && editResult && (
                 <Box
                     sx={{
+                        pointerEvents: 'all',
                         position: "absolute",
                         backgroundColor: "rgba(0,0,0,0.7)",
                         width: "100%",
