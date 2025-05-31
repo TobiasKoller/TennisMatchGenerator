@@ -15,7 +15,7 @@ export const Settings: React.FC = () => {
     if (!season) return null; // Sicherstellen, dass die Saison vorhanden ist
 
     const [formData, setFormData] = useState<Setting>({
-        pointsForWin: 1,
+        // pointsForWin: 1,
         pointsForParticipation: 1,
         availableCourts: []
     });
@@ -81,7 +81,7 @@ export const Settings: React.FC = () => {
                 <Typography variant="h5">Grundeinstellungen</Typography>
 
                 <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
-                <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth />
+                {/* <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth /> */}
                 <ToggleButtonGroup
                     value={selectedCourts}
                     onChange={(_e, newSelection) => setSelectedCourts(newSelection)}

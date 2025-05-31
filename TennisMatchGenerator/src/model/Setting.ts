@@ -1,7 +1,7 @@
 
 
 export class Setting {
-    pointsForWin: number = 0;
+    // pointsForWonGame: number = 0;
     pointsForParticipation: number = 0;
     availableCourts: number[] = [];
 }

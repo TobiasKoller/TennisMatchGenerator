@@ -10,6 +10,7 @@ import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { SeasonService } from "../services/SeasonService";
 
 interface MatchDayDetailProps {
 }
@@ -86,7 +87,8 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     const closeMatchDay = async () => {
         try {
-            await matchDayService.closeMatchDay(matchDayId);
+            var seasonService = new SeasonService();
+            await matchDayService.closeMatchDay(seasonService, matchDayId);
             notification.notifySuccess("Spieltag erfolgreich abgeschlossen.");
         } catch (error) {
             notification.notifyError("Fehler beim Abschließen des Spieltags.");

@@ -11,6 +11,9 @@ import { Set } from "../model/Set";
 import { DbColumnDefinition } from "../db/DbColumnDefinition";
 import { MatchGenerator } from "./MatchGenerator";
 import { MatchResult } from "../model/MatchResult";
+import { SeasonService } from "./SeasonService";
+import { MatchDayCloser } from "./MatchDayCloser";
+import { getGridFilter } from "@mui/x-data-grid/internals";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
@@ -48,6 +51,14 @@ const RoundColumns: DbColumnDefinition[] = [
     { column: "courts", type: "json" },
     { column: "is_active", alias: "isActive", type: "boolean" }
 ];
+
+const StatisticColumns: DbColumnDefinition[] = [
+    { column: "id", type: "string" },
+    { column: "player_id", alias: "playerId", type: "string" },
+    { column: "season_id", alias: "seasonId", type: "string" },
+    { column: "points_for_participation", alias: "pointsForParticipation", type: "number" },
+    { column: "points_for_won_games", alias: "pointsForWonGames", type: "number" }
+]
 
 export class MatchDayService extends ServiceBase {
 
@@ -286,9 +297,22 @@ export class MatchDayService extends ServiceBase {
             [match.id, match.roundId, match.type, match.number, match.court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
     }
 
-    async closeMatchDay(matchdayId: string) {
+    async closeMatchDay(seasonService: SeasonService, matchdayId: string) {
         const database = await db;
+        var closer = new MatchDayCloser(seasonService, this);
+        var records = await closer.CalculateMatchDayPoints(this.seasonId, matchdayId);
+        if (records.length === 0) this.noticiationService.notifyError("Keine Spieler für die Punkteberechnung gefunden.");
 
+        try {
+            for (var record of records) {
+                await database.execute(`INSERT INTO statistic (id, player_id, season_id, points_for_participation, points_for_won_games) VALUES (?,?,?,?,?)`,
+                    [record.id, record.playerId, record.seasonId, record.pointsForParticipation, record.pointsForWonGames]);
+            }
+        } catch (error: any) {
+            this.noticiationService.notifyError("Fehler beim Speichern der Statistiken: " + error?.message);
+        }
+
+        this.notifyError("Fehler: TODO Rollback...ggf erstellte Datensätze löschen: ");
     }
 
     generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {
