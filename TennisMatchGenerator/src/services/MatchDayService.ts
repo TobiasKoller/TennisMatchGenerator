@@ -13,7 +13,7 @@ import { MatchGenerator } from "./MatchGenerator";
 import { MatchResult } from "../model/MatchResult";
 import { SeasonService } from "./SeasonService";
 import { MatchDayCloser } from "./MatchDayCloser";
-import { getGridFilter } from "@mui/x-data-grid/internals";
+import { StatisticService } from "./StatisticService";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
@@ -24,7 +24,7 @@ const MatchDayColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
     { column: "date", type: "date" },
     { column: "is_active", alias: "isActive", type: "boolean" },
-    { column: "scoring_done", alias: "scoringDone", type: "boolean" },
+    { column: "is_closed", alias: "isClosed", type: "boolean" },
     { column: "season_id", alias: "seasonId", type: "string" }
 ];
 
@@ -52,32 +52,30 @@ const RoundColumns: DbColumnDefinition[] = [
     { column: "is_active", alias: "isActive", type: "boolean" }
 ];
 
-const StatisticColumns: DbColumnDefinition[] = [
-    { column: "id", type: "string" },
-    { column: "player_id", alias: "playerId", type: "string" },
-    { column: "season_id", alias: "seasonId", type: "string" },
-    { column: "points_for_participation", alias: "pointsForParticipation", type: "number" },
-    { column: "points_for_won_games", alias: "pointsForWonGames", type: "number" }
-]
 
 export class MatchDayService extends ServiceBase {
 
+    private statisticService: StatisticService;
+
     constructor(seasonId: string, notificationService: INotificationService) {
         super(seasonId, notificationService);
+
+        this.statisticService = new StatisticService(seasonId, notificationService);
     }
 
     async createMatchDay(): Promise<string> {
         const matchday: MatchDay = {
             date: new Date(),
             isActive: true,
-            scoringDone: false, // Standardmäßig auf false setzen
+            isClosed: false, // Standardmäßig auf false setzen
             id: uuidv4()
         }
 
         const database = await db;
-        await database.execute(`INSERT INTO matchday (id,season_id,date, is_active, scoring_done) VALUES (?,?,?,?,?)`, [matchday.id, this.seasonId, matchday.date.toISOString(), true, false]);
-
+        await database.execute(`INSERT INTO matchday (id,season_id,date, is_active, is_closed) VALUES (?,?,?,?,?)`, [matchday.id, this.seasonId, matchday.date.toISOString(), 0, 0]);
         await this.setActiveMatchDay(matchday.id); // Set the new matchday as active
+
+        await this.createMatchDayRound(matchday.id); // Create the first round for the new matchday
         return matchday.id;
     }
 
@@ -301,19 +299,26 @@ export class MatchDayService extends ServiceBase {
         const database = await db;
         var closer = new MatchDayCloser(seasonService, this);
         var records = await closer.CalculateMatchDayPoints(this.seasonId, matchdayId);
-        if (records.length === 0) this.noticiationService.notifyError("Keine Spieler für die Punkteberechnung gefunden.");
+        if (records.length === 0) throw new Error("Keine Spieler für den Spieltag gefunden. Bitte stellen Sie sicher, dass Spieler in der Runde vorhanden sind.");
+
+        const rollBackStatistics = async (database: any, records: any[]) => {
+            for (var record of records) {
+                await database.execute(`DELETE FROM statistic WHERE id=?`, [record.id]);
+            }
+        }
 
         try {
             for (var record of records) {
-                await database.execute(`INSERT INTO statistic (id, player_id, season_id, points_for_participation, points_for_won_games) VALUES (?,?,?,?,?)`,
-                    [record.id, record.playerId, record.seasonId, record.pointsForParticipation, record.pointsForWonGames]);
+                await this.statisticService.createStatistic(record);
             }
+            await database.execute(`UPDATE matchday SET is_closed=1 WHERE id=?`, [matchdayId]);
         } catch (error: any) {
-            this.noticiationService.notifyError("Fehler beim Speichern der Statistiken: " + error?.message);
+            rollBackStatistics(database, records);
+            throw new Error(`Fehler beim Schließen des Spieltags: ${error?.message}`);
         }
-
-        this.notifyError("Fehler: TODO Rollback...ggf erstellte Datensätze löschen: ");
     }
+
+
 
     generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {
 

@@ -50,17 +50,17 @@ export class MatchDayCloser {
 
     private initPlayerRecords(seasonId: string, match: Match, pointsForParticipation: number, records: Record<string, StatisticData>) {
         var statisticData: StatisticData = {
-            id: uuidv4(),
             playerId: "",
+            id: "",
             seasonId: seasonId,
             pointsForParticipation: pointsForParticipation,
             pointsForWonGames: 0
 
         }
-        if (match.player1HomeId && !records[match.player1HomeId]) records[match.player1HomeId] = { ...statisticData, playerId: match.player1HomeId };
-        if (match.player2HomeId && !records[match.player2HomeId]) records[match.player2HomeId] = { ...statisticData, playerId: match.player2HomeId };
-        if (match.player1GuestId && !records[match.player1GuestId]) records[match.player1GuestId] = { ...statisticData, playerId: match.player1GuestId };
-        if (match.player2GuestId && !records[match.player2GuestId]) records[match.player2GuestId] = { ...statisticData, playerId: match.player2GuestId };
+        if (match.player1HomeId && !records[match.player1HomeId]) records[match.player1HomeId] = { ...statisticData, playerId: match.player1HomeId, id: uuidv4() };
+        if (match.player2HomeId && !records[match.player2HomeId]) records[match.player2HomeId] = { ...statisticData, playerId: match.player2HomeId, id: uuidv4() };
+        if (match.player1GuestId && !records[match.player1GuestId]) records[match.player1GuestId] = { ...statisticData, playerId: match.player1GuestId, id: uuidv4() };
+        if (match.player2GuestId && !records[match.player2GuestId]) records[match.player2GuestId] = { ...statisticData, playerId: match.player2GuestId, id: uuidv4() };
     }
 
 }

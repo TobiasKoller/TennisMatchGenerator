@@ -4,6 +4,6 @@ import { DbRecord } from "./DbRecord";
 export class MatchDay extends DbRecord {
     date: Date = new Date();
     isActive: boolean = false;
-    scoringDone: boolean = false;
+    isClosed: boolean = false;
 }
 

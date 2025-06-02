@@ -22,8 +22,9 @@ import { isNullOrEmpty } from "../common/Common.ts";
 interface MatchDayRoundPageProps {
     matchDayId: string;
     round: MatchDayRound;
-    isEnabled: boolean;
-    isActive: boolean;
+    isClosed: boolean;
+    // isEnabled: boolean;
+    // isActive: boolean;
     addNewRound: () => void;
     // changeTabState: (enableTab: boolean) => void;
 }
@@ -42,7 +43,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
     const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
-    const isActive = props.isActive; // Zustand für die aktiven Runden
+    // const isActive = props.isActive; // Zustand für die aktiven Runden
+    const isClosed = props.isClosed; // Zustand für den geschlossenen Status der Runde
     const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
     // const [isEnabled, setIsEnabled] = useState(props.isEnabled); // Zustand für die Aktivierung der Runde
 
@@ -100,7 +102,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
     const isEditable = () => {
         // Runde ist aktiv und nicht gestartet
-        return !roundStarted; //isActive && !roundStarted;
+        return !isClosed;
     }
 
     const courtSelectionChanged = async (_event: React.MouseEvent<HTMLElement>, newCourts: number[]) => {
@@ -112,7 +114,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                 var usedCourts = matches.filter(match => match.court === removedCourt[0]);
                 if (usedCourts.length > 0) {
                     notification.notifyError(`Platz ${removedCourt[0]} kann nicht entfernt werden, da er bereits in einem Match verwendet wird.`);
-
                     return;
                 }
                 notification.notifySuccess(`Platz ${removedCourt[0]} entfernt`);
@@ -124,40 +125,40 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         setSelectedCourts(sorted);
     };
 
-    const toggleRoundState = async () => {
+    // const toggleRoundState = async () => {
 
-        if (!roundStarted) {
-            for (const match of matches) {
-                if (match.type === "single") {
-                    if (isNullOrEmpty(match.player1HomeId) || isNullOrEmpty(match.player1GuestId)) {
-                        notification.notifyError(`Court ${match.court} ist nicht vollständig besetzt!`);
-                        return;
-                    }
-                }
-                if (match.type === "double") {
-                    //2 gegen 1 erlaubt
-                    if ((isNullOrEmpty(match.player1HomeId) && isNullOrEmpty(match.player2HomeId)) || (isNullOrEmpty(match.player1GuestId) && isNullOrEmpty(match.player2GuestId))) {
-                        notification.notifyError(`Court ${match.court} ist nicht vollständig besetzt!`);
-                        return;
-                    }
-                }
-            }
+    //     if (!roundStarted) {
+    //         for (const match of matches) {
+    //             if (match.type === "single") {
+    //                 if (isNullOrEmpty(match.player1HomeId) || isNullOrEmpty(match.player1GuestId)) {
+    //                     notification.notifyError(`Court ${match.court} ist nicht vollständig besetzt!`);
+    //                     return;
+    //                 }
+    //             }
+    //             if (match.type === "double") {
+    //                 //2 gegen 1 erlaubt
+    //                 if ((isNullOrEmpty(match.player1HomeId) && isNullOrEmpty(match.player2HomeId)) || (isNullOrEmpty(match.player1GuestId) && isNullOrEmpty(match.player2GuestId))) {
+    //                     notification.notifyError(`Court ${match.court} ist nicht vollständig besetzt!`);
+    //                     return;
+    //                 }
+    //             }
+    //         }
 
-            dialogRef.current?.open({
-                question: "Möchten Sie die Runde wirklich starten?",
-                onConfirm: async () => {
-                    notification.notifyWarning("TODO: Runde starten");
-                    setRoundStarted(true);
-                },
-                onClose: () => {
-                },
-            });
-        }
-        else {
-            notification.notifyWarning("TODO: Runde beenden");
-            setRoundStarted(false);
-        }
-    }
+    //         dialogRef.current?.open({
+    //             question: "Möchten Sie die Runde wirklich starten?",
+    //             onConfirm: async () => {
+    //                 notification.notifyWarning("TODO: Runde starten");
+    //                 setRoundStarted(true);
+    //             },
+    //             onClose: () => {
+    //             },
+    //         });
+    //     }
+    //     else {
+    //         notification.notifyWarning("TODO: Runde beenden");
+    //         setRoundStarted(false);
+    //     }
+    // }
 
     const generateMatches = async () => {
         if (selectedCourts.length === 0) {
@@ -204,7 +205,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         height: '100%'
                     }}
                 >
-                    <PlayerListView round={round} isActive={isActive} matches={matches} />
+                    <PlayerListView round={round} isActive={!isClosed} matches={matches} />
                 </Box>
 
                 {/* Rechte Seite */}

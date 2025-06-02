@@ -205,7 +205,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 position: "relative",
                 width: 300,
                 height: 200,
-                pointerEvents: isEditable ? 'auto' : 'none',
+                // pointerEvents: isEditable ? 'auto' : 'none',
                 ...(match && {
                     '&:hover .action-icon': {
                         opacity: 1,
@@ -325,7 +325,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && !editResult && (
                 <Box onClick={() => { setEditResult(true) }}
                     sx={{
-                        pointerEvents: 'all',
+                        // pointerEvents: 'all',
                         cursor: "pointer",
                         position: "absolute",
                         top: "50%",
@@ -344,7 +344,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && editResult && (
                 <Box
                     sx={{
-                        pointerEvents: 'all',
+                        // pointerEvents: 'all',
                         position: "absolute",
                         backgroundColor: "rgba(0,0,0,0.7)",
                         width: "100%",
