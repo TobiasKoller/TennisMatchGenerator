@@ -58,27 +58,37 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
 
     const handleDelete = async (roundId: string) => {
-        // if (rounds.length <= 1) {
-        //     notification.notifyError("Es muss mindestens eine Runde vorhanden sein.");
-        //     return;
-        // }
+        if (rounds.length <= 1) {
+            notification.notifyWarning("Es muss mindestens eine Runde vorhanden sein.");
+            return;
+        }
 
-        // const confirmed = window.confirm("Möchten Sie diese Runde wirklich löschen?");
-        // if (!confirmed) return;
+        var round = rounds.find((r) => r.id === roundId);
+        if (!round) {
+            notification.notifyError("Runde nicht gefunden.");
+            return;
+        }
 
-        // try {
-        //     await matchDayService.deleteMatchDayRound(matchDayId, roundId);
-        //     setRounds((prev) => prev.filter((round) => round.id !== roundId));
-        //     notification.notifySuccess("Runde erfolgreich gelöscht.");
-        //     // Wenn die gelöschte Runde die aktive Runde war, setze die nächste Runde als aktiv
-        //     if (activeRoundId === roundId && rounds.length > 1) {
-        //         const nextActiveRound = rounds[0].id; // Nimm die erste Runde als neue aktive Runde
-        //         setActiveRound(nextActiveRound);
-        //         setSelectedRoundId(nextActiveRound);
-        //     }
-        // } catch (error) {
-        //     notification.notifyError("Fehler beim Löschen der Runde.");
-        // }
+        var matches = await matchDayService.getMatches(roundId);
+        if (matches && matches.length > 0) {
+            notification.notifyWarning("Die Runde kann nicht gelöscht werden, da sie bereits Spiele enthält.");
+            return;
+        }
+
+        const confirmed = window.confirm("Möchten Sie diese Runde wirklich löschen?");
+        if (!confirmed) return;
+
+        try {
+            await matchDayService.deleteMatchDayRound(roundId);
+            var filteredRounds = rounds.filter((r) => r.id !== roundId);
+            setRounds(filteredRounds);
+
+            setSelectedRoundId(filteredRounds[filteredRounds.length - 1].id); // Setze die ausgewählte Runde auf die letzte Runde
+            notification.notifySuccess("Runde erfolgreich gelöscht.");
+
+        } catch (error) {
+            notification.notifyError("Fehler beim Löschen der Runde.");
+        }
     }
 
     const closeMatchDay = async () => {
@@ -102,9 +112,6 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
             },
         });
 
-
-
-
     }
 
     const init = async () => {
@@ -123,7 +130,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         >
             <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
                 {/* Obere Buttons und Tabs */}
-                <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>
                     <Tabs
                         value={selectedRoundId}
                         onChange={handleTabChange}
@@ -134,7 +141,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                             <Tab key={round.id} sx={{ pointerEvents: 'all' }} label={
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     {`Runde ${round.number}`}
-                                    {index === rounds.length - 1 && (
+                                    {index > 0 && index === rounds.length - 1 && (
                                         !isClosed && <IconButton
                                             size="small"
                                             onClick={(e) => {

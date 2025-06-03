@@ -124,19 +124,15 @@ export class MatchDayService extends ServiceBase {
         }
     }
 
-    async deleteMatchDayRound(matchdayId: string, roundId: string) {
+    async deleteMatchDayRound(roundId: string) {
         const database = await db;
 
-        const transaction = await database.beginTransaction();
         try {
-            transaction.addStatement(`DELETE FROM ${tableNameRoundPlayer} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Spieler
-            transaction.addStatement(`DELETE FROM ${tableNameRound} WHERE id=?`, [roundId]);
-            transaction.addStatement(`DELETE FROM ${tableNameMatch} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Matches
-
-            await transaction.commit(); // Transaktion abschließen
+            database.execute(`DELETE FROM ${tableNameRoundPlayer} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Spieler
+            database.execute(`DELETE FROM ${tableNameMatch} WHERE round_id=?`, [roundId]); // Löschen der zugehörigen Matches
+            database.execute(`DELETE FROM ${tableNameRound} WHERE id=?`, [roundId]);
         }
         catch (error: any) {
-            await transaction.rollback(); // Transaktion zurücksetzen
             throw this.notifyError("Fehler beim Löschen der Runde: " + error?.message);
         }
     }

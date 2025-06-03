@@ -23,7 +23,7 @@ const columns: GridColDef[] = [
     width: 500,
     valueGetter: (_value, row: Player) => `${row.firstname || ''} ${row.lastname || ''}`,
   },
-  { field: 'age', headerName: 'Alter', type: 'number', width: 150 },
+  { field: 'birthDate', headerName: 'Geburtstag', type: 'date', width: 150 },
   { field: 'skillRating', headerName: 'Leitungsbewertung', type: 'number', width: 150 },
 ];
 

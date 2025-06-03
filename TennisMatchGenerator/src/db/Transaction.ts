@@ -18,12 +18,12 @@ export class Transaction {
 
     public async commit() {
 
-        console.log(this._statements.join("\r\n"));
+        // console.log(this._statements.join(";\r\n"));
         // for (const statement of this._statements) {
         //     await this._db.execute(statement);
         // }
         await this._db.execute("BEGIN TRANSACTION;");
-        await this._db.execute(this._statements.join("\r\n"));
+        await this._db.execute(this._statements.join(";\r\n"));
         await this._db.execute("COMMIT;");
     }
 

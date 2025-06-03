@@ -48,8 +48,10 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
             if (isNewPlayer) return;
             if (!playerId) return;
 
-            var player = await playerService.getPlayerById(playerId);
-            if (player) setPlayer(player);
+            var currentPlayer = await playerService.getPlayerById(playerId);
+            if (currentPlayer) {
+                setPlayer(currentPlayer);
+            }
         };
 
         fetchPlayer();
@@ -60,16 +62,26 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
         navigateHook(`/${RoutePath.PLAYERS.path}`);
     }
 
+    const formatDate = (date: Date | string | null): string => {
+        if (!date) return "";
+        const d = new Date(date);
+        return d.toISOString().split("T")[0]; // => "2025-06-03"
+    };
 
     const newPlayerFormChanged = (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }> | SelectChangeEvent<string>
     ) => {
-        const { name, value, type } = event.target as HTMLInputElement;
+        const { name, value, checked, type } = event.target as HTMLInputElement;
 
-        // Kopiere den aktuellen player-Objekt und aktualisiere nur das angegebene Feld
+        let newValue: any = value;
+
+        if (type === "checkbox") {
+            newValue = checked;
+        }
+
         setPlayer((prevPlayer) => ({
             ...prevPlayer,
-            [name]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
+            [name]: newValue,
         }));
     };
 
@@ -113,7 +125,14 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ }) => {
 
                     <TextField label="Vorname" type="text" name="firstname" value={player.firstname} onChange={newPlayerFormChanged} fullWidth />
                     <TextField label="Nachname" name="lastname" type="text" value={player.lastname} onChange={newPlayerFormChanged} fullWidth />
-                    <TextField label="Alter" name="age" type="age" value={player.age} onChange={newPlayerFormChanged} fullWidth />
+                    <TextField label="Geburtstag" name="birthDate" type="date" slotProps={{
+                        input: {
+                            // optional, wenn du z. B. Klassen oder Styles an das <input> geben willst
+                        },
+                        inputLabel: {
+                            shrink: true, // ⬅️ Der neue Weg
+                        },
+                    }} value={formatDate(player.birthDate)} onChange={newPlayerFormChanged} fullWidth />
                     <FormControl fullWidth>
                         <InputLabel id="gender-select-label">Geschlecht</InputLabel>
                         <Select

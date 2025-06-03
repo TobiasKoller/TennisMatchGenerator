@@ -219,7 +219,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                     <Stack direction="row" spacing={2} justifyContent="flex-end">
                         <Box display="flex" alignItems="center">
                             <Typography variant="subtitle1" gutterBottom>
-                                Verfügbare Plätze auswählen:
+                                Plätze:
                             </Typography>
                             <ToggleButtonGroup
                                 disabled={!isEditable()}
@@ -245,6 +245,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                 ))}
                             </ToggleButtonGroup>
                         </Box>
+                        <Box flexGrow={1} />
                         <Box>
                             {isEditable() && <Button onClick={generateMatches}
 
@@ -253,28 +254,6 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                                 Partien auslosen
                             </Button>}
                         </Box>
-                        <Box flexGrow={1} />
-                        {/* {(!isActive || roundStarted) && (
-                            <Button
-                                color="error"
-                                variant="outlined"
-                                startIcon={isEnabled ? <LockOutlineIcon /> : <LockOpenIcon />}
-                                onClick={() => props.changeTabState(!isEnabled)}
-                            >
-                                {isEnabled ? "Abschließen" : "Entsperren"}
-                            </Button>
-
-                        )} */}
-                        {/* {isActive && matches.length > 0 && (
-                            <Button
-                                color={roundStarted ? "error" : "success"}
-                                variant="contained"
-                                startIcon={<PlayCircleFilledWhiteIcon />}
-                                onClick={() => toggleRoundState()}
-                            >
-                                {roundStarted ? "Runde beenden" : "Runde starten"}
-                            </Button>
-                        )} */}
 
                     </Stack>
 
