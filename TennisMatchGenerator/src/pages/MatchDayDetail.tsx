@@ -96,7 +96,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         //wirklich abschließen?
         dialogRef.current?.open({
 
-            question: "Möchten Sie die Runde wirklich beenden?",
+            question: "Möchten Sie den gesamten Spieltag wirklich beenden?",
             onConfirm: async () => {
                 try {
                     var seasonService = new SeasonService();
