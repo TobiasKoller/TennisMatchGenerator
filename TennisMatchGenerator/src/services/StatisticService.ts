@@ -41,19 +41,45 @@ export class StatisticService extends ServiceBase {
         const players = await playerService.getAllPlayers();
 
         var userPoints: Record<string, RankingRecord> = {};
-        statistics.forEach(stat => {
-            const player = players.find(p => p.id === stat.playerId);
-            if (player) {
-                const totalPoints = stat.pointsForParticipation + stat.pointsForWonGames;
 
-                userPoints[stat.playerId] = new RankingRecord(player.id, `${player.firstname} ${player.lastname}`, totalPoints, -1);
-            }
-        });
+        for (const stat of statistics) {
+            const player = players.find(p => p.id === stat.playerId);
+            if (!player) continue;
+
+            if (!userPoints[stat.playerId])
+                userPoints[stat.playerId] = new RankingRecord(stat.playerId, `${player.firstname} ${player.lastname}`, 0, 0);
+
+            const totalPoints = stat.pointsForParticipation + stat.pointsForWonGames;
+
+            userPoints[stat.playerId].totalPoints += totalPoints; // Addiere die Punkte
+            userPoints[stat.playerId].participations += 1; // Erhöhe die Anzahl der Teilnahmen
+        };
 
 
         // Sortiere die Spieler nach den Gesamtpunkten
         const ranking = Object.values(userPoints).sort((a, b) => b.totalPoints - a.totalPoints);
 
+        //platzierung
+        ranking.forEach((record, index) => {
+            record.position = index + 1; // Platzierung beginnt bei 1
+
+        });
         return ranking;
+    }
+
+    async getNumberOfMatchDays(): Promise<number> {
+        const database = await db;
+        const result: any = await database.select(`SELECT COUNT(*) as count FROM matchday WHERE season_id=?`, [this.seasonId]);
+        return result[0].count;
+    }
+
+    async getNumberOfPlayers(): Promise<number> {
+        const database = await db;
+        const result: any[] = await database.select(`SELECT  COUNT(DISTINCT round_player.player_id) as count  FROM round_player
+                                    inner join round on round_player.round_id = round.id
+                                    inner join matchday on matchday.id = round.matchday_id
+                                    where season_id=?`, [this.seasonId]);
+
+        return result[0].count;
     }
 }

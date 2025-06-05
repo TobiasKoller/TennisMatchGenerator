@@ -124,6 +124,7 @@ export class MatchGenerator {
 
   private generatePairsSimple(): PlayerPair[] {
     const pairs: PlayerPair[] = [];
+    if (!this.players || this.players.length < 2) return pairs;
 
     const shuffledPlayers = this.shuffleArray(this.players);
     let counter = 0;

@@ -25,7 +25,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
 import { useNotification } from "./provider/NotificationProvider";
-import { AppService } from "./services/AppService";
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 export default function App() {
 
@@ -92,9 +92,9 @@ export default function App() {
               Tennis Action - {season!.description}
             </Typography>
             <Box sx={{ ml: "auto" }}>
-              <Tooltip title="Aktuelle Tabelle" arrow >
-                <IconButton color="inherit" onClick={() => console.log("Ranking")}>
-                  <EmojiEventsIcon sx={{ color: 'gold' }} />
+              <Tooltip title="Statistik" arrow >
+                <IconButton color="inherit" onClick={() => navigateHook(`/${RoutePath.HOME.path}`)}>
+                  <DashboardIcon sx={{ color: 'gold' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Aktueller Spieltag" arrow >

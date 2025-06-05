@@ -1,4 +1,4 @@
-import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, } from "@mui/material";
+import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Typography, } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
@@ -13,6 +13,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { SeasonService } from "../services/SeasonService";
 import LockIcon from '@mui/icons-material/Lock';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog";
+import { MatchDay } from "../model/Matchday";
 
 interface MatchDayDetailProps {
 }
@@ -28,6 +29,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     const [isClosed, setIsClosed] = useState(false);
     // const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
     const [rounds, setRounds] = useState<MatchDayRound[]>([]);
+    const [matchDay, setMatchDay] = useState<MatchDay | null>(null);
     const dialogRef = useRef<ConfirmDialogHandle>(null);
 
     const matchDayId = id;
@@ -44,6 +46,11 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         await matchDayService.createMatchDayRound(matchDayId);
         fetchRounds();
     };
+
+    const formatDate = (value: Date | undefined) => {
+        if (!value) return "";
+        return value.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    }
 
     async function fetchRounds() {
         const dbRounds = await matchDayService.getAllMatchDayRounds(matchDayId!);
@@ -115,8 +122,9 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     }
 
     const init = async () => {
-        var matchDay = await matchDayService.getMatchDayById(matchDayId);
-        setIsClosed(matchDay.isClosed);
+        var currentMatchDay = await matchDayService.getMatchDayById(matchDayId);
+        setMatchDay(currentMatchDay);
+        setIsClosed(currentMatchDay.isClosed);
         await fetchRounds();
     }
 
@@ -128,6 +136,9 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     return (
         <CustomPaper sx={{ height: "100%", pointerEvents: isClosed ? 'none' : 'auto', }}
         >
+            <Typography variant="h6">
+                {`Spieltag vom ${formatDate(matchDay?.date)}`}
+            </Typography>
             <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
                 {/* Obere Buttons und Tabs */}
                 <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>

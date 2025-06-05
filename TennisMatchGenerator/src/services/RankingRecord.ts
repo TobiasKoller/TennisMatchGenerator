@@ -1,5 +1,6 @@
 
 export class RankingRecord {
+    position: number = -1; // Platzierung, falls benötigt
     playerId: string;
     name: string;
     totalPoints: number;
