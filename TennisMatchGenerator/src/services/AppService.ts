@@ -5,7 +5,7 @@ import { INotificationService } from "../provider/NotificationProvider";
 export class AppService {
 
     constructor(private notificationService: INotificationService) {
-
+        void this.notificationService; //dummy variable to avoid unused variable warning
     }
 
     async isDbInitialized() {
@@ -48,6 +48,7 @@ export class AppService {
                 "season_id"	TEXT NOT NULL,
                 "date"	TEXT,
                 "is_active"	INTEGER,
+                "is_closed"	INTEGER,
                 PRIMARY KEY("id")
             );
             `,
@@ -57,8 +58,8 @@ export class AppService {
                 "firstname"	TEXT,
                 "lastname"	TEXT,
                 "skill_rating"	INTEGER,
-                "age"	INTEGER,
                 "gender"	TEXT,
+                "birthdate"	TEXT,
                 "is_active"	INTEGER,
                 PRIMARY KEY("id")
             );
@@ -92,7 +93,16 @@ export class AppService {
                 "is_active"	INTEGER,
                 PRIMARY KEY("number" AUTOINCREMENT)
             );
-            `
+            `,
+            `CREATE TABLE "statistic" (
+                "id"	TEXT NOT NULL UNIQUE,
+                "season_id"	TEXT,
+                "player_id"	TEXT NOT NULL,
+                "won_games"	INTEGER,
+                "points_for_participation"	INTEGER,
+                "points_for_won_games"	INTEGER,
+                PRIMARY KEY("id")
+            )`
         ];
 
         var completeStatement = statements.join(" ");

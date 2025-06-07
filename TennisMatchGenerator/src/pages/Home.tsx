@@ -1,9 +1,6 @@
-import React, { use, useEffect } from "react";
+import React from "react";
 import {
-    Grid,
-    Card,
-    CardContent,
-    Typography
+    Grid
 } from "@mui/material";
 
 import { RankingTile } from "../components/tiles/RankingTile";

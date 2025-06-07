@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 export interface RankingTileProps {
 }
 
-export const RankingTile: React.FC<RankingTileProps> = (props) => {
+export const RankingTile: React.FC<RankingTileProps> = (_props) => {
 
     const { season } = useSeason();
     const notification = useNotification();

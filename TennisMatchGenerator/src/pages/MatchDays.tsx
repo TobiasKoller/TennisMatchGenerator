@@ -1,5 +1,5 @@
 
-import { Box, Button, List, ListItem, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { CustomPaper } from '../components/CustomPaper';
 import AddIcon from '@mui/icons-material/Add';
 import { MatchDayService } from '../services/MatchDayService';

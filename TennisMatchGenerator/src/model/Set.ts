@@ -1,4 +1,3 @@
-import { DbRecord } from "./DbRecord";
 
 export class Set {
     constructor(homeGames: number, guestGames: number) {

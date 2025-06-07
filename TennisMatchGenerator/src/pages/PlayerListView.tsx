@@ -1,5 +1,5 @@
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import { use, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Select, { MultiValue } from 'react-select';
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
@@ -38,9 +38,9 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const [allPlayers, setAllPlayers] = useState<Player[]>([]);
     const [selectionChanged, setSelectionChanged] = useState(false);
     const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<OptionType>>([]);
-
+    const [isEnabled, setIsEnabled] = useState(props.isEnabled ?? true);
     const round = props.round;
-    const isEnabled = props.isEnabled;
+
 
     const { isPlayerUsedInMatch } = matchDayRoundContext!;
     const playerService = new PlayerService(season.id, notification);
@@ -48,6 +48,11 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const dragDropService = new DragDropService(season.id, notification, round.id, matchDayService, matchDayRoundContext.reloadMatches);
 
     const NoMultiValue = () => null;
+
+    useEffect(() => {
+        setIsEnabled(props.isEnabled ?? true);
+    }
+        , [props.isEnabled]);
 
     useEffect(() => {
 
@@ -143,8 +148,8 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
     return (
 
-        <>
-            < Box sx={{ marginBottom: 2 }}>
+        <Box>
+            <Box sx={{ marginBottom: 2 }}>
                 <Typography variant="h6">Spieler der Runde</Typography>
                 <Select
                     isDisabled={!props.isActive}
@@ -209,6 +214,6 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
                     })
                 }
             </Box >
-        </ >)
+        </Box >)
 
 }

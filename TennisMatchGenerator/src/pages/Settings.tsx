@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, SelectChangeEvent, Typography, Box, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { TextField, Button, SelectChangeEvent, Typography, Box, ToggleButtonGroup, ToggleButton, InputAdornment } from "@mui/material";
 import { Setting } from "../model/Setting";
 import { useNotification } from "../provider/NotificationProvider";
 import { CustomPaper } from "../components/CustomPaper";
@@ -17,6 +17,7 @@ export const Settings: React.FC = () => {
     const [formData, setFormData] = useState<Setting>({
         // pointsForWin: 1,
         pointsForParticipation: 1,
+        costForParticipation: 0,
         availableCourts: []
     });
     const [selectedCourts, setSelectedCourts] = useState<number[]>([]); // Zustand für die ausgewählten Plätze
@@ -81,7 +82,34 @@ export const Settings: React.FC = () => {
                 <Typography variant="h5">Grundeinstellungen</Typography>
 
                 <TextField label="Punkte für Antritt" name="pointsForParticipation" type="number" value={formData.pointsForParticipation} onChange={handleChange} fullWidth />
-                {/* <TextField label="Punkte pro Spielgewinn" name="pointsForWin" type="number" value={formData.pointsForWin} onChange={handleChange} fullWidth /> */}
+
+                <TextField
+                    label="Kosten pro Teilnahme"
+                    name="costForParticipation"
+                    type="text"
+                    value={formData.costForParticipation}
+                    onChange={handleChange}
+                    fullWidth
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment
+                                position="start"
+                                sx={{
+                                    borderRight: 'none',       // Trennlinie entfernen
+                                    marginRight: 0,
+                                    paddingRight: 0,
+                                    '& .MuiInputAdornment-root': {
+                                        borderRight: 'none',
+                                    }
+                                }}
+                            >
+                                €
+                            </InputAdornment>
+                        ),
+                        inputMode: 'decimal',
+                    }}
+                />
+
                 <ToggleButtonGroup
                     value={selectedCourts}
                     onChange={(_e, newSelection) => setSelectedCourts(newSelection)}

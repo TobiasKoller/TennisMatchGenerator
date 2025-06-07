@@ -6,17 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { CourtsView } from "./CourtsView";
 import { SeasonService } from "../services/SeasonService";
 import { Setting } from "../model/Setting";
-import LockOutlineIcon from '@mui/icons-material/LockOutline';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { MatchDayService } from "../services/MatchDayService.ts";
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext.tsx";
 import { PlayerListView } from "./PlayerListView.tsx";
 import { PlayerService } from "../services/PlayerService.ts";
 import { Match } from "../model/Match.ts";
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog.tsx";
-import { isNullOrEmpty } from "../common/Common.ts";
 
 
 interface MatchDayRoundPageProps {
@@ -45,7 +41,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
     // const isActive = props.isActive; // Zustand für die aktiven Runden
     const isClosed = props.isClosed; // Zustand für den geschlossenen Status der Runde
-    const [roundStarted, setRoundStarted] = useState(false); // Zustand für die aktive Runde
+
     // const [isEnabled, setIsEnabled] = useState(props.isEnabled); // Zustand für die Aktivierung der Runde
 
     const matchDayService = new MatchDayService(season.id, notification);

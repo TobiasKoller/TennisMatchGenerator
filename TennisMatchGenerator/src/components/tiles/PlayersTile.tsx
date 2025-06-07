@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export interface PlayersTileProps {
 }
 
-export const PlayersTile: React.FC<PlayersTileProps> = (props) => {
+export const PlayersTile: React.FC<PlayersTileProps> = (_props) => {
 
     const { season } = useSeason();
     const notification = useNotification();

@@ -46,7 +46,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     const [isDraggingRight, setIsDraggingRight] = useState(false);
     const [isDraggingPlayerId, setIsDraggingPlayerId] = useState<string | null>(null);
 
-    const isEditable = matchDayRoundContext.isEditable();
 
     const playerStyle = (position: { top: string; left?: string; right?: string, isMarked: boolean, }): {} => ({
         position: "absolute",

@@ -20,7 +20,6 @@ import { MatchDayDetail } from "./pages/MatchDayDetail";
 import { Drawer, IconButton, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
@@ -92,6 +91,22 @@ export default function App() {
               Tennis Action - {season!.description}
             </Typography>
             <Box sx={{ ml: "auto" }}>
+              {/* <FormControl fullWidth>
+                <InputLabel id="saison-select-label">Saison auswählen</InputLabel>
+                <Select
+                  labelId="saison-select-label"
+                  value={selectedSaison}
+                  label="Saison auswählen"
+                  onChange={handleChange}
+                >
+                  {saisons.map((saison) => (
+                    <MenuItem key={saison.id} value={saison.id}>
+                      {saison.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl> */}
+
               <Tooltip title="Statistik" arrow >
                 <IconButton color="inherit" onClick={() => navigateHook(`/${RoutePath.HOME.path}`)}>
                   <DashboardIcon sx={{ color: 'gold' }} />

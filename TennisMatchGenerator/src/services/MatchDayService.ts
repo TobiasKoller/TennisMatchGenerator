@@ -314,7 +314,21 @@ export class MatchDayService extends ServiceBase {
         }
     }
 
+    async getPrevMatchDayId(matchDayId: string): Promise<string | null> {
+        const database = await db;
 
+        const matchDays = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where season_id=? and date < (select date from matchday where id=?) order by date desc limit 1`, [this.seasonId, matchDayId]);
+        if (matchDays.length === 0) return null;
+        return matchDays[0].id;
+    }
+
+    async getNextMatchDayId(matchDayId: string): Promise<string | null> {
+        const database = await db;
+
+        const matchDays = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where season_id=? and date > (select date from matchday where id=?) order by date asc limit 1`, [this.seasonId, matchDayId]);
+        if (matchDays.length === 0) return null;
+        return matchDays[0].id;
+    }
 
     generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {
 

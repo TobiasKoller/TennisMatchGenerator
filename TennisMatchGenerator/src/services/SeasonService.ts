@@ -34,7 +34,7 @@ export class SeasonService {
         await database.execute(`UPDATE ${tableName} SET is_active=1 WHERE id=?`, [seasonId]);
     }
 
-    private async createSeason(): Promise<Season | null> {
+    public async createSeason(): Promise<Season | null> {
         // Hier wird eine neue Saison erstellt und in die Datenbank eingefügt
         const database = await db;
         var year = new Date().getFullYear();

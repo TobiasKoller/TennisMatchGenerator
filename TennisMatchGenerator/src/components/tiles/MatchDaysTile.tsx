@@ -1,5 +1,4 @@
-import { Card, CardContent, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { RankingRecord } from "../../services/RankingRecord";
+import { Card, CardContent, Typography } from "@mui/material";
 import { useSeason } from "../../context/SeasonContext";
 import { useNotification } from "../../provider/NotificationProvider";
 import { StatisticService } from "../../services/StatisticService";
@@ -8,7 +7,7 @@ import { useEffect, useState } from "react";
 export interface MatchDaysTileProps {
 }
 
-export const MatchDaysTile: React.FC<MatchDaysTileProps> = (props) => {
+export const MatchDaysTile: React.FC<MatchDaysTileProps> = (_props) => {
 
     const { season } = useSeason();
     const notification = useNotification();

@@ -1,11 +1,11 @@
-import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Typography, } from "@mui/material";
+import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Tooltip, Typography, } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
 import { MatchDayRound } from "../model/MatchDayRound";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,6 +14,10 @@ import { SeasonService } from "../services/SeasonService";
 import LockIcon from '@mui/icons-material/Lock';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog";
 import { MatchDay } from "../model/Matchday";
+
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { RoutePath } from "../model/RoutePath";
 
 interface MatchDayDetailProps {
 }
@@ -27,10 +31,15 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     // const [activeRoundId, setActiveRound] = useState("");
     const [selectedRoundId, setSelectedRoundId] = useState("");
     const [isClosed, setIsClosed] = useState(false);
+    const [prevMatchDayId, setPrevMatchDayId] = useState<string | null>(null);
+    const [nextMatchDayId, setNextMatchDayId] = useState<string | null>(null);
+
     // const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
     const [rounds, setRounds] = useState<MatchDayRound[]>([]);
     const [matchDay, setMatchDay] = useState<MatchDay | null>(null);
     const dialogRef = useRef<ConfirmDialogHandle>(null);
+    const location = useLocation();
+    const navigateHook = useNavigate();
 
     const matchDayId = id;
     if (!matchDayId) return null; // Sicherstellen, dass die ID vorhanden ist    
@@ -121,12 +130,31 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
     }
 
+    const navigateToPrevMatchDay = () => {
+        navigateHook(`/${RoutePath.MATCHDAYS.path}/${prevMatchDayId}`);
+    };
+
+    const navigateToNextMatchDay = () => {
+        navigateHook(`/${RoutePath.MATCHDAYS.path}/${nextMatchDayId}`);
+    };
+
     const init = async () => {
         var currentMatchDay = await matchDayService.getMatchDayById(matchDayId);
         setMatchDay(currentMatchDay);
         setIsClosed(currentMatchDay.isClosed);
+
+        var prevId = await matchDayService.getPrevMatchDayId(currentMatchDay.id);
+        var nextId = await matchDayService.getNextMatchDayId(currentMatchDay.id);
+
+        setPrevMatchDayId(prevId);
+        setNextMatchDayId(nextId);
+
         await fetchRounds();
     }
+
+    useEffect(() => {
+        init();
+    }, [id]);
 
     useEffect(() => {
         init();
@@ -134,11 +162,29 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
 
     return (
-        <CustomPaper sx={{ height: "100%", pointerEvents: isClosed ? 'none' : 'auto', }}
-        >
-            <Typography variant="h6">
+        <CustomPaper sx={{ height: "100%", pointerEvents: isClosed ? 'none' : 'auto', }} >
+            <Box display="flex" alignItems="center" gap={1} sx={{ pointerEvents: "all" }}>
+                {prevMatchDayId && (
+
+                    <Tooltip title={"vorheriger Spieltag"}>
+                        <IconButton onClick={navigateToPrevMatchDay} aria-label="Zurück">
+                            <ArrowBackIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
                 {`Spieltag vom ${formatDate(matchDay?.date)}`}
-            </Typography>
+                {
+                    nextMatchDayId && (
+                        <Tooltip title={"nächster Spieltag"}>
+                            <IconButton onClick={navigateToNextMatchDay} aria-label="Weiter">
+                                <ArrowForwardIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+            </Box>
+            {/* <Typography variant="h6">
+                {`Spieltag vom ${formatDate(matchDay?.date)}`}
+            </Typography> */}
             <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
                 {/* Obere Buttons und Tabs */}
                 <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>
@@ -230,7 +276,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                 </Box>
             </Stack>
             <ConfirmDialog ref={dialogRef} />
-        </CustomPaper>
+        </CustomPaper >
 
 
     );

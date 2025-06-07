@@ -56,7 +56,7 @@ export class DragDropService extends ServiceBase {
         const fromMatchId = context.fromMatchId;
         const toMatchId = context.toMatchId;
         const fromPlayerId = context.fromPlayerId;
-        const toPlayerId = context.toPlayerId;
+        // const toPlayerId = context.toPlayerId;
         const fromCourtNumber = context.fromCourtNumber;
         const toCourtNumber = context.toCourtNumber;
         const fromSide = context.fromSide;
