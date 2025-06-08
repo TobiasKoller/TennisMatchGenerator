@@ -6,6 +6,7 @@ export class MatchDayRoundPlayer {
     roundId: string = "";
     playerId: string = "";
     player?: Player = new Player();
+    numberOfRoundsPlayed?: number = 0;
     status?: "active" | "inactive" = "active";
 
 }

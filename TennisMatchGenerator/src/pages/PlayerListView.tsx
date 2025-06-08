@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Badge, Box, Chip, colors, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import Select, { MultiValue } from 'react-select';
 import { useNotification } from "../provider/NotificationProvider";
@@ -6,6 +6,7 @@ import { useSeason } from "../context/SeasonContext";
 import { PlayerService } from "../services/PlayerService";
 import { Player } from "../model/Player";
 import { OptionType } from "../model/OptionType";
+import { PlayerOptionType } from "../model/PlayerOptionType";
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
 
 import WomanIcon from '@mui/icons-material/Woman';
@@ -16,11 +17,16 @@ import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
 import { DragDropService } from "../handler/DragDropHandler";
 import { MatchDayService } from "../services/MatchDayService";
 import { Match } from "../model/Match";
+import CloseIcon from '@mui/icons-material/Close';
+import RefreshIcon from '@mui/icons-material/Refresh';
+
+import StarIcon from '@mui/icons-material/Star';
 
 interface PlayerListProps {
     // Define any props you need here
     isActive?: boolean;
     isEnabled?: boolean;
+    matchDayId: string;
     round: MatchDayRound;
     matches: Match[];
 }
@@ -34,10 +40,10 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const matchDayRoundContext = useContext(MatchDayRoundContext);
     if (!season || !matchDayRoundContext) return <></>;
 
-    const [allPlayerOptions, setAllPlayerOptions] = useState<OptionType[]>([]);
+    const [allPlayerOptions, setAllPlayerOptions] = useState<PlayerOptionType[]>([]);
     const [allPlayers, setAllPlayers] = useState<Player[]>([]);
     const [selectionChanged, setSelectionChanged] = useState(false);
-    const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<OptionType>>([]);
+    const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<PlayerOptionType>>([]);
     const [isEnabled, setIsEnabled] = useState(props.isEnabled ?? true);
     const round = props.round;
 
@@ -72,8 +78,9 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         try {
             const players = await playerService.getAllPlayers();
 
-            var playerOptions: OptionType[] = players.map((player: Player) => ({ //Modell für Select-Optionen
+            var playerOptions: PlayerOptionType[] = players.map((player: Player) => ({ //Modell für Select-Optionen
                 value: player.id,
+                player: player, // Hier wird der Player direkt verwendet
                 label: `${player.firstname} ${player.lastname} (${player.skillRating})`,
             }));
             setAllPlayers(players); // Speichern der Spieler für die Hintergrundfarbe
@@ -86,10 +93,13 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
     const fetchSelectedPlayers = async () => {
         try {
             const players = await playerService.getPlayersByRoundId(round.id, true);
+            var playerCount = await matchDayService.countPlayersInMatches(props.matchDayId);
 
-            var selectedPlayers: OptionType[] = players.map((player: MatchDayRoundPlayer) => ({
+            var selectedPlayers: PlayerOptionType[] = players.map((player: MatchDayRoundPlayer) => ({
                 value: player.playerId,
-                label: `${player.player?.firstname} ${player.player?.lastname} (${player.player?.skillRating})`,
+                NumberOfRoundsPlayed: playerCount[player.playerId] ?? 0, // Anzahl der Teilnahmen
+                player: player.player!, // Hier wird der Player aus MatchDayRoundPlayer verwendet
+                label: `${player.player?.firstname} ${player.player?.lastname}`,
             }));
 
 
@@ -102,6 +112,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
 
     const init = async () => {
+
         await fetchAllPlayers();
         await fetchSelectedPlayers();
     }
@@ -123,7 +134,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         await playerService.updateSelectedRoundPlayers(round.id, selectedPlayerIds)
     }
 
-    const handleSelectChange = (selectedOptions: MultiValue<OptionType>) => {
+    const handleSelectChange = (selectedOptions: MultiValue<PlayerOptionType>) => {
         const sortedPlayers = [...selectedOptions].sort((a, b) => {
             // Vergleiche die Namen lexikografisch
             return a.label.localeCompare(b.label);
@@ -144,11 +155,19 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         }
     }
 
-
+    const getGenderColor = (playerId: string) => {
+        var player = allPlayers.find((p) => p.id === playerId);
+        switch (player?.gender) {
+            case "male": return "darkblue";
+            case "female": return "hotpink";
+            case "diverse": return "purple";
+            default: return null; // Fallback, falls kein Geschlecht gefunden wird
+        }
+    }
 
     return (
 
-        <Box>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ marginBottom: 2 }}>
                 <Typography variant="h6">Spieler der Runde</Typography>
                 <Select
@@ -174,21 +193,102 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
             {/* 2. Scrollbarer Bereich */}
             < Box
                 sx={{
-                    flexGrow: 1, // <<< nimmt den restlichen Platz ein
+                    flex: 1,
                     overflowY: 'auto',
-                    paddingRight: 1, // optional Scrollbar Platz lassen
+                    minHeight: 0, // <<< sehr wichtig!
+                    paddingRight: 1, // optional für Scrollbar-Abstand
                 }}
             >
 
                 {
                     selectedPlayers.map((player, index) => {
-
+                        const isDisabled = !isEnabled || isPlayerUsedInMatch(player.value);
                         return <Box
-                            key={index} sx={{ marginBottom: 1 }}
+
+                            key={index} sx={{
+                                pointerEvents: isDisabled ? 'none' : 'auto',
+                                opacity: isDisabled ? 0.5 : 1,
+                                marginBottom: 1,
+                            }}
                             draggable={!isPlayerUsedInMatch(player.value)}
                             onDragStart={(ev) => dragDropService.handleDragPlayerStart(ev, player.value, null, null, null)}
                         >
-                            <Chip disabled={isPlayerUsedInMatch(player.value)}
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    p: 1,
+                                    border: "2px solid " + getGenderColor(player.value),
+                                    borderRadius: 1,
+                                    maxWidth: 300,
+                                    backgroundColor: "#fafafa",
+                                }}
+                            >
+                                {/* Name + Gender + Badges */}
+                                <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            gap: 0.5,
+                                            flexShrink: 1,
+                                        }}
+                                    >
+                                        {/* {getGenderIcon(player.value)} */}
+                                        <span title={player.label}>{player.label}</span>
+                                    </Box>
+                                    <Box sx={{ flexGrow: 1, minWidth: 0 }} /> {/* Spacer für Flexbox */}
+                                    <Tooltip title="Teilnahmen">
+                                        <Badge
+                                            badgeContent={player.NumberOfRoundsPlayed ?? 0}
+                                            showZero
+                                            color="primary"
+                                            sx={{
+                                                "& .MuiBadge-badge": {
+                                                    fontSize: "0.7rem", height: 18, minWidth: 18,
+                                                    top: -3, // Standard ist ca. 10, kleiner Wert = höher
+                                                    right: 0,
+                                                }
+                                            }}
+                                        >
+                                            <RefreshIcon fontSize="small" />
+                                        </Badge>
+                                    </Tooltip>
+
+                                    <Tooltip title="Spielstärke">
+                                        <Badge
+                                            badgeContent={player.player?.skillRating ?? 0}
+                                            showZero
+                                            color="secondary"
+                                            sx={{
+                                                "& .MuiBadge-badge": {
+                                                    fontSize: "0.7rem", height: 18, minWidth: 18,
+                                                    top: -3, // Standard ist ca. 10, kleiner Wert = höher
+                                                    right: 0,
+                                                }
+                                            }}
+                                        >
+                                            <StarIcon fontSize="small" sx={{ color: "gold" }} />
+                                        </Badge>
+                                    </Tooltip>
+                                </Stack>
+
+                                {/* Delete Icon */}
+                                <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                        deletePlayer(player.value);
+                                    }}
+                                    aria-label={`Lösche ${player.label}`}
+                                    sx={{ ml: 1, pointerEvents: 'all' }}
+                                >
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                            {/* <Chip disabled={isPlayerUsedInMatch(player.value)}
                                 label={
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         {getGenderIcon(player.value)}
@@ -209,7 +309,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
                                     paddingRight: 0, // Minimiert Abstand rechts für "X"
                                     backgroundColor: "rgba(255, 255, 255, 0.8)"
                                 }}
-                            />
+                            /> */}
                         </Box>
                     })
                 }

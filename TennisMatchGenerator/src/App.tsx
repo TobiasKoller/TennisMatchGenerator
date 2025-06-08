@@ -20,6 +20,7 @@ import { MatchDayDetail } from "./pages/MatchDayDetail";
 import { Drawer, IconButton, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
@@ -53,6 +54,10 @@ export default function App() {
     if (!matchDay) navigateHook(`/${RoutePath.MATCHDAYS.path}`);
     else navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
   };
+
+  const exportData = async () => {
+
+  }
 
 
 
@@ -107,6 +112,11 @@ export default function App() {
                 </Select>
               </FormControl> */}
 
+              <Tooltip title="Export Spieldaten" arrow >
+                <IconButton color="inherit" onClick={exportData}>
+                  <FileDownloadIcon sx={{ color: 'white' }} />
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Statistik" arrow >
                 <IconButton color="inherit" onClick={() => navigateHook(`/${RoutePath.HOME.path}`)}>
                   <DashboardIcon sx={{ color: 'gold' }} />

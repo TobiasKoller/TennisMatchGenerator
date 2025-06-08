@@ -330,9 +330,43 @@ export class MatchDayService extends ServiceBase {
         return matchDays[0].id;
     }
 
-    generateMatches(players: MatchDayRoundPlayer[], roundId: string, courts: number[]): MatchResult {
+    async countPlayersInMatches(matchDayId: string) {
+        const database = await db;
 
-        var generator = new MatchGenerator(players);
+        const columns: DbColumnDefinition[] = [
+            { column: "player1_home_id", alias: "player1HomeId", type: "string" },
+            { column: "player2_home_id", alias: "player2HomeId", type: "string" },
+            { column: "player1_guest_id", alias: "player1GuestId", type: "string" },
+            { column: "player2_guest_id", alias: "player2GuestId", type: "string" }
+        ]
+        const result = await database.safeSelect<Match>(columns, `${tableNameMatch} m`, `JOIN round r ON m.round_id = r.id WHERE r.matchday_id = ?`, [matchDayId]);
+
+        const playerMatchCount: Record<string, number> = {};
+
+        for (const match of result) {
+            const players = [
+                match.player1HomeId,
+                match.player2HomeId,
+                match.player1GuestId,
+                match.player2GuestId
+            ];
+
+            for (const playerId of players) {
+                if (!playerId || playerId === emptyGuid) continue; // Skip if playerId is null or empty
+
+                if (!playerMatchCount[playerId]) {
+                    playerMatchCount[playerId] = 0;
+                }
+                playerMatchCount[playerId]++;
+            }
+        }
+
+        return playerMatchCount;
+    }
+
+    async generateMatches(players: MatchDayRoundPlayer[], matchDayId: string, roundId: string, courts: number[]): Promise<MatchResult> {
+        var playerMatchCount = await this.countPlayersInMatches(matchDayId);
+        var generator = new MatchGenerator(players, playerMatchCount);
         const matches = generator.generate(roundId, courts);
 
         return matches;

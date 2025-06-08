@@ -18,6 +18,7 @@ import { MatchDay } from "../model/Matchday";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { RoutePath } from "../model/RoutePath";
+import { WaitScreen } from "./WaitScreen";
 
 interface MatchDayDetailProps {
 }
@@ -33,11 +34,13 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     const [isClosed, setIsClosed] = useState(false);
     const [prevMatchDayId, setPrevMatchDayId] = useState<string | null>(null);
     const [nextMatchDayId, setNextMatchDayId] = useState<string | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // const [enabledRoundIds, setEnabledRoundIds] = useState<string[]>([]); // Zustand für die aktiven Runden
     const [rounds, setRounds] = useState<MatchDayRound[]>([]);
     const [matchDay, setMatchDay] = useState<MatchDay | null>(null);
     const dialogRef = useRef<ConfirmDialogHandle>(null);
+
     const location = useLocation();
     const navigateHook = useNavigate();
 
@@ -139,6 +142,10 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     };
 
     const init = async () => {
+        //loading time in milliseconds
+        const maxLoadingTime = 1000;
+        var start = new Date().getTime();
+
         var currentMatchDay = await matchDayService.getMatchDayById(matchDayId);
         setMatchDay(currentMatchDay);
         setIsClosed(currentMatchDay.isClosed);
@@ -150,9 +157,18 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         setNextMatchDayId(nextId);
 
         await fetchRounds();
+
+        var diff = new Date().getTime() - start;
+
+        if (diff < maxLoadingTime)
+            setTimeout(() => { setIsInitialized(true) }, maxLoadingTime - diff);
+        else setIsInitialized(true);
+
+
     }
 
     useEffect(() => {
+        setIsInitialized(false);
         init();
     }, [id]);
 
@@ -162,7 +178,8 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
 
     return (
-        <CustomPaper sx={{ height: "100%", pointerEvents: isClosed ? 'none' : 'auto', }} >
+
+        <CustomPaper sx={{ height: '100%', display: 'flex', flexDirection: 'column', pointerEvents: isClosed ? 'none' : 'auto' }} >
             <Box display="flex" alignItems="center" gap={1} sx={{ pointerEvents: "all" }}>
                 {prevMatchDayId && (
 
@@ -182,98 +199,102 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                         </Tooltip>
                     )}
             </Box>
-            {/* <Typography variant="h6">
-                {`Spieltag vom ${formatDate(matchDay?.date)}`}
-            </Typography> */}
-            <Stack direction="column" spacing={2} sx={{ height: "100%" }}>
-                {/* Obere Buttons und Tabs */}
-                <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>
-                    <Tabs
-                        value={selectedRoundId}
-                        onChange={handleTabChange}
-                        variant="scrollable"
-                        scrollButtons="auto"
-                    >
-                        {rounds.map((round, index) => (
-                            <Tab key={round.id} sx={{ pointerEvents: 'all' }} label={
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {`Runde ${round.number}`}
-                                    {index > 0 && index === rounds.length - 1 && (
-                                        !isClosed && <IconButton
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDelete(round.id);
-                                            }}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
-                                </span>
-                            } value={round.id} />
-                        ))}
-                    </Tabs>
-                    {!isClosed &&
-                        <Button
-                            color="primary"
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={addNewRound}
-                            sx={{ marginLeft: 2 }}
-                        >
-                            Neue Runde
-                        </Button>
-                    }
-                    <Box sx={{ flexGrow: 1 }} />
-                    {
-                        isClosed
-                            ? <Chip
-                                icon={<LockIcon />}
-                                label="Spieltag abgeschlossen"
-                                color="default" // oder "primary", "secondary", "success", je nach gewünschter Farbe
-                                variant="outlined" // oder "filled"
-                                sx={{
-                                    borderColor: '#f44336',
-                                    borderWidth: 2,
-                                    color: '#f44336',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.9rem',
-                                    '&:hover': {
-                                        backgroundColor: '#ffebee', // leicht roter Hover-Hintergrund
-                                    }
-                                }}
-                            />
-                            :
-                            <Button
-                                color="success"
-                                variant="outlined"
-                                startIcon={<TaskAltIcon />}
-                                onClick={closeMatchDay}
-                                disabled={isClosed}
+            <Stack direction="column" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+                {!isInitialized ? <WaitScreen message="Lade Spieltag..." />
+                    :
+                    (<>
+                        {/* Obere Buttons und Tabs */}
+                        <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+                            <Tabs
+                                value={selectedRoundId}
+                                onChange={handleTabChange}
+                                variant="scrollable"
+                                scrollButtons="auto"
                             >
-                                Spieltag abschließen
-                            </Button>
+                                {rounds.map((round, index) => (
+                                    <Tab key={round.id} sx={{ pointerEvents: 'all' }} label={
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {`Runde ${round.number}`}
+                                            {index > 0 && index === rounds.length - 1 && (
+                                                !isClosed && <IconButton
+                                                    size="small"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(round.id);
+                                                    }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                        </span>
+                                    } value={round.id} />
+                                ))}
+                            </Tabs>
+                            {!isClosed &&
+                                <Button
+                                    color="primary"
+                                    variant="outlined"
+                                    startIcon={<AddIcon />}
+                                    onClick={addNewRound}
+                                    sx={{ marginLeft: 2 }}
+                                >
+                                    Neue Runde
+                                </Button>
+                            }
+                            <Box sx={{ flexGrow: 1 }} />
+                            {
+                                isClosed
+                                    ? <Chip
+                                        icon={<LockIcon />}
+                                        label="Spieltag abgeschlossen"
+                                        color="default" // oder "primary", "secondary", "success", je nach gewünschter Farbe
+                                        variant="outlined" // oder "filled"
+                                        sx={{
+                                            borderColor: '#f44336',
+                                            borderWidth: 2,
+                                            color: '#f44336',
+                                            fontWeight: 'bold',
+                                            fontSize: '0.9rem',
+                                            '&:hover': {
+                                                backgroundColor: '#ffebee', // leicht roter Hover-Hintergrund
+                                            }
+                                        }}
+                                    />
+                                    :
+                                    <Button
+                                        color="success"
+                                        variant="outlined"
+                                        startIcon={<TaskAltIcon />}
+                                        onClick={closeMatchDay}
+                                        disabled={isClosed}
+                                    >
+                                        Spieltag abschließen
+                                    </Button>
 
-                    }
-                </Box>
+                            }
+                        </Box>
 
-                {/* Inhalt Bereich */}
-                <Box sx={{ flexGrow: 1, overflow: "hidden", minHeight: 0 }}>
-                    {rounds.map((round) => (
-                        round.id === selectedRoundId && (
-                            <MatchDayRoundPage
-                                key={round.id}
-                                matchDayId={matchDayId}
-                                round={round}
-                                // changeTabState={changeTabState}
-                                addNewRound={addNewRound}
-                                isClosed={isClosed}
-                            // isActive={activeRoundId === round.id}
-                            // isEnabled={true}
-                            />
-                        )
-                    ))}
-                </Box>
+                        {/* Inhalt Bereich */}
+                        <Box sx={{ flexGrow: 1, overflow: "hidden", minHeight: 0 }}>
+                            {rounds.map((round) => (
+                                round.id === selectedRoundId && (
+                                    <MatchDayRoundPage
+                                        key={round.id}
+                                        matchDayId={matchDayId}
+                                        round={round}
+                                        // changeTabState={changeTabState}
+                                        addNewRound={addNewRound}
+                                        isClosed={isClosed}
+                                    // isActive={activeRoundId === round.id}
+                                    // isEnabled={true}
+                                    />
+                                )
+                            ))}
+                        </Box>
+                    </>)
+                }
+
+
             </Stack>
             <ConfirmDialog ref={dialogRef} />
         </CustomPaper >

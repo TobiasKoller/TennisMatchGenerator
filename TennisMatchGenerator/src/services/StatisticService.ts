@@ -75,9 +75,7 @@ export class StatisticService extends ServiceBase {
 
     async getNumberOfPlayers(): Promise<number> {
         const database = await db;
-        const result: any[] = await database.select(`SELECT  COUNT(DISTINCT round_player.player_id) as count  FROM round_player
-                                    inner join round on round_player.round_id = round.id
-                                    inner join matchday on matchday.id = round.matchday_id
+        const result: any[] = await database.select(`select count(distinct player_id) as count from statistic
                                     where season_id=?`, [this.seasonId]);
 
         return result[0].count;

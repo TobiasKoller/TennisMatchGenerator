@@ -15,20 +15,20 @@ interface PlayerPair {
 
 
 export class MatchGenerator {
-  constructor(private players: MatchDayRoundPlayer[]) { }
+  private players: MatchDayRoundPlayer[] = [];
+  constructor(players: MatchDayRoundPlayer[], countPlayersInMatch: Record<string, number>) {
 
-  // private getUsedPlayerIds(pairs: PlayerPair[]): string[] {
-  //   const usedPlayerIds: string[] = [];
-  //   pairs.forEach(pair => {
-  //     usedPlayerIds.push(pair.player1id);
-  //     usedPlayerIds.push(pair.player2id);
-  //   });
-  //   return usedPlayerIds;
-  // }
+    for (var player of players) {
+      player.numberOfRoundsPlayed = countPlayersInMatch[player.playerId] || 0;
+    }
+
+    this.players = players;
+  }
 
 
   public generate(roundId: string, courtNumbers: number[]): MatchResult {
-    const allPairs = this.generatePairsSimple();
+    const maxPlayerCount = courtNumbers.length * 4; // Assuming each court can have 2 players in doubles
+    const allPairs = this.generatePairsSimple(maxPlayerCount);
     const usedPlayerIds: string[] = [];
     let singlePair: PlayerPair | null = null;
 
@@ -122,11 +122,17 @@ export class MatchGenerator {
   }
 
 
-  private generatePairsSimple(): PlayerPair[] {
+  private generatePairsSimple(maxPlayerCount: number): PlayerPair[] {
     const pairs: PlayerPair[] = [];
     if (!this.players || this.players.length < 2) return pairs;
 
-    const shuffledPlayers = this.shuffleArray(this.players);
+    var playersCopy = [...this.players];
+    if (playersCopy.length > maxPlayerCount) { //wenn mehr Spieler als maxPlayerCount vorhanden sind, dann werden die Spieler mit den meisten Runden entfernt
+      var playersCopy = playersCopy.sort((a, b) => a.numberOfRoundsPlayed! - b.numberOfRoundsPlayed!);
+      playersCopy = playersCopy.slice(0, maxPlayerCount);
+    }
+
+    const shuffledPlayers = this.shuffleArray(playersCopy);
     let counter = 0;
     while (shuffledPlayers.length > 1) {
       if (shuffledPlayers.length < 2) break; // Ensure we have at least two players to form a pair

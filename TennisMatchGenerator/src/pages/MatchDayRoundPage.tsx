@@ -13,6 +13,7 @@ import { PlayerService } from "../services/PlayerService.ts";
 import { Match } from "../model/Match.ts";
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog.tsx";
+import { WaitScreen } from "./WaitScreen.tsx";
 
 
 interface MatchDayRoundPageProps {
@@ -39,6 +40,8 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
     const [matches, setMatches] = useState(round.matches ?? []); // Matches aus der Runde extrahieren
     const [settings, setSettings] = useState<Setting>(new Setting());
     const [selectedCourts, setSelectedCourts] = useState<number[]>(round.courts ?? []); // Zustand für die ausgewählten Plätze
+
+
     // const isActive = props.isActive; // Zustand für die aktiven Runden
     const isClosed = props.isClosed; // Zustand für den geschlossenen Status der Runde
 
@@ -78,6 +81,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         await fetchSettings();
         await fetchMatches();
         await fetchRound();
+
     }
 
     // useEffect(() => {
@@ -165,8 +169,10 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         dialogRef.current?.open({
             question: "Es werden alle bisherigen Matches gelöscht! Fortfahren?",
             onConfirm: async () => {
+                TODO altuelle MAtches löschen
+                await matchDayService.deleteMatchesByRoundId(round.id);
                 const players = await playerService.getPlayersByRoundId(round.id, true);
-                const generatedMatches = await matchDayService.generateMatches(players, round.id, selectedCourts);
+                const generatedMatches = await matchDayService.generateMatches(players, props.matchDayId, round.id, selectedCourts);
                 var newMatches: Match[] = [generatedMatches.doubles, generatedMatches.singles].flat();
                 await matchDayService.createMatches(round.id, newMatches);
                 fetchMatches();
@@ -201,7 +207,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
                         height: '100%'
                     }}
                 >
-                    <PlayerListView round={round} isActive={!isClosed} matches={matches} />
+                    <PlayerListView round={round} isActive={!isClosed} matches={matches} matchDayId={props.matchDayId} />
                 </Box>
 
                 {/* Rechte Seite */}
