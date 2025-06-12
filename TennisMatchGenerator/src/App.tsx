@@ -112,11 +112,11 @@ export default function App() {
                 </Select>
               </FormControl> */}
 
-              <Tooltip title="Export Spieldaten" arrow >
+              {/* <Tooltip title="Export Spieldaten" arrow >
                 <IconButton color="inherit" onClick={exportData}>
                   <FileDownloadIcon sx={{ color: 'white' }} />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip title="Statistik" arrow >
                 <IconButton color="inherit" onClick={() => navigateHook(`/${RoutePath.HOME.path}`)}>
                   <DashboardIcon sx={{ color: 'gold' }} />

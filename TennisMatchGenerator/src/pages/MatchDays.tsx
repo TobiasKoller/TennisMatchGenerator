@@ -30,8 +30,14 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
         setMatchDays(dbMatchDays.sort((a, b) => b.date.getTime() - a.date.getTime())); // Spieltage im Zustand speichern
     };
 
+    const init = async () => {
+        await fetchMatchDays();
+    }
+
+
     useEffect(() => {
-        fetchMatchDays();
+        init();
+
     }, []);
 
 
@@ -43,6 +49,19 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
         navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
     };
 
+    const onRowUpdated = async (newRow: MatchDay) => {
+        try {
+            await matchDayService.updateMatchDayDate(newRow.id, newRow.date);
+            notification.notifySuccess('Datum wurde aktualisiert');
+
+            init();
+
+            return newRow;
+        } catch (error) {
+            notification.notifyError('Fehler beim Aktualisieren des Datums');
+            return newRow; // Rückgabe des unveränderten Rows, um den Zustand nicht zu verlieren
+        }
+    };
     // const getMatchDayTitle = (matchDay: MatchDay) => {
     //     //inkl. Wochentag
     //     const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' };
@@ -62,10 +81,12 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
         {
             field: 'date',
             headerName: 'Datum',
+            type: 'date',
+            editable: true,
             width: 200,
             headerClassName: 'super-app-theme--header',
             valueFormatter: (value: Date) => {
-                return value.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                return value?.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' });
             },
         },
         {
@@ -117,7 +138,7 @@ export const MatchDays: React.FC<MatchDaysProps> = ({ }) => {
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-
+                    processRowUpdate={onRowUpdated}
                     rows={matchDays}
                     columns={columns}
                     pageSizeOptions={[5]}

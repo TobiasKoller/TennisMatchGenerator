@@ -216,15 +216,15 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {`Runde ${round.number}`}
                                             {index > 0 && index === rounds.length - 1 && (
-                                                !isClosed && <IconButton
-                                                    size="small"
+                                                !isClosed && <span
+                                                    // size="small"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleDelete(round.id);
                                                     }}
                                                 >
                                                     <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                                </span>
                                             )}
                                         </span>
                                     } value={round.id} />

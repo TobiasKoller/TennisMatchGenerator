@@ -13,8 +13,6 @@ import { PlayerService } from "../services/PlayerService.ts";
 import { Match } from "../model/Match.ts";
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog.tsx";
-import { WaitScreen } from "./WaitScreen.tsx";
-
 
 interface MatchDayRoundPageProps {
     matchDayId: string;
@@ -26,7 +24,7 @@ interface MatchDayRoundPageProps {
     // changeTabState: (enableTab: boolean) => void;
 }
 export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
-    console.log("MatchDayRoundPage rendered with props:", props);
+
     const notification = useNotification();
     const { season } = useSeason();
 
@@ -169,13 +167,19 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
         dialogRef.current?.open({
             question: "Es werden alle bisherigen Matches gelöscht! Fortfahren?",
             onConfirm: async () => {
-                TODO altuelle MAtches löschen
-                await matchDayService.deleteMatchesByRoundId(round.id);
-                const players = await playerService.getPlayersByRoundId(round.id, true);
-                const generatedMatches = await matchDayService.generateMatches(players, props.matchDayId, round.id, selectedCourts);
-                var newMatches: Match[] = [generatedMatches.doubles, generatedMatches.singles].flat();
-                await matchDayService.createMatches(round.id, newMatches);
-                fetchMatches();
+                try {
+                    await matchDayService.deleteAllMatchesByRoundId(round.id);
+
+                    const players = await playerService.getPlayersByRoundId(round.id, true);
+                    const generatedMatches = await matchDayService.generateMatches(players, props.matchDayId, round.id, selectedCourts);
+                    var newMatches: Match[] = [generatedMatches.doubles, generatedMatches.singles].flat();
+                    await matchDayService.createMatches(round.id, newMatches);
+                    fetchMatches();
+                }
+                catch (error) {
+                    console.error("Error generating matches:", error);
+                    notification.notifyError("Fehler beim Generieren der Matches: " + error);
+                }
             },
             onClose: () => {
             },

@@ -55,13 +55,18 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
     const NoMultiValue = () => null;
 
+    const matchesChanged = async () => {
+        await fetchSelectedPlayers();
+    }
+
     useEffect(() => {
         setIsEnabled(props.isEnabled ?? true);
-    }
-        , [props.isEnabled]);
+    }, [props.isEnabled]);
+
+
 
     useEffect(() => {
-
+        matchesChanged();
     }, [props.matches]);
 
     const deletePlayer = async (playerId: string) => {
@@ -144,16 +149,16 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         setSelectedPlayers(sortedPlayers);
     };
 
-    const getGenderIcon = (playerId: string) => {
-        var player = allPlayers.find((p) => p.id === playerId);
+    // const getGenderIcon = (playerId: string) => {
+    //     var player = allPlayers.find((p) => p.id === playerId);
 
-        switch (player?.gender) {
-            case "male": return <ManIcon sx={{ color: "darkblue" }} />;
-            case "female": return <WomanIcon sx={{ color: "hotpink" }} />;
-            case "diverse": return <Man4Icon sx={{ color: "purple" }} />;
-            default: return null; // Fallback, falls kein Geschlecht gefunden wird
-        }
-    }
+    //     switch (player?.gender) {
+    //         case "male": return <ManIcon sx={{ color: "darkblue" }} />;
+    //         case "female": return <WomanIcon sx={{ color: "hotpink" }} />;
+    //         case "diverse": return <Man4Icon sx={{ color: "purple" }} />;
+    //         default: return null; // Fallback, falls kein Geschlecht gefunden wird
+    //     }
+    // }
 
     const getGenderColor = (playerId: string) => {
         var player = allPlayers.find((p) => p.id === playerId);

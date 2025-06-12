@@ -322,12 +322,22 @@ export class MatchDayService extends ServiceBase {
         return matchDays[0].id;
     }
 
+    async updateMatchDayDate(matchDayId: string, newDate: Date) {
+        const database = await db;
+        await database.execute(`UPDATE matchday SET date=? WHERE id=?`, [newDate.toISOString(), matchDayId]);
+    }
+
     async getNextMatchDayId(matchDayId: string): Promise<string | null> {
         const database = await db;
 
         const matchDays = await database.safeSelect<MatchDay>(MatchDayColumns, tableNameMatchDay, `where season_id=? and date > (select date from matchday where id=?) order by date asc limit 1`, [this.seasonId, matchDayId]);
         if (matchDays.length === 0) return null;
         return matchDays[0].id;
+    }
+
+    async deleteAllMatchesByRoundId(roundId: string) {
+        const database = await db;
+        await database.execute(`DELETE FROM ${tableNameMatch} WHERE round_id=?`, [roundId]); // Löschen der Matches für die Runde
     }
 
     async countPlayersInMatches(matchDayId: string) {
