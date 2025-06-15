@@ -1,11 +1,11 @@
-import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Tooltip, Typography, } from "@mui/material";
+import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Tooltip } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
 import { MatchDayRound } from "../model/MatchDayRound";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -41,7 +41,6 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     const [matchDay, setMatchDay] = useState<MatchDay | null>(null);
     const dialogRef = useRef<ConfirmDialogHandle>(null);
 
-    const location = useLocation();
     const navigateHook = useNavigate();
 
     const matchDayId = id;

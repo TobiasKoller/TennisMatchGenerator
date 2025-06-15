@@ -192,6 +192,8 @@ export class MatchDayService extends ServiceBase {
     }
 
     async updateMatch(match: Match) {
+        if (!match.player1GuestId && !match.player2GuestId && !match.player1HomeId && !match.player2HomeId)
+            return this.deleteMatch(match.id); // Wenn keine Spieler gesetzt sind, wird das Match gelöscht
         return this.updateMatches([match]);
     }
 

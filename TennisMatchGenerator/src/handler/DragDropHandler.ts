@@ -276,19 +276,35 @@ export class DragDropService extends ServiceBase {
             }
             else {
                 // Spieler von einem Match in ein anderes Match verschieben
+                // if (fromSide == CourtSide.LEFT) {
+                //     var fromAttribute = fromMatch!.player1HomeId === fromPlayerId ? "player1HomeId" : "player2HomeId";
+                //     var toAttribute = toMatch.player1GuestId === toPlayerId ? "player1GuestId" : "player2GuestId";
+
+                //     (<any>toMatch)[toAttribute] = fromPlayerId;
+                //     (<any>fromMatch)[fromAttribute] = toPlayerId;
+                // }
+                // else {
+                //     var fromAttribute = fromMatch!.player1GuestId === fromPlayerId ? "player1GuestId" : "player2GuestId";
+                //     var toAttribute = toMatch.player1HomeId === toPlayerId ? "player1HomeId" : "player2HomeId";
+
+                //     (<any>toMatch)[toAttribute] = fromPlayerId;
+                //     (<any>fromMatch)[fromAttribute] = toPlayerId;
+                // }
                 if (fromSide == CourtSide.LEFT) {
                     var fromAttribute = fromMatch!.player1HomeId === fromPlayerId ? "player1HomeId" : "player2HomeId";
-                    var toAttribute = toMatch.player1GuestId === toPlayerId ? "player1GuestId" : "player2GuestId";
-
-                    (<any>toMatch)[toAttribute] = fromPlayerId;
                     (<any>fromMatch)[fromAttribute] = toPlayerId;
                 }
-                else {
+                else if (fromSide == CourtSide.RIGHT) {
                     var fromAttribute = fromMatch!.player1GuestId === fromPlayerId ? "player1GuestId" : "player2GuestId";
-                    var toAttribute = toMatch.player1HomeId === toPlayerId ? "player1HomeId" : "player2HomeId";
-
-                    (<any>toMatch)[toAttribute] = fromPlayerId;
                     (<any>fromMatch)[fromAttribute] = toPlayerId;
+                }
+                if (toSide == CourtSide.LEFT) {
+                    var toAttribute = toMatch!.player1HomeId === toPlayerId ? "player1HomeId" : "player2HomeId";
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
+                }
+                else if (toSide == CourtSide.RIGHT) {
+                    var toAttribute = toMatch!.player1GuestId === toPlayerId ? "player1GuestId" : "player2GuestId";
+                    (<any>toMatch)[toAttribute] = fromPlayerId;
                 }
                 await this.matchDayService.updateMatch(toMatch);
                 await this.matchDayService.updateMatch(fromMatch!);

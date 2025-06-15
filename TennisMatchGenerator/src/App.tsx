@@ -20,7 +20,6 @@ import { MatchDayDetail } from "./pages/MatchDayDetail";
 import { Drawer, IconButton, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
@@ -55,10 +54,9 @@ export default function App() {
     else navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
   };
 
-  const exportData = async () => {
+  // const exportData = async () => {
 
-  }
-
+  // }
 
 
   return (

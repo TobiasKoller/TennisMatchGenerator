@@ -1,17 +1,13 @@
-import { Badge, Box, Chip, colors, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { Badge, Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import Select, { MultiValue } from 'react-select';
 import { useNotification } from "../provider/NotificationProvider";
 import { useSeason } from "../context/SeasonContext";
 import { PlayerService } from "../services/PlayerService";
 import { Player } from "../model/Player";
-import { OptionType } from "../model/OptionType";
 import { PlayerOptionType } from "../model/PlayerOptionType";
 import { MatchDayRoundContext } from "../context/MatchDayRoundContext";
 
-import WomanIcon from '@mui/icons-material/Woman';
-import ManIcon from '@mui/icons-material/Man';
-import Man4Icon from '@mui/icons-material/Man4';
 import { MatchDayRound } from "../model/MatchDayRound";
 import { MatchDayRoundPlayer } from "../model/MatchDayRoundPlayer";
 import { DragDropService } from "../handler/DragDropHandler";
