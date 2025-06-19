@@ -13,7 +13,6 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { CourtSide } from "../model/Enums";
 import { DragDropService } from "../handler/DragDropHandler";
 import { DragPlayerContext } from "../model/DragPlayerContext";
-import CloseIcon from '@mui/icons-material/Close';
 import { CourtPlayer } from "../components/CourtPlayer";
 import { PlayerCourtPosition } from "../model/PlayerCourtPosition";
 
@@ -111,11 +110,11 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setEditResult(false);
     };
 
-    const getPlayerName = (playerId: string | null): string => {
-        if (playerId === null) return "";
-        const player = players.find(p => p.id === playerId);
-        return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "";
-    }
+    // const getPlayerName = (playerId: string | null): string => {
+    //     if (playerId === null) return "";
+    //     const player = players.find(p => p.id === playerId);
+    //     return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "";
+    // }
 
 
     const getMatchSkill = (): string => {
@@ -177,7 +176,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setIsDraggingPlayerId(null);
     }
 
-    const handleRemovePlayer = async (playerId: string) => {
+    const handleRemovePlayer = async (playerId: string | null) => {
         if (!match) return;
         if (match.type === "double") {
             if (match.player1HomeId === playerId) match.player1HomeId = null;
