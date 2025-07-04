@@ -20,6 +20,10 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { RoutePath } from "../model/RoutePath";
 import { WaitScreen } from "./WaitScreen";
 
+import BarChartIcon from '@mui/icons-material/BarChart';
+import { MatchDayStatistic } from "./MatchDayStatistic";
+
+
 interface MatchDayDetailProps {
 }
 
@@ -30,7 +34,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     const notification = useNotification();
 
     // const [activeRoundId, setActiveRound] = useState("");
-    const [selectedRoundId, setSelectedRoundId] = useState("");
+    const [selectedTabId, setSelectedTab] = useState("");
     const [isClosed, setIsClosed] = useState(false);
     const [prevMatchDayId, setPrevMatchDayId] = useState<string | null>(null);
     const [nextMatchDayId, setNextMatchDayId] = useState<string | null>(null);
@@ -50,7 +54,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
     var matchDayService = new MatchDayService(season.id, notification);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-        setSelectedRoundId(newValue);
+        setSelectedTab(newValue);
     };
 
     const addNewRound = async () => {
@@ -71,7 +75,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
 
         const activeRoundId = dbRounds[dbRounds.length - 1].id; // Setze die aktive Runde auf die letzte Runde
         // setActiveRound(activeRoundId); // Setze die aktive Runde auf die letzte Runde
-        setSelectedRoundId(activeRoundId); // Setze die ausgewählte Runde auf die letzte Runde
+        setSelectedTab(activeRoundId); // Setze die ausgewählte Runde auf die letzte Runde
     }
 
 
@@ -101,7 +105,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
             var filteredRounds = rounds.filter((r) => r.id !== roundId);
             setRounds(filteredRounds);
 
-            setSelectedRoundId(filteredRounds[filteredRounds.length - 1].id); // Setze die ausgewählte Runde auf die letzte Runde
+            setSelectedTab(filteredRounds[filteredRounds.length - 1].id); // Setze die ausgewählte Runde auf die letzte Runde
             notification.notifySuccess("Runde erfolgreich gelöscht.");
 
         } catch (error) {
@@ -205,7 +209,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                         {/* Obere Buttons und Tabs */}
                         <Box display="flex" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider', padding: 1 }}>
                             <Tabs
-                                value={selectedRoundId}
+                                value={selectedTabId}
                                 onChange={handleTabChange}
                                 variant="scrollable"
                                 scrollButtons="auto"
@@ -228,6 +232,9 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                                         </span>
                                     } value={round.id} />
                                 ))}
+                                <Tab key="match-day-stats" sx={{ pointerEvents: 'all' }}
+                                    icon={<BarChartIcon sx={{ color: 'gold' }} />}
+                                    label="Statistik" value="stats" />
                             </Tabs>
                             {!isClosed &&
                                 <Button
@@ -276,7 +283,7 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                         {/* Inhalt Bereich */}
                         <Box sx={{ flexGrow: 1, overflow: "hidden", minHeight: 0 }}>
                             {rounds.map((round) => (
-                                round.id === selectedRoundId && (
+                                round.id === selectedTabId && (
                                     <MatchDayRoundPage
                                         key={round.id}
                                         matchDayId={matchDayId}
@@ -289,6 +296,9 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                                     />
                                 )
                             ))}
+                            {selectedTabId === "stats" && (
+                                <MatchDayStatistic matchDayId={matchDayId} />
+                            )}
                         </Box>
                     </>)
                 }

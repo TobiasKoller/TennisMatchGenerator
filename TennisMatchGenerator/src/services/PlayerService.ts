@@ -61,6 +61,23 @@ export class PlayerService extends ServiceBase {
         return players;
     }
 
+    async getPlayersByMatchDayId(matchDayId: string): Promise<Player[]> {
+        const database = await db;
+
+        var players: Player[] = [];
+        const dbPlayers = await database.safeSelect<MatchDayRoundPlayer>(RoundPlayerColumns, tableNameRoundPlayer, "where round_id in (select id from round where matchday_id=?)", [matchDayId]);
+        var allPlayers = await this.getAllPlayers();
+
+        for (const player of dbPlayers) {
+            if (!player.playerId) continue; // Skip if playerId is not set
+
+            const playerData = allPlayers.find(p => p.id === player.playerId);
+            if (playerData) players.push(playerData);
+        }
+
+        return players;
+    }
+
     async createRoundPlayer(roundId: string, roundPlayer: MatchDayRoundPlayer): Promise<string> {
         roundPlayer.id = uuidv4();
         const database = await db;
