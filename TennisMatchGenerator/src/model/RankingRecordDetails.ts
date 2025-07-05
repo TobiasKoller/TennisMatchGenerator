@@ -1,6 +1,7 @@
-import { RankingRecordDetailMatch } from "./RankingRecordDetailMatch";
+import { RankingRecordMatchDay } from "./RankingRecordMatchDay";
 
 
 export class RankingRecordDetails {
-    MatchDays: Record<string, RankingRecordDetailMatch[]> = {};
+    MatchDays: RankingRecordMatchDay[] = [];
 }
+

@@ -12,6 +12,8 @@ import { StatisticData } from "../model/StatisticData";
 import { MatchDayStatisticData } from "../model/MatchDayStatisticData";
 import { StatisticSourceRecord } from "../model/StatisticSourceRecord";
 import { RankingRecordDetails } from "../model/RankingRecordDetails";
+import { RankingRecordDetailMatch } from "../model/RankingRecordDetailMatch";
+import { RankingRecordMatchDay } from "../model/RankingRecordMatchDay";
 
 export const StatisticColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
@@ -155,12 +157,12 @@ export class StatisticService extends ServiceBase {
             const set1 = record.set1.split(':').map(Number);
 
             if (record.player1HomeId) playerMap[record.player1HomeId].totalPoints += set1[0];
-            if (record.player2HomeId) playerMap[record.player2HomeId].totalPoints += set1[1];
+            if (record.player2HomeId) playerMap[record.player2HomeId].totalPoints += set1[0];
             if (record.player1GuestId) playerMap[record.player1GuestId].totalPoints += set1[1];
-            if (record.player2GuestId) playerMap[record.player2GuestId].totalPoints += set1[0];
+            if (record.player2GuestId) playerMap[record.player2GuestId].totalPoints += set1[1];
         }
 
-        var participationPoints = settings.pointsForParticipation || 0; // Default to 0 if not set
+        var participationPoints = settings.pointsForParticipation || 0;
         var sortedList = Object.values(playerMap).map(record => {
             record.totalPoints += record.participationDays.length * participationPoints; // Add participation points
 
@@ -175,8 +177,35 @@ export class StatisticService extends ServiceBase {
 
     async getRankingForPlayer(playerId: string): Promise<RankingRecordDetails> {
         const database = await db;
+        var records = await database.safeSelect<StatisticSourceRecord>(StatistikSourceRecord, "match", ` m
+                        inner join round r on m.round_id = r.id
+                        inner join matchday md on r.matchday_id = md.id
+                        where season_id=? and (
+                            m.player1_guest_id=? or 
+                            m.player2_guest_id=? or 
+                            m.player1_home_id=? or 
+                            m.player2_home_id=?
+                        )`, [this.seasonId, playerId, playerId, playerId, playerId]);
 
-        return
+        var result = new RankingRecordDetails();
+        for (var record of records) {
+
+            let matchDay = result.MatchDays.find(md => md.matchDayId === record.matchDayId);
+            if (!matchDay) {
+                matchDay = new RankingRecordMatchDay(record.matchDayId, record.matchDayDate, []);
+                result.MatchDays.push(matchDay);
+            }
+
+            let isHomePlayer = record.player1HomeId === playerId || record.player2HomeId === playerId;
+            if (record.set1) {
+                const setParts = record.set1.split(':').map(Number);
+                matchDay.totalGames += isHomePlayer ? setParts[0] : setParts[1];
+                matchDay.matches.push(new RankingRecordDetailMatch(isHomePlayer, setParts[0], setParts[1]));
+            }
+        }
+
+
+        return result;
     }
 
     async getNumberOfMatchDays(): Promise<number> {

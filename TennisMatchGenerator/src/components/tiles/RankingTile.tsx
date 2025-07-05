@@ -58,6 +58,7 @@ export const RankingTile: React.FC<RankingTileProps> = (_props) => {
                                 <TableRow
                                     key={row.playerId}
                                     onClick={() => toggleDetails(row.playerId)}
+                                    sx={{ cursor: "pointer" }}
                                     className="cursor-pointer hover:bg-muted"
                                 >
                                     <TableCell>{row.position}</TableCell>

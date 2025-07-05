@@ -1,12 +1,12 @@
 
 export class RankingRecordDetailMatch {
-    HomeGames: number = 0;
-    GuestGames: number = 0;
-    IsPlayerHome: boolean = false;
+    homeGames: number = 0;
+    guestGames: number = 0;
+    isPlayerHome: boolean = false;
 
     constructor(isPlayerHome: boolean, homeGames: number, guestGames: number) {
-        this.IsPlayerHome = isPlayerHome;
-        this.HomeGames = homeGames;
-        this.GuestGames = guestGames;
+        this.isPlayerHome = isPlayerHome;
+        this.homeGames = homeGames;
+        this.guestGames = guestGames;
     }
 }
