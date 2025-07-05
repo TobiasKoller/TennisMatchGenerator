@@ -1,9 +1,10 @@
 import { MatchDayStatisticRoundResult } from "./MatchDayStatisticRoundResult";
+import { Player } from "./Player";
 
 
 export class MatchDayStatisticPlayer {
-    playerId: string = "";
+    player: Player | null = null;
     totalPoints: number = 0;
-    totalParticipations: number = 0;
+    totalMatchesPlayed: number = 0;
     roundResults: MatchDayStatisticRoundResult[] = [];
 }

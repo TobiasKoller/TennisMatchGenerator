@@ -5,11 +5,13 @@ import { MatchDayStatisticRoundResult } from "../model/MatchDayStatisticRoundRes
 import { MatchDayStatisticPlayer } from "../model/MatchDayStatisticPlayer";
 import { INotificationService } from "../provider/NotificationProvider";
 import { PlayerService } from "./PlayerService";
-import { RankingRecord } from "./RankingRecord";
+import { RankingRecord } from "../model/RankingRecord";
 import { SeasonService } from "./SeasonService";
 import { ServiceBase } from "./ServiceBase";
 import { StatisticData } from "../model/StatisticData";
 import { MatchDayStatisticData } from "../model/MatchDayStatisticData";
+import { StatisticSourceRecord } from "../model/StatisticSourceRecord";
+import { RankingRecordDetails } from "../model/RankingRecordDetails";
 
 export const StatisticColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
@@ -18,6 +20,21 @@ export const StatisticColumns: DbColumnDefinition[] = [
     { column: "points_for_participation", alias: "pointsForParticipation", type: "number" },
     { column: "points_for_won_games", alias: "pointsForWonGames", type: "number" }
 ]
+
+export const StatistikSourceRecord: DbColumnDefinition[] = [
+
+    { column: "r.number", alias: "number", type: "number" },
+    { column: "m.court", alias: "court", type: "number" },
+    { column: "m.set1", alias: "set1", type: "string" },
+    { column: "m.player1_home_id", alias: "player1HomeId", type: "string" },
+    { column: "m.player2_home_id", alias: "player2HomeId", type: "string" },
+    { column: "m.player1_guest_id", alias: "player1GuestId", type: "string" },
+    { column: "m.player2_guest_id", alias: "player2GuestId", type: "string" },
+    { column: "md.date", alias: "matchDayDate", type: "date" },
+    { column: "md.id", alias: "matchDayId", type: "string" }
+
+];
+
 
 const MatchColumns: DbColumnDefinition[] = [
     { column: "id", type: "string" },
@@ -67,39 +84,99 @@ export class StatisticService extends ServiceBase {
             [statistic.id, statistic.playerId, statistic.seasonId, statistic.pointsForParticipation, statistic.pointsForWonGames]);
     }
 
+
+
+    // async getRankingOld(): Promise<RankingRecord[]> {
+    //     const database = await db;
+    //     //punkte und Spielteilnahmen addieren zu gesamtpunkten
+    //     const statistics = await database.safeSelect<StatisticData>(StatisticColumns, "statistic", `where season_id=? order by points_for_participation + points_for_won_games desc`, [this.seasonId]);
+
+    //     const playerService = new PlayerService(this.seasonId, this.noticiationService);
+    //     const players = await playerService.getAllPlayers();
+
+    //     var userPoints: Record<string, RankingRecord> = {};
+
+    //     for (const stat of statistics) {
+    //         const player = players.find(p => p.id === stat.playerId);
+    //         if (!player) continue;
+
+    //         if (!userPoints[stat.playerId])
+    //             userPoints[stat.playerId] = new RankingRecord(stat.playerId, `${player.firstname} ${player.lastname}`, 0, 0);
+
+    //         const totalPoints = stat.pointsForParticipation + stat.pointsForWonGames;
+
+    //         userPoints[stat.playerId].totalPoints += totalPoints; // Addiere die Punkte
+    //         userPoints[stat.playerId].participations += 1; // Erhöhe die Anzahl der Teilnahmen
+    //     };
+
+
+    //     // Sortiere die Spieler nach den Gesamtpunkten
+    //     const ranking = Object.values(userPoints).sort((a, b) => b.totalPoints - a.totalPoints);
+
+    //     //platzierung
+    //     ranking.forEach((record, index) => {
+    //         record.position = index + 1; // Platzierung beginnt bei 1
+
+    //     });
+    //     return ranking;
+    // }
+
     async getRanking(): Promise<RankingRecord[]> {
         const database = await db;
-        //punkte und Spielteilnahmen addieren zu gesamtpunkten
-        const statistics = await database.safeSelect<StatisticData>(StatisticColumns, "statistic", `where season_id=? order by points_for_participation + points_for_won_games desc`, [this.seasonId]);
+        const players = await this._playerService.getAllPlayers();
+        var settings = await this._seasonService.getSettings();
 
-        const playerService = new PlayerService(this.seasonId, this.noticiationService);
-        const players = await playerService.getAllPlayers();
+        var records = await database.safeSelect<StatisticSourceRecord>(StatistikSourceRecord, "match", ` m
+                    inner join round r on m.round_id = r.id
+                    inner join matchday md on r.matchday_id = md.id where md.season_id=?`, [this.seasonId]);
 
-        var userPoints: Record<string, RankingRecord> = {};
+        var playerMap: Record<string, RankingRecord> = {};
 
-        for (const stat of statistics) {
-            const player = players.find(p => p.id === stat.playerId);
-            if (!player) continue;
+        const mapPlayer = (matchdayId: string, id: string) => {
+            if (!id) return;
 
-            if (!userPoints[stat.playerId])
-                userPoints[stat.playerId] = new RankingRecord(stat.playerId, `${player.firstname} ${player.lastname}`, 0, 0);
+            if (!playerMap[id]) {
+                const player = players.find(p => p.id === id);
+                if (player) playerMap[id] = new RankingRecord(id, `${player.firstname} ${player.lastname}`, 0, []);
+                else playerMap[id] = new RankingRecord(id, `Unbekannt (${id})`, 0, []);
+            }
 
-            const totalPoints = stat.pointsForParticipation + stat.pointsForWonGames;
+            if (!playerMap[id].participationDays.includes(matchdayId)) {
+                playerMap[id].participationDays.push(matchdayId);
+            }
+        }
 
-            userPoints[stat.playerId].totalPoints += totalPoints; // Addiere die Punkte
-            userPoints[stat.playerId].participations += 1; // Erhöhe die Anzahl der Teilnahmen
-        };
+        for (var record of records) {
+            mapPlayer(record.matchDayId, record.player1HomeId);
+            mapPlayer(record.matchDayId, record.player2HomeId);
+            mapPlayer(record.matchDayId, record.player1GuestId);
+            mapPlayer(record.matchDayId, record.player2GuestId);
 
+            const set1 = record.set1.split(':').map(Number);
 
-        // Sortiere die Spieler nach den Gesamtpunkten
-        const ranking = Object.values(userPoints).sort((a, b) => b.totalPoints - a.totalPoints);
+            if (record.player1HomeId) playerMap[record.player1HomeId].totalPoints += set1[0];
+            if (record.player2HomeId) playerMap[record.player2HomeId].totalPoints += set1[1];
+            if (record.player1GuestId) playerMap[record.player1GuestId].totalPoints += set1[1];
+            if (record.player2GuestId) playerMap[record.player2GuestId].totalPoints += set1[0];
+        }
 
-        //platzierung
-        ranking.forEach((record, index) => {
-            record.position = index + 1; // Platzierung beginnt bei 1
+        var participationPoints = settings.pointsForParticipation || 0; // Default to 0 if not set
+        var sortedList = Object.values(playerMap).map(record => {
+            record.totalPoints += record.participationDays.length * participationPoints; // Add participation points
 
+            return record;
+        }).sort((a, b) => b.totalPoints - a.totalPoints);
+
+        return sortedList.map((record, index) => {
+            record.position = index + 1; // Set position based on sorted order
+            return record;
         });
-        return ranking;
+    }
+
+    async getRankingForPlayer(playerId: string): Promise<RankingRecordDetails> {
+        const database = await db;
+
+        return
     }
 
     async getNumberOfMatchDays(): Promise<number> {
@@ -128,33 +205,33 @@ export class StatisticService extends ServiceBase {
         var settings = await this._seasonService.getSettings();
 
         stat.matchDayId = matchDayId;
-        stat.totalPlayerCount = players.length;
+        stat.totalPlayerCount = 0;
+        stat.pointsForParticipation = settings.pointsForParticipation || 0; // Default to 0 if not set
 
+        let playerList: string[] = [];
         for (const player of players) {
             let playerStat: MatchDayStatisticPlayer = {
-                playerId: player.id,
+                player: player,
                 totalPoints: 0,
-                totalParticipations: settings.pointsForParticipation,
+                totalMatchesPlayed: 0,
                 roundResults: []
             };
 
             // Filter matches for the current player
             const playerMatches = matches.filter(m => m.player1HomeId === player.id || m.player2HomeId === player.id || m.player1GuestId === player.id || m.player2GuestId === player.id);
+            if (playerMatches.length === 0 || playerList.includes(player.id)) continue; // Skip if no matches found for the player
 
+            playerList.push(player.id);
             for (const match of playerMatches) {
                 let result = "";
                 let points = 0;
                 let games = match.set1Str || "";
 
                 const isHomePlayer = match.player1HomeId === player.id || match.player2HomeId === player.id;
-                const isGuestPlayer = match.player1GuestId === player.id || match.player2GuestId === player.id;
 
                 // Determine the result and points based on the match data
                 if (match.set1Str) {
                     const set1 = match.set1Str.split(':').map(Number);
-
-                    if (isHomePlayer) points += set1[0];
-                    else points += set1[1];
 
                     if (isHomePlayer) {
                         points += set1[0];
@@ -167,13 +244,15 @@ export class StatisticService extends ServiceBase {
                 }
 
                 // Add points for participation
-                points += 1; // Assuming 1 point for participation
+                // points += 1; // Assuming 1 point for participation
 
+                playerStat.totalMatchesPlayed += 1;
                 playerStat.totalPoints += points;
                 playerStat.roundResults.push({ games, result, points } as MatchDayStatisticRoundResult);
             }
 
             stat.playerResults.push(playerStat);
+            stat.totalPlayerCount = stat.playerResults.length;
         }
 
         return stat;

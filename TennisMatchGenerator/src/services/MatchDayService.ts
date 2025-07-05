@@ -14,6 +14,7 @@ import { MatchResult } from "../model/MatchResult";
 import { SeasonService } from "./SeasonService";
 import { MatchDayCloser } from "./MatchDayCloser";
 import { StatisticService } from "./StatisticService";
+import { Setting } from "../model/Setting";
 
 const tableNameMatchDay = "matchday" as const;
 const tableNameRound = "round" as const;
@@ -56,11 +57,19 @@ const RoundColumns: DbColumnDefinition[] = [
 export class MatchDayService extends ServiceBase {
 
     private statisticService: StatisticService;
+    private seasonService: SeasonService;
 
     constructor(seasonId: string, notificationService: INotificationService) {
         super(seasonId, notificationService);
 
         this.statisticService = new StatisticService(seasonId, notificationService);
+        this.seasonService = new SeasonService();
+
+    }
+
+    async getSettings(): Promise<Setting> {
+        const settings = await this.seasonService.getSettings();
+        return settings;
     }
 
     async createMatchDay(): Promise<string> {
@@ -95,6 +104,12 @@ export class MatchDayService extends ServiceBase {
                 courts: (lastRound ? lastRound.courts : []),
                 isActive: true
             };
+
+            if (!lastRound) {
+                //alle courts aktivieren
+                var settings = await this.getSettings();
+                newRound.courts = settings.availableCourts!;
+            }
 
             const lastRoundPlayers = lastRound ? await playerService.getPlayersByRoundId(lastRound.id, false) : [];
 

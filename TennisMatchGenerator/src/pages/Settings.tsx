@@ -48,7 +48,11 @@ export const Settings: React.FC = () => {
         const { name, value, type } = event.target as HTMLInputElement;
         setFormData((prev) => ({
             ...prev,
-            [name!]: type === "checkbox" ? (event.target as HTMLInputElement).checked : value,
+            [name!]: type === "checkbox"
+                ? (event.target as HTMLInputElement).checked
+                : type === "number"
+                    ? Number(value)
+                    : value,
         }));
     };
 

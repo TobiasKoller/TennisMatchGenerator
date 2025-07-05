@@ -6,3 +6,4 @@ export class DoubleMatch extends Match {
     awayPlayers: [string, string] = ["", ""];
 
 }
+

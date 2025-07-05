@@ -3,9 +3,10 @@ import { useSeason } from "../context/SeasonContext";
 import { useNotification } from "../provider/NotificationProvider";
 import { StatisticService } from "../services/StatisticService";
 import { MatchDayStatisticData } from "../model/MatchDayStatisticData";
-import { Box, Typography } from "@mui/material";
+import { Badge, Box, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowsProp } from "@mui/x-data-grid";
 import { MatchDayStatisticRoundResult } from "../model/MatchDayStatisticRoundResult";
+import { Player } from "../model/Player";
 
 interface MatchDayStatisticProps {
     matchDayId: string;
@@ -39,9 +40,19 @@ export const MatchDayStatistic: React.FC<MatchDayStatisticProps> = (props) => {
     // Basisspalten
     const baseColumns: GridColDef[] = [
         { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'playerId', headerName: 'Spieler', flex: 1 },
-        { field: 'totalPoints', headerName: 'Punkte', width: 100 },
-        { field: 'totalParticipations', headerName: 'Teilnahmen', width: 130 },
+        {
+            field: 'player',
+            headerName: 'Spieler',
+            flex: 1,
+            renderCell: (params: GridRenderCellParams<MatchDayStatisticData>) => {
+                const player: Player = params.value.player;
+                return (
+                    <Typography variant="body2" color="textPrimary">
+                        {player.firstname} {player.lastname}
+                    </Typography>
+                );
+            },
+        }
     ];
 
     // Runden-Spalten hinzufügen
@@ -49,23 +60,105 @@ export const MatchDayStatistic: React.FC<MatchDayStatisticProps> = (props) => {
         field: `round${i + 1}`,
         headerName: `Runde ${i + 1}`,
         flex: 1,
+        renderCell: (params) => {
+            const rowValue: MatchDayStatisticRoundResult = params.value;
+
+            if (!rowValue) return <Box />; // Falls keine Daten vorhanden sind
+
+            const badgeColor =
+                rowValue.result === 'Won' ? 'success' :
+                    rowValue.result === 'Lost' ? 'error' :
+                        'default';
+
+            const textColor =
+                rowValue.result === 'Won' ? 'green' :
+                    rowValue.result === 'Lost' ? 'red' :
+                        'text.secondary';
+
+            return (
+                <Box
+                    width="100%"
+                    height="100%"
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                >
+                    <Box position="relative" display="inline-flex">
+                        <Typography sx={{ color: textColor }}>{rowValue.games}</Typography>
+                        <Badge
+                            badgeContent={rowValue.points}
+                            color={badgeColor}
+                            showZero
+                            sx={{
+                                position: 'absolute',
+                                top: -2,
+                                right: -12,
+                                '& .MuiBadge-badge': {
+                                    fontSize: '0.7rem',
+                                    minWidth: 18,
+                                    height: 18,
+                                },
+                            }}
+                        />
+                    </Box>
+                </Box>
+            );
+        },
     }));
 
-    const columns: GridColDef[] = [...baseColumns, ...roundColumns];
+    const lastColumns: GridColDef[] = [
+        {
+            field: 'totalPoints',
+            headerName: 'Gesamtpunkte',
+            width: 150,
+            renderCell: (params: GridRenderCellParams<MatchDayStatisticData>) => {
+                const row = params.row as any
+                return (
+                    <Box
+                        width="100%"
+                        height="100%"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                    >
+                        <Box position="relative" display="inline-flex">
+                            <Typography>{row.totalPoints}</Typography>
+                            <Badge
+                                badgeContent={row.totalMatchesPlayed.length > 0 ? row.pointsForParticipation : 0}
+                                color={"primary"}
+                                showZero
+                                sx={{
+                                    position: 'absolute',
+                                    top: -2,
+                                    right: -12,
+                                    '& .MuiBadge-badge': {
+                                        fontSize: '0.7rem',
+                                        minWidth: 18,
+                                        height: 18,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                );
+            },
+        }]
+
+    const columns: GridColDef[] = [...baseColumns, ...roundColumns, ...lastColumns];
 
     // Zeilen konstruieren
     const rows: GridRowsProp = statisticData.playerResults.map((player, index) => {
-        const roundData: Record<string, string> = {};
+        const roundData: Record<string, any> = {};
 
         player.roundResults.forEach((r, i) => {
-            roundData[`round${i + 1}`] = `${r.games} – ${r.result}`;
+            roundData[`round${i + 1}`] = r
         });
-
         return {
             id: index + 1,
-            playerId: player.playerId,
+            player: player,
+            totalMatchesPlayed: player.totalMatchesPlayed,
+            pointsForParticipation: statisticData.pointsForParticipation,
             totalPoints: player.totalPoints,
-            totalParticipations: player.totalParticipations,
             ...roundData,
         };
     });
@@ -73,15 +166,25 @@ export const MatchDayStatistic: React.FC<MatchDayStatisticProps> = (props) => {
     return (
         <Box sx={{ width: '100%' }}>
             <Typography variant="h6" gutterBottom>
-                Spieltag: {statisticData.matchDayId} – {statisticData.totalPlayerCount} Spieler
+                Anzahl teilnehmender Spieler: {statisticData.totalPlayerCount}
             </Typography>
 
             <DataGrid
                 rows={rows}
                 columns={columns}
                 // pageSize={5}
-                autoHeight
+                // autoHeight
                 disableRowSelectionOnClick
+                getRowClassName={() => 'vertical-center'}
+                sx={{
+                    '& .MuiDataGrid-cell': {
+                        display: 'flex',
+                        alignItems: 'center',  // vertikal zentriert
+                    },
+                    '& .MuiDataGrid-columnHeader': {
+                        alignItems: 'center',  // optional: auch Kopfzeile zentriert
+                    },
+                }}
             />
         </Box>
     );
