@@ -164,28 +164,27 @@ export const MatchDayStatistic: React.FC<MatchDayStatisticProps> = (props) => {
     });
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-                Anzahl teilnehmender Spieler: {statisticData.totalPlayerCount}
-            </Typography>
+        <Box sx={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {/* <Typography variant="h6" gutterBottom>
+                Statistik für Spieltag {matchDayId}
+            </Typography> */}
 
-            <DataGrid
-                rows={rows}
-                columns={columns}
-                // pageSize={5}
-                // autoHeight
-                disableRowSelectionOnClick
-                getRowClassName={() => 'vertical-center'}
-                sx={{
-                    '& .MuiDataGrid-cell': {
-                        display: 'flex',
-                        alignItems: 'center',  // vertikal zentriert
-                    },
-                    '& .MuiDataGrid-columnHeader': {
-                        alignItems: 'center',  // optional: auch Kopfzeile zentriert
-                    },
-                }}
-            />
+            <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                <DataGrid
+                    rows={rows}
+                    columns={columns}
+                    disableRowSelectionOnClick
+                    sx={{
+                        '& .MuiDataGrid-cell': {
+                            display: 'flex',
+                            alignItems: 'center',
+                        },
+                        '& .MuiDataGrid-columnHeader': {
+                            alignItems: 'center',
+                        },
+                    }}
+                />
+            </Box>
         </Box>
     );
 

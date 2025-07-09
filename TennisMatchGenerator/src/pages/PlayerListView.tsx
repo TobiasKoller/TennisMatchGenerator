@@ -171,6 +171,9 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ marginBottom: 2 }}>
                 <Typography variant="h6">Spieler der Runde</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                    Insgesamt: {selectedPlayers.length}
+                </Typography>
                 <Select
                     isDisabled={!props.isActive}
                     options={allPlayerOptions}
