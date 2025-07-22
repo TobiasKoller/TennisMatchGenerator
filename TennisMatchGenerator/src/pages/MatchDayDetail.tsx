@@ -1,4 +1,4 @@
-import { Box, Button, Chip, IconButton, Stack, Tab, Tabs, Tooltip } from "@mui/material";
+import { Box, Button, IconButton, Stack, Tab, Tabs, Tooltip } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { CustomPaper } from "../components/CustomPaper";
 import { MatchDayService } from "../services/MatchDayService";
@@ -10,7 +10,6 @@ import { MatchDayRoundPage } from "./MatchDayRoundPage";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { SeasonService } from "../services/SeasonService";
 import LockIcon from '@mui/icons-material/Lock';
 import { ConfirmDialog, ConfirmDialogHandle } from "../components/ConfirmDialog";
 import { MatchDay } from "../model/Matchday";
@@ -113,26 +112,33 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
         }
     }
 
+    const reopenMatchDay = async () => {
+        await matchDayService.reopenMatchDay(matchDayId);
+        setIsClosed(false);
+    }
+
     const closeMatchDay = async () => {
+        await matchDayService.closeMatchDay(matchDayId);
+        setIsClosed(true);
 
         //wirklich abschließen?
-        dialogRef.current?.open({
+        // dialogRef.current?.open({
 
-            question: "Möchten Sie den gesamten Spieltag wirklich beenden?",
-            onConfirm: async () => {
-                try {
-                    var seasonService = new SeasonService();
-                    await matchDayService.closeMatchDay(seasonService, matchDayId)
-                    setIsClosed(true);
+        //     question: "Möchten Sie den gesamten Spieltag wirklich beenden?",
+        //     onConfirm: async () => {
+        //         try {
+        //             var seasonService = new SeasonService();
+        //             await matchDayService.closeMatchDay(seasonService, matchDayId)
+        //             setIsClosed(true);
 
-                    notification.notifySuccess("Spieltag erfolgreich abgeschlossen.");
-                } catch (error) {
-                    notification.notifyError(error instanceof Error ? error.message : "Fehler beim Abschließen des Spieltags.");
-                }
-            },
-            onClose: () => {
-            },
-        });
+        //             notification.notifySuccess("Spieltag erfolgreich abgeschlossen.");
+        //         } catch (error) {
+        //             notification.notifyError(error instanceof Error ? error.message : "Fehler beim Abschließen des Spieltags.");
+        //         }
+        //     },
+        //     onClose: () => {
+        //     },
+        // });
 
     }
 
@@ -250,32 +256,42 @@ export const MatchDayDetail: React.FC<MatchDayDetailProps> = ({ }) => {
                             <Box sx={{ flexGrow: 1 }} />
                             {
                                 isClosed
-                                    ? <Chip
-                                        icon={<LockIcon />}
-                                        label="Spieltag abgeschlossen"
-                                        color="default" // oder "primary", "secondary", "success", je nach gewünschter Farbe
-                                        variant="outlined" // oder "filled"
-                                        sx={{
-                                            borderColor: '#f44336',
-                                            borderWidth: 2,
-                                            color: '#f44336',
-                                            fontWeight: 'bold',
-                                            fontSize: '0.9rem',
-                                            '&:hover': {
-                                                backgroundColor: '#ffebee', // leicht roter Hover-Hintergrund
-                                            }
-                                        }}
-                                    />
-                                    :
+                                    ?
                                     <Button
+                                        sx={{ pointerEvents: 'all' }}
+                                        color="error"
+                                        variant="outlined"
+                                        startIcon={<LockIcon />}
+                                        onClick={reopenMatchDay}
+                                    >
+                                        Spieltag erneut öffnen
+                                    </Button>
+                                    // <Chip
+                                    //     icon={<LockIcon />}
+                                    //     label="Spieltag abgeschlossen - Wieder öffnen"
+                                    //     color="default" // oder "primary", "secondary", "success", je nach gewünschter Farbe
+                                    //     variant="outlined" // oder "filled"
+                                    //     sx={{
+                                    //         borderColor: '#f44336',
+                                    //         borderWidth: 2,
+                                    //         color: '#f44336',
+                                    //         fontWeight: 'bold',
+                                    //         fontSize: '0.9rem',
+                                    //         '&:hover': {
+                                    //             backgroundColor: '#ffebee', // leicht roter Hover-Hintergrund
+                                    //         }
+                                    //     }}
+                                    //     onClick={reopenMatchDay}
+                                    // />
+                                    : <Button
                                         color="success"
                                         variant="outlined"
                                         startIcon={<TaskAltIcon />}
                                         onClick={closeMatchDay}
-                                        disabled={isClosed}
                                     >
                                         Spieltag abschließen
                                     </Button>
+
 
                             }
                         </Box>

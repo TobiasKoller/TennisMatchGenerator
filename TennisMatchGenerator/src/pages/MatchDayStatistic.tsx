@@ -124,7 +124,7 @@ export const MatchDayStatistic: React.FC<MatchDayStatisticProps> = (props) => {
                         <Box position="relative" display="inline-flex">
                             <Typography>{row.totalPoints}</Typography>
                             <Badge
-                                badgeContent={row.totalMatchesPlayed.length > 0 ? row.pointsForParticipation : 0}
+                                badgeContent={row.totalMatchesPlayed > 0 ? row.pointsForParticipation : 0}
                                 color={"primary"}
                                 showZero
                                 sx={{

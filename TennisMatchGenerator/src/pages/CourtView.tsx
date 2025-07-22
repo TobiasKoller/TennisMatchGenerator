@@ -1,4 +1,4 @@
-import { Box, IconButton, TextField } from "@mui/material";
+import { Box, IconButton, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import { Match } from "../model/Match";
 import { useContext, useEffect, useState } from "react";
 import tennisCourtUrl from "../assets/tennis_court.svg";
@@ -20,6 +20,7 @@ interface CourtViewProps {
     roundId: string;
     court: number;
     match: Match | null;
+    availableCourts: number[];
 
 }
 
@@ -42,6 +43,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     const [scoreHome, setScoreHome] = useState(0);
     const [scoreGuest, setScoreGuest] = useState(0);
     const [match, setMatch] = useState<Match | null>(props.match);
+    const [isEditingCourtNumber, setIsEditingCourtNumber] = useState(false);
 
     const [isDraggingLeft, setIsDraggingLeft] = useState(false);
     const [isDraggingRight, setIsDraggingRight] = useState(false);
@@ -110,13 +112,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setEditResult(false);
     };
 
-    // const getPlayerName = (playerId: string | null): string => {
-    //     if (playerId === null) return "";
-    //     const player = players.find(p => p.id === playerId);
-    //     return player ? `${player.firstname} ${player.lastname} (${player.skillRating})` : "";
-    // }
-
-
     const getMatchSkill = (): string => {
         if (!match) return "";
 
@@ -142,7 +137,15 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         }
     }
 
-
+    const handleCourtChange = async (oldCourtNo: number, event: SelectChangeEvent<number>) => {
+        const newCourt = event.target.value as unknown as number;
+        if (newCourt !== court) {
+            await matchDayService.switchCourts(props.roundId, oldCourtNo, newCourt);
+            setIsEditingCourtNumber(false);
+            notification.notifySuccess(`Platznummer geändert von ${oldCourtNo} auf ${newCourt}`);
+            matchDayRoundContext.reloadMatches();
+        }
+    };
 
     const deleteMatch = async () => {
         if (match) {
@@ -192,10 +195,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         await matchDayService.updateMatch(match);
         matchDayRoundContext.reloadMatches();
     }
-
-    // const isDraggingOverPlayer = (playerId: string | undefined | null): boolean => {
-    //     return !!playerId && isDraggingPlayerId === playerId;
-    // }
 
     const createCourtDragContext = (e: React.DragEvent<HTMLDivElement>, toSide: CourtSide) => {
 
@@ -289,40 +288,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                         handleRemovePlayer={handleRemovePlayer}
 
                     />
-                    // <Box draggable display={match.player1HomeId ? "block" : "none"}
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId, match.id, court, CourtSide.LEFT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player1HomeId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1HomeId, CourtSide.LEFT));
-                    //     }}
-                    //     sx={playerStyle({ top: "28%", left: "5%", isMarked: isDraggingOverPlayer(match.player1HomeId) })} >
-                    //     <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                    //         <span style={{ flexGrow: 1 }}>{getPlayerName(match.player1HomeId)}</span>
-                    //         <IconButton
-                    //             size="small"
-                    //             onClick={(e) => {
-                    //                 e.stopPropagation(); // verhindert z. B. Drag-Effekte
-                    //             }}
-                    //         >
-                    //             <CloseIcon fontSize="small" />
-                    //         </IconButton>
-                    //     </Box>
-                    // </Box>
                 }
                 {match.player2HomeId &&
-                    // <Box draggable display={match.player1HomeId ? "block" : "none"}
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2HomeId, match.id, court, CourtSide.LEFT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player2HomeId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player2HomeId, CourtSide.LEFT));
-                    //     }}
-                    //     sx={playerStyle({ top: "60%", left: "5%", isMarked: isDraggingOverPlayer(match.player2HomeId) })} >
-                    //     {getPlayerName(match.player2HomeId)}
-                    // </Box>
                     <CourtPlayer
                         playerId={match.player2HomeId}
                         matchId={match.id}
@@ -343,17 +310,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                 }
                 {/* Team B (rechts) */}
                 {match.player1GuestId &&
-                    // <Box draggable display={match.player1HomeId ? "block" : "none"}
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId, match.id, court, CourtSide.RIGHT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player1GuestId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1GuestId, CourtSide.RIGHT));
-                    //     }}
-                    //     sx={playerStyle({ top: "28%", right: "5%", isMarked: isDraggingOverPlayer(match.player1GuestId) })} >
-                    //     {getPlayerName(match.player1GuestId)}
-                    // </Box>
                     <CourtPlayer
                         playerId={match.player1GuestId}
                         matchId={match.id}
@@ -373,17 +329,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     />
                 }
                 {match.player2GuestId &&
-                    // <Box draggable display={match.player1HomeId ? "block" : "none"}
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player2GuestId, match.id, court, CourtSide.RIGHT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player2GuestId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player2GuestId, CourtSide.RIGHT));
-                    //     }}
-                    //     sx={playerStyle({ top: "60%", right: "5%", isMarked: isDraggingOverPlayer(match.player2GuestId) })} >
-                    //     {getPlayerName(match.player2GuestId)}
-                    // </Box>
                     <CourtPlayer
                         playerId={match.player2GuestId}
                         matchId={match.id}
@@ -406,19 +351,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             {match && match.type === "single" && (<>
                 {/* Einzelspieler */}
                 {match.player1HomeId &&
-                    // <Box
-                    //     draggable
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1HomeId, match.id, court, CourtSide.LEFT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player1HomeId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1HomeId, CourtSide.LEFT));
-                    //     }}
-                    //     sx={playerStyle({ top: "28%", left: "10%", isMarked: isDraggingOverPlayer(match.player1HomeId) })}
-                    // >
-                    //     {getPlayerName(match.player1HomeId)}
-                    // </Box>
                     <CourtPlayer
                         playerId={match.player1HomeId}
                         matchId={match.id}
@@ -437,18 +369,6 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     />
                 }
                 {match.player1GuestId &&
-                    // <Box
-                    //     draggable
-                    //     onDragStart={(e) => dragDropService.handleDragPlayerStart(e, match.player1GuestId, match.id, court, CourtSide.RIGHT)}
-                    //     onDragOver={(e => handleDragOverPlayer(e, match.player1GuestId))}
-                    //     onDragLeave={handleDragLeavePlayer}
-                    //     onDrop={(event) => {
-                    //         resetDragging();
-                    //         dragDropService.handleDropOnPlayer(event, createPlayerDragContext(event, match.player1GuestId, CourtSide.RIGHT));
-                    //     }}
-                    //     sx={playerStyle({ top: "60%", right: "10%", isMarked: isDraggingOverPlayer(match.player1GuestId) })}>
-                    //     {getPlayerName(match.player1GuestId)}
-                    // </Box>
                     <CourtPlayer
                         playerId={match.player1GuestId}
                         matchId={match.id}
@@ -559,6 +479,7 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             )}
 
             <Box
+                onClick={() => setIsEditingCourtNumber(true)}
                 sx={{
                     position: "absolute",
                     bottom: 8,
@@ -575,7 +496,33 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     fontWeight: "bold",
                 }}
             >
-                {court}
+                {isEditingCourtNumber ? (
+                    <Select
+                        value={court}
+                        onChange={(event) => handleCourtChange(court, event)}
+                        autoFocus
+                        size="small"
+                        sx={{
+                            backgroundColor: "white",
+                            borderRadius: 1,
+                            color: "black",
+                            height: 28,
+                            fontSize: "14px",
+                            "& .MuiSelect-select": {
+                                padding: "4px 8px",
+                            },
+                        }}
+                        onBlur={() => setIsEditingCourtNumber(false)}
+                    >
+                        {[...props.availableCourts].map((num) => (
+                            num != court && <MenuItem key={num} value={num}>
+                                {num}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                ) : (
+                    court
+                )}
             </Box>
             <Box
                 className="action-icon"

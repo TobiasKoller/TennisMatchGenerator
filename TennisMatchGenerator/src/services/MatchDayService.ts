@@ -12,8 +12,6 @@ import { DbColumnDefinition } from "../db/DbColumnDefinition";
 import { MatchGenerator } from "./MatchGenerator";
 import { MatchResult } from "../model/MatchResult";
 import { SeasonService } from "./SeasonService";
-import { MatchDayCloser } from "./MatchDayCloser";
-import { StatisticService } from "./StatisticService";
 import { Setting } from "../model/Setting";
 
 const tableNameMatchDay = "matchday" as const;
@@ -56,13 +54,13 @@ const RoundColumns: DbColumnDefinition[] = [
 
 export class MatchDayService extends ServiceBase {
 
-    private statisticService: StatisticService;
+    // private statisticService: StatisticService;
     private seasonService: SeasonService;
 
     constructor(seasonId: string, notificationService: INotificationService) {
         super(seasonId, notificationService);
 
-        this.statisticService = new StatisticService(seasonId, notificationService);
+        // this.statisticService = new StatisticService(seasonId, notificationService);
         this.seasonService = new SeasonService();
 
     }
@@ -308,26 +306,43 @@ export class MatchDayService extends ServiceBase {
             [match.id, match.roundId, match.type, match.number, match.court, "", "", this.validateGuid(match.player1HomeId), this.validateGuid(match.player2HomeId), this.validateGuid(match.player1GuestId), this.validateGuid(match.player2GuestId)]);
     }
 
-    async closeMatchDay(seasonService: SeasonService, matchdayId: string) {
+    async closeMatchDay(matchdayId: string) {
         const database = await db;
-        var closer = new MatchDayCloser(seasonService, this);
-        var records = await closer.CalculateMatchDayPoints(this.seasonId, matchdayId);
-        if (records.length === 0) throw new Error("Keine Spieler für den Spieltag gefunden. Bitte stellen Sie sicher, dass Spieler in der Runde vorhanden sind.");
-
-        const rollBackStatistics = async (database: any, records: any[]) => {
-            for (var record of records) {
-                await database.execute(`DELETE FROM statistic WHERE id=?`, [record.id]);
-            }
-        }
 
         try {
-            for (var record of records) {
-                await this.statisticService.createStatistic(record);
-            }
             await database.execute(`UPDATE matchday SET is_closed=1 WHERE id=?`, [matchdayId]);
         } catch (error: any) {
-            rollBackStatistics(database, records);
             throw new Error(`Fehler beim Schließen des Spieltags: ${error?.message}`);
+        }
+
+        // var closer = new MatchDayCloser(seasonService, this);
+        // var records = await closer.CalculateMatchDayPoints(this.seasonId, matchdayId);
+        // if (records.length === 0) throw new Error("Keine Spieler für den Spieltag gefunden. Bitte stellen Sie sicher, dass Spieler in der Runde vorhanden sind.");
+
+        // const rollBackStatistics = async (database: any, records: any[]) => {
+        //     for (var record of records) {
+        //         await database.execute(`DELETE FROM statistic WHERE id=?`, [record.id]);
+        //     }
+        // }
+
+        // try {
+        //     for (var record of records) {
+        //         await this.statisticService.createStatistic(record);
+        //     }
+        //     await database.execute(`UPDATE matchday SET is_closed=1 WHERE id=?`, [matchdayId]);
+        // } catch (error: any) {
+        //     rollBackStatistics(database, records);
+        //     throw new Error(`Fehler beim Schließen des Spieltags: ${error?.message}`);
+        // }
+    }
+
+    async reopenMatchDay(matchdayId: string) {
+        const database = await db;
+
+        try {
+            await database.execute(`UPDATE matchday SET is_closed=0 WHERE id=?`, [matchdayId]);
+        } catch (error: any) {
+            throw new Error(`Fehler beim Öffnen des Spieltags: ${error?.message}`);
         }
     }
 
@@ -356,6 +371,18 @@ export class MatchDayService extends ServiceBase {
         const database = await db;
         await database.execute(`DELETE FROM ${tableNameMatch} WHERE round_id=?`, [roundId]); // Löschen der Matches für die Runde
     }
+
+    async getDistinctMatchDayPlayerCount(matchDayId: string): Promise<number> {
+        const database = await db;
+
+        const players = await database.select<any>(`select distinct p.player_id from round r
+                                    inner join round_player p
+                                    on r.id = p.round_id
+                                    where r.matchday_id=?`, [matchDayId]);
+
+        return players.length;
+    }
+
 
     async countPlayersInMatches(matchDayId: string) {
         const database = await db;
@@ -397,6 +424,20 @@ export class MatchDayService extends ServiceBase {
         const matches = generator.generate(roundId, courts);
 
         return matches;
+    }
+
+    async switchCourts(roundId: string, oldCourt: number, newCourt: number) {
+        if (!oldCourt || !newCourt || oldCourt === newCourt) return;
+        const database = await db;
+
+        const newCourtMatch = await database.safeSelect<Match>(MatchColumns, tableNameMatch, `where round_id=? and court=?`, [roundId, newCourt]);
+        const oldCourtMatch = await database.safeSelect<Match>(MatchColumns, tableNameMatch, `where round_id=? and court=?`, [roundId, oldCourt]);
+
+
+        if (newCourtMatch.length > 0)
+            await database.execute(`UPDATE ${tableNameMatch} SET court=? WHERE id=?`, [oldCourt, newCourtMatch[0].id]);
+        if (oldCourtMatch.length > 0)
+            await database.execute(`UPDATE ${tableNameMatch} SET court=? WHERE id=?`, [newCourt, oldCourtMatch[0].id]);
     }
 
     validateGuid(id: string | null): string | null {

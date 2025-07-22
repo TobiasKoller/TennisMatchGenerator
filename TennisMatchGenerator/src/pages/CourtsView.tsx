@@ -36,7 +36,11 @@ export const CourtsView: React.FC<CourtsViewProps> = (props) => {
                 gap: '16px', // Abstand zwischen den SVGs (optional)
             }}>
                 {courts.map((courtNumber, _index) => (
-                    <CourtView key={_index} roundId={props.round.id} court={courtNumber} match={getMatchByCourt(courtNumber)} />
+                    <CourtView key={_index}
+                        roundId={props.round.id}
+                        court={courtNumber}
+                        availableCourts={courts}
+                        match={getMatchByCourt(courtNumber)} />
                 ))}
             </Box>
         </Box>

@@ -38,6 +38,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
     const [allPlayerOptions, setAllPlayerOptions] = useState<PlayerOptionType[]>([]);
     const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+    const [disinctMatchDayPlayerCount, setDistinctMatchDayPlayerCount] = useState<number>(0);
     const [selectionChanged, setSelectionChanged] = useState(false);
     const [selectedPlayers, setSelectedPlayers] = useState<MultiValue<PlayerOptionType>>([]);
     const [isEnabled, setIsEnabled] = useState(props.isEnabled ?? true);
@@ -73,6 +74,7 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         const newSelectedPlayers = selectedPlayers.filter((p) => p.value !== playerId);
         setSelectedPlayers(newSelectedPlayers);
         setSelectionChanged(true);
+        await fetchDistinctMatchDayPlayerCount();
     }
 
     const fetchAllPlayers = async () => {
@@ -110,12 +112,20 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
         }
     };
 
-
+    const fetchDistinctMatchDayPlayerCount = async () => {
+        try {
+            const count = await matchDayService.getDistinctMatchDayPlayerCount(props.matchDayId);
+            setDistinctMatchDayPlayerCount(count);
+        } catch (error) {
+            console.error("Fehler beim Abrufen der Spieleranzahl für diesen Spieltag:", error);
+        }
+    };
 
     const init = async () => {
 
         await fetchAllPlayers();
         await fetchSelectedPlayers();
+        await fetchDistinctMatchDayPlayerCount();
     }
 
     useEffect(() => {
@@ -127,34 +137,24 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
             onSelectionClosed(); // Jetzt ist selectedPlayers sicher aktuell
             setSelectionChanged(false); // Reset
         }
+
     }, [selectedPlayers, selectionChanged]);
 
 
     const onSelectionClosed = async () => {
         const selectedPlayerIds = selectedPlayers.map((player) => player.value);
-        await playerService.updateSelectedRoundPlayers(round.id, selectedPlayerIds)
+        await playerService.updateSelectedRoundPlayers(round.id, selectedPlayerIds);
+
+        await fetchDistinctMatchDayPlayerCount();
     }
 
     const handleSelectChange = (selectedOptions: MultiValue<PlayerOptionType>) => {
         const sortedPlayers = [...selectedOptions].sort((a, b) => {
-            // Vergleiche die Namen lexikografisch
             return a.label.localeCompare(b.label);
         });
 
-
         setSelectedPlayers(sortedPlayers);
     };
-
-    // const getGenderIcon = (playerId: string) => {
-    //     var player = allPlayers.find((p) => p.id === playerId);
-
-    //     switch (player?.gender) {
-    //         case "male": return <ManIcon sx={{ color: "darkblue" }} />;
-    //         case "female": return <WomanIcon sx={{ color: "hotpink" }} />;
-    //         case "diverse": return <Man4Icon sx={{ color: "purple" }} />;
-    //         default: return null; // Fallback, falls kein Geschlecht gefunden wird
-    //     }
-    // }
 
     const getGenderColor = (playerId: string) => {
         var player = allPlayers.find((p) => p.id === playerId);
@@ -170,9 +170,9 @@ export const PlayerListView: React.FC<PlayerListProps> = (props) => {
 
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ marginBottom: 2 }}>
-                <Typography variant="h6">Spieler der Runde</Typography>
+                <Typography variant="h6">Spieler der Runde({selectedPlayers.length})</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
-                    Insgesamt: {selectedPlayers.length}
+                    Spieltag gesamt: {disinctMatchDayPlayerCount}
                 </Typography>
                 <Select
                     isDisabled={!props.isActive}
