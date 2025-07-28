@@ -336,6 +336,18 @@ export class MatchDayService extends ServiceBase {
         // }
     }
 
+    async countDoublePairing(matchdayId: string, player1Id: string, player2Id: string): Promise<number> {
+        const database = await db;
+        const query = `SELECT * FROM match inner join round on match.round_id = round.id WHERE matchday_id=? 
+                                        AND 
+                                        (
+                                            (player1_home_id=? or player2_home_id=?) AND (player1_home_id=? or player2_home_id=?) OR
+                                            (player1_guest_id=? or player2_guest_id=?) AND (player1_guest_id=? or player2_guest_id=?)
+                                        )`;
+        const matches: any = await database.select(query, [matchdayId, player1Id, player1Id, player2Id, player2Id, player1Id, player1Id, player2Id, player2Id]);
+        return matches.length;
+    }
+
     async reopenMatchDay(matchdayId: string) {
         const database = await db;
 

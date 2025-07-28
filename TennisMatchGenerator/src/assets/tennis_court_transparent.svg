@@ -26,13 +26,13 @@
        fx="0"><stop
          id="stop16"
          offset="0"
-         style="stop-opacity:1;stop-color:#606A7F" /><stop
+         style="stop-opacity:1;stop-color:transparent" /><stop
          id="stop18"
          offset="0.79775989"
-         style="stop-opacity:1;stop-color:#606A7F" /><stop
+         style="stop-opacity:1;stop-color:transparent" /><stop
          id="stop20"
          offset="1"
-         style="stop-opacity:1;stop-color:#606A7F" /></radialGradient><clipPath
+         style="stop-opacity:1;stop-color:transparent" /></radialGradient><clipPath
        id="clipPath32"
        clipPathUnits="userSpaceOnUse"><path
          id="path30"

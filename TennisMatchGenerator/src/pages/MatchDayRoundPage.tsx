@@ -263,7 +263,7 @@ export const MatchDayRoundPage: React.FC<MatchDayRoundPageProps> = (props) => {
 
                     </Stack>
 
-                    <CourtsView round={round} courts={selectedCourts} matches={matches} />
+                    <CourtsView matchDayId={props.matchDayId} round={round} courts={selectedCourts} matches={matches} />
 
                 </Box>
             </Box >

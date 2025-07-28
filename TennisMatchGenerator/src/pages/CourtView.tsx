@@ -1,4 +1,4 @@
-import { Box, IconButton, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
+import { Badge, Box, IconButton, MenuItem, Select, SelectChangeEvent, TextField, Tooltip } from "@mui/material";
 import { Match } from "../model/Match";
 import { useContext, useEffect, useState } from "react";
 import tennisCourtUrl from "../assets/tennis_court.svg";
@@ -17,6 +17,7 @@ import { CourtPlayer } from "../components/CourtPlayer";
 import { PlayerCourtPosition } from "../model/PlayerCourtPosition";
 
 interface CourtViewProps {
+    matchDayId: string;
     roundId: string;
     court: number;
     match: Match | null;
@@ -44,6 +45,8 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
     const [scoreGuest, setScoreGuest] = useState(0);
     const [match, setMatch] = useState<Match | null>(props.match);
     const [isEditingCourtNumber, setIsEditingCourtNumber] = useState(false);
+    const [doublePairingHomeCount, setDoublePairingHomeCount] = useState(0);
+    const [doublePairingGuestCount, setDoublePairingGuestCount] = useState(0);
 
     const [isDraggingLeft, setIsDraggingLeft] = useState(false);
     const [isDraggingRight, setIsDraggingRight] = useState(false);
@@ -77,6 +80,11 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
         setPlayers(allPlayers);
     }
 
+    //doppelpaarung prüfen, wie oft sie schon vorkam in englisch. gibt die anzahl der vorkommen zurück
+    const countDoublePairing = async (player1Id: string, player2Id: string): Promise<number> => {
+        return await matchDayService.countDoublePairing(props.matchDayId, player1Id, player2Id);
+    }
+
     useEffect(() => {
         var currentMatch = props.match;
         console.log("Match changed", JSON.stringify(props.match));
@@ -89,6 +97,18 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
             setScoreGuest(0);
         }
 
+        if (props.match?.type === "double") {
+            countDoublePairing(currentMatch?.player1HomeId!, currentMatch?.player2HomeId!).then(homeDoubleCount => {
+                setDoublePairingHomeCount(homeDoubleCount)
+            });
+            countDoublePairing(currentMatch?.player1GuestId!, currentMatch?.player2GuestId!).then(guestDoubleCount => {
+                setDoublePairingGuestCount(guestDoubleCount);
+            });
+        }
+        else {
+            setDoublePairingHomeCount(0);
+            setDoublePairingGuestCount(0);
+        }
         setMatch(currentMatch);
     }, [props.match]);
 
@@ -251,7 +271,26 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     height: "100%",
                     backgroundColor: isDraggingLeft ? "rgba(0, 0, 0, 0.5)" : null,
                 }}
-            />
+            >
+                {doublePairingHomeCount > 1 && (
+                    <Tooltip title={`Doppelpaarungen wurden schon ${doublePairingHomeCount} mal verwendet`}>
+                        <Badge
+                            badgeContent="!"
+                            color="warning"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 100,
+                                left: 10,
+                                '& .MuiBadge-badge': {
+                                    fontSize: '1rem',
+                                    minWidth: 24,
+                                    height: 24,
+                                },
+                            }}
+                        />
+                    </Tooltip>
+                )}
+            </Box>
             {/*away-side */}
             <Box
                 onDragOver={(event => handleDragOver(event, CourtSide.RIGHT))}
@@ -267,7 +306,26 @@ export const CourtView: React.FC<CourtViewProps> = (props) => {
                     width: "50%",
                     height: "100%",
                     backgroundColor: isDraggingRight ? "rgba(0, 0, 0, 0.5)" : null,
-                }} />
+                }} >
+                {doublePairingGuestCount > 1 && (
+                    <Tooltip title={`Doppelpaarungen wurden schon ${doublePairingGuestCount} mal verwendet`}>
+                        <Badge
+                            badgeContent="!"
+                            color="warning"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 100,
+                                right: 10,
+                                '& .MuiBadge-badge': {
+                                    fontSize: '1rem',
+                                    minWidth: 24,
+                                    height: 24,
+                                },
+                            }}
+                        />
+                    </Tooltip>
+                )}
+            </Box>
             {match && match.type === "double" && (<>
                 {/* Team A (links) */}
                 {match.player1HomeId &&

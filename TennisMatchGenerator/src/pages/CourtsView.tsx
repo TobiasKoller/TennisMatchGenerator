@@ -5,6 +5,7 @@ import { Match } from "../model/Match";
 import { CourtView } from "./CourtView";
 
 interface CourtsViewProps {
+    matchDayId: string;
     round: MatchDayRound;
     courts: number[];
     matches: Match[];
@@ -37,6 +38,7 @@ export const CourtsView: React.FC<CourtsViewProps> = (props) => {
             }}>
                 {courts.map((courtNumber, _index) => (
                     <CourtView key={_index}
+                        matchDayId={props.matchDayId}
                         roundId={props.round.id}
                         court={courtNumber}
                         availableCourts={courts}
