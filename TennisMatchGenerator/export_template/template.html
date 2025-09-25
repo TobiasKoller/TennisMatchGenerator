@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mönsheim Tennis-Action Statistik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: block;
+      /* für mobiles Scrollen */
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    th,
+    td {
+      border: 1px solid #eee;
+      padding: 10px;
+      text-align: left;
+      white-space: nowrap;
+      /* kein Umbruch in Zellen */
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    button {
+      padding: 6px 10px;
+      background: #0078d7;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005fa3;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    /* Modal Content */
+    .modal {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal h2 {
+      margin-top: 0;
+    }
+
+    .close-btn {
+      float: right;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+
+    .ergebnis {
+      margin: 1rem 0;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .ergebnis b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .match {
+      margin-left: 1rem;
+      padding: 3px 0;
+    }
+
+    .score {
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .win {
+      background: #b6ffb3;
+      color: #064d06;
+    }
+
+    .loss {
+      background: #ffb3b3;
+      color: #600;
+    }
+
+    .neutral {
+      background: #fff3b0;
+      /* gelblich für echte Unentschieden */
+      color: #5a4b00;
+    }
+
+    .opponent {
+      background: #e0e0e0;
+      /* grau für Gegnerwerte */
+      color: #333;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Tennis-Action Rangliste</h1>
+  <table id="statsTable">
+    <thead>
+      <tr>
+        <th>Platz</th>
+        <th>Name</th>
+        <th>Punkte</th>
+        <th>Spiele (S/N)</th>
+        <th>Spieltage</th>
+        <th>Ergebnisse</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">Ergebnisse</h2>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // String "true"/"false" → echtes Boolean
+    function asBool(v) {
+      if (typeof v === "boolean") return v;
+      if (typeof v === "string") return v.toLowerCase() === "true";
+      return !!v;
+    }
+
+    // Ergebnisfarbe des Spielerwertes
+    function getResultClass(my, opp) {
+      if (my > opp) return "win";
+      if (my < opp) return "loss";
+      return "neutral"; // echtes Unentschieden
+    }
+
+    function openModal(player) {
+      document.getElementById("modalTitle").innerText = player.name + " – Ergebnisse";
+      const modalContent = document.getElementById("modalContent");
+
+      modalContent.innerHTML = (player.details?.MatchDays ?? []).map(md => `
+        <div class="ergebnis">
+          <b>${new Date(md.matchDayDate).toLocaleDateString('de-DE')}</b>
+          <div class="match">
+            ${(md.matches ?? []).map(m => {
+        const isHome = asBool(m.isPlayerHome);
+        const my = isHome ? m.homeGames : m.guestGames;
+        const opp = isHome ? m.guestGames : m.homeGames;
+        const myCls = getResultClass(my, opp);
+        return `
+                <span class="score ${myCls}">${my}</span>
+                -
+                <span class="score opponent">${opp}</span>
+              `;
+      }).join(" | ")}
+          </div>
+        </div>
+      `).join("");
+
+      document.getElementById("modalOverlay").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+    }
+
+    async function loadData() {
+      const response = await fetch("tennisaction_statistic.json");
+      const data = await response.json();
+      const tbody = document.querySelector("#statsTable tbody");
+
+      data.forEach(player => {
+        let wins = 0, losses = 0, gamesCount = 0;
+
+        (player.details?.MatchDays ?? []).forEach(md => {
+          (md.matches ?? []).forEach(m => {
+            gamesCount++;
+            const isHome = asBool(m.isPlayerHome);
+            const ps = isHome ? m.homeGames : m.guestGames;
+            const os = isHome ? m.guestGames : m.homeGames;
+            if (ps > os) wins++;
+            else if (ps < os) losses++;
+          });
+        });
+
+        const matchdayCount = player.details?.MatchDays?.length ?? 0;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${player.position}</td>
+          <td>${player.name}</td>
+          <td>${player.totalPoints}</td>
+          <td>${gamesCount} (${wins}/${losses})</td>
+          <td>${matchdayCount}</td>
+          <td></td>
+        `;
+
+        const btnCell = tr.lastElementChild;
+        const btn = document.createElement("button");
+        btn.textContent = "Anzeigen";
+        btn.addEventListener("click", () => openModal(player));
+        btnCell.appendChild(btn);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+
+</html>

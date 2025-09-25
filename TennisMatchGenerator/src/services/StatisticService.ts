@@ -8,7 +8,6 @@ import { PlayerService } from "./PlayerService";
 import { RankingRecord } from "../model/RankingRecord";
 import { SeasonService } from "./SeasonService";
 import { ServiceBase } from "./ServiceBase";
-import { StatisticData } from "../model/StatisticData";
 import { MatchDayStatisticData } from "../model/MatchDayStatisticData";
 import { StatisticSourceRecord } from "../model/StatisticSourceRecord";
 import { RankingRecordDetails } from "../model/RankingRecordDetails";
@@ -74,17 +73,17 @@ export class StatisticService extends ServiceBase {
         this._playerService = new PlayerService(seasonId, notificationService);
     }
 
-    async getStatistics(): Promise<StatisticData[]> {
-        const database = await db;
-        const statistics = await database.safeSelect<StatisticData>(StatisticColumns, "statistic", `where season_id=?`, [this.seasonId]);
-        return statistics;
-    }
+    // async getStatistics(): Promise<StatisticData[]> {
+    //     const database = await db;
+    //     const statistics = await database.safeSelect<StatisticData>(StatisticColumns, "statistic", `where season_id=?`, [this.seasonId]);
+    //     return statistics;
+    // }
 
-    async createStatistic(statistic: StatisticData): Promise<void> {
-        const database = await db;
-        await database.execute(`INSERT INTO statistic (id, player_id, season_id, points_for_participation, points_for_won_games) VALUES (?,?,?,?,?)`,
-            [statistic.id, statistic.playerId, statistic.seasonId, statistic.pointsForParticipation, statistic.pointsForWonGames]);
-    }
+    // async createStatistic(statistic: StatisticData): Promise<void> {
+    //     const database = await db;
+    //     await database.execute(`INSERT INTO statistic (id, player_id, season_id, points_for_participation, points_for_won_games) VALUES (?,?,?,?,?)`,
+    //         [statistic.id, statistic.playerId, statistic.seasonId, statistic.pointsForParticipation, statistic.pointsForWonGames]);
+    // }
 
 
 
@@ -123,7 +122,7 @@ export class StatisticService extends ServiceBase {
     //     return ranking;
     // }
 
-    async getRanking(): Promise<RankingRecord[]> {
+    async getRanking(includeDetails: boolean): Promise<RankingRecord[]> {
         const database = await db;
         const players = await this._playerService.getAllPlayers();
         var settings = await this._seasonService.getSettings();
@@ -134,6 +133,7 @@ export class StatisticService extends ServiceBase {
 
         var playerMap: Record<string, RankingRecord> = {};
 
+        // Hilfsfunktion zum Hinzufügen und Aktualisieren von Spielern im Ranking
         const mapPlayer = (matchdayId: string, id: string) => {
             if (!id) return;
 
@@ -148,6 +148,7 @@ export class StatisticService extends ServiceBase {
             }
         }
 
+        // Durchlaufe alle Spielaufzeichnungen und aktualisiere die Spielerinformationen
         for (var record of records) {
             mapPlayer(record.matchDayId, record.player1HomeId);
             mapPlayer(record.matchDayId, record.player2HomeId);
@@ -162,6 +163,7 @@ export class StatisticService extends ServiceBase {
             if (record.player2GuestId) playerMap[record.player2GuestId].totalPoints += set1[1];
         }
 
+        // Berechne die Gesamtpunkte und sortiere die Spieler
         var participationPoints = settings.pointsForParticipation || 0;
         var sortedList = Object.values(playerMap).map(record => {
             record.totalPoints += record.participationDays.length * participationPoints; // Add participation points
@@ -169,10 +171,21 @@ export class StatisticService extends ServiceBase {
             return record;
         }).sort((a, b) => b.totalPoints - a.totalPoints);
 
+        if (includeDetails) {
+            for (var rankingRecord of sortedList) {
+                rankingRecord.details = await this.getRankingForPlayer(rankingRecord.playerId);
+            }
+        }
+
+        // Setze die Platzierung basierend auf der sortierten Liste
         return sortedList.map((record, index) => {
             record.position = index + 1; // Set position based on sorted order
             return record;
         });
+    }
+
+    async exportRanking(): Promise<RankingRecord[]> {
+        return await this.getRanking(true);
     }
 
     async getRankingForPlayer(playerId: string): Promise<RankingRecordDetails> {
@@ -216,10 +229,12 @@ export class StatisticService extends ServiceBase {
 
     async getNumberOfPlayers(): Promise<number> {
         const database = await db;
-        const result: any[] = await database.select(`select count(distinct player_id) as count from statistic
-                                    where season_id=?`, [this.seasonId]);
+        const result: any[] = await database.select(`select count(distinct rp.player_id) as playerCount from round_player rp 
+                                                    inner join round r on rp.round_id = r.id
+                                                    inner join matchday md on r.matchday_id = md.id 
+                                                        where season_id=?`, [this.seasonId]);
 
-        return result[0].count;
+        return result[0].playerCount;
     }
 
     async getMatchDayStatistics(matchDayId: string): Promise<MatchDayStatisticData> {

@@ -22,7 +22,7 @@ export const RankingTile: React.FC<RankingTileProps> = (_props) => {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
     const init = async () => {
-        var records = await statisticService.getRanking();
+        var records = await statisticService.getRanking(false);
         setRankingRecords(records);
     }
 

@@ -1,3 +1,4 @@
+import { RankingRecordDetails } from "./RankingRecordDetails";
 
 export class RankingRecord {
     position: number = -1; // Platzierung, falls benötigt
@@ -5,6 +6,7 @@ export class RankingRecord {
     name: string;
     totalPoints: number;
     participationDays: string[]; // Anzahl der Teilnahmen, falls benötigt
+    details?: RankingRecordDetails;
 
     constructor(playerId: string, name: string, totalPoints: number, participations: string[]) {
         this.playerId = playerId;
@@ -14,4 +16,6 @@ export class RankingRecord {
 
     }
 }
+
+
 

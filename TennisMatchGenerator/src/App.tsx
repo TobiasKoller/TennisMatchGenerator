@@ -20,11 +20,15 @@ import { MatchDayDetail } from "./pages/MatchDayDetail";
 import { Drawer, IconButton, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import { MatchDayService } from "./services/MatchDayService";
 import { useNotification } from "./provider/NotificationProvider";
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import { StatisticService } from "./services/StatisticService";
+import { ExportService } from "./services/ExportService";
+
 
 export default function App() {
 
@@ -47,6 +51,7 @@ export default function App() {
   }
 
   var matchDayService = new MatchDayService(season!.id, notification);
+  var statisticService = new StatisticService(season!.id, notification);
 
   const openCurrentMatchday = async () => {
     var matchDay = await matchDayService.getActiveMatchDay();
@@ -54,9 +59,12 @@ export default function App() {
     else navigateHook(`/${RoutePath.MATCHDAYS.path}/${matchDay.id}`);
   };
 
-  // const exportData = async () => {
+  const exportData = async () => {
+    var data = await statisticService.exportRanking();
+    var exporter = new ExportService();
+    await exporter.exportAsJson("tennisaction_statistic.json", data);
 
-  // }
+  }
 
 
   return (
@@ -110,11 +118,11 @@ export default function App() {
                 </Select>
               </FormControl> */}
 
-              {/* <Tooltip title="Export Spieldaten" arrow >
+              <Tooltip title="Export Spieldaten" arrow >
                 <IconButton color="inherit" onClick={exportData}>
                   <FileDownloadIcon sx={{ color: 'white' }} />
                 </IconButton>
-              </Tooltip> */}
+              </Tooltip>
               <Tooltip title="Statistik" arrow >
                 <IconButton color="inherit" onClick={() => navigateHook(`/${RoutePath.HOME.path}`)}>
                   <DashboardIcon sx={{ color: 'gold' }} />

@@ -314,26 +314,6 @@ export class MatchDayService extends ServiceBase {
         } catch (error: any) {
             throw new Error(`Fehler beim Schließen des Spieltags: ${error?.message}`);
         }
-
-        // var closer = new MatchDayCloser(seasonService, this);
-        // var records = await closer.CalculateMatchDayPoints(this.seasonId, matchdayId);
-        // if (records.length === 0) throw new Error("Keine Spieler für den Spieltag gefunden. Bitte stellen Sie sicher, dass Spieler in der Runde vorhanden sind.");
-
-        // const rollBackStatistics = async (database: any, records: any[]) => {
-        //     for (var record of records) {
-        //         await database.execute(`DELETE FROM statistic WHERE id=?`, [record.id]);
-        //     }
-        // }
-
-        // try {
-        //     for (var record of records) {
-        //         await this.statisticService.createStatistic(record);
-        //     }
-        //     await database.execute(`UPDATE matchday SET is_closed=1 WHERE id=?`, [matchdayId]);
-        // } catch (error: any) {
-        //     rollBackStatistics(database, records);
-        //     throw new Error(`Fehler beim Schließen des Spieltags: ${error?.message}`);
-        // }
     }
 
     async countDoublePairing(matchdayId: string, player1Id: string, player2Id: string): Promise<number> {
