@@ -1,5 +1,7 @@
 import { DatabaseExt } from "./DatabaseExt";
 
+const DB_PATH = "sqlite:/home/tobias/Dokumente/Entwicklung/TennisMatchGenerator/TennisMatchGenerator/db/tennismatchgenerator.sqlite";
+
 // ✅ Singleton-Klasse
 class DB {
     private static instance: Promise<DatabaseExt>;
@@ -8,7 +10,7 @@ class DB {
 
     static getInstance(): Promise<DatabaseExt> {
         if (!DB.instance) {
-            DB.instance = DatabaseExt.load("sqlite:tennismatchgenerator.sqlite");
+            DB.instance = DatabaseExt.load(DB_PATH);
         }
         return DB.instance;
     }
