@@ -26,11 +26,11 @@
     "active": true,
     "targets": ["nsis"],
     "createUpdaterArtifacts": false,
-    "nsis": {
-      "displayLanguageSelector": false,
-      "installMode": "perMachine",
-      "allowCancelByUser": true,
-      "createDesktopShortcut": true
+    "windows": {
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installMode": "perMachine"
+      }
     },
     "icon": [
       "icons/32x32.png",
