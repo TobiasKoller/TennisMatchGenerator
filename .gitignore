@@ -88,6 +88,8 @@ AppPackages/
 
 # Others
 sql/
+!TennisMatchGenerator/src-tauri/resources/sql/
+!TennisMatchGenerator/src-tauri/resources/sql/init.sql
 *.Cache
 ClientBin/
 [Ss]tyle[Cc]op.*
