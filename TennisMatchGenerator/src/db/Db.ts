@@ -1,6 +1,6 @@
 import { DatabaseExt } from "./DatabaseExt";
 
-const DB_PATH = "sqlite:/home/tobias/Dokumente/Entwicklung/TennisMatchGenerator/TennisMatchGenerator/db/tennismatchgenerator.sqlite";
+const DB_PATH = "sqlite:tennismatchgenerator.sqlite";
 
 // ✅ Singleton-Klasse
 class DB {

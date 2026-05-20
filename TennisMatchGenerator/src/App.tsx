@@ -62,7 +62,7 @@ export default function App() {
   const exportData = async () => {
     var data = await statisticService.exportRanking();
     var exporter = new ExportService();
-    await exporter.exportAsJson("tennisaction_statistic.json", data);
+    await exporter.exportAsHtml("tennisaction_statistic.html", data);
 
   }
 
